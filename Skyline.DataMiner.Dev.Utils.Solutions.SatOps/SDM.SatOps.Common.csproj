@@ -4,7 +4,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps</AssemblyName>
-    <RootNamespace>Skyline.DataMiner.Dev.Utils.Solutions.SatOps</RootNamespace>
+    <RootNamespace>Skyline.DataMiner.SDM.SatOps.Common</RootNamespace>
     <PackageVersion>1.0.1</PackageVersion>
     <Version>1.0.1</Version>
     <PackageTags>Skyline;DataMiner</PackageTags>
@@ -39,7 +39,5 @@
     </PackageReference>
   </ItemGroup>
   
-  <ItemGroup>
-    <Folder Include="SDM\Models\" />
-  </ItemGroup>
+  <Import Project="..\SharedMappers\SharedMappers.projitems" Label="Shared" />
 </Project>
