@@ -1738,6 +1738,7 @@ namespace SharedMappers.Satellite_Management
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages;
 
@@ -2608,6 +2609,7 @@ namespace SharedMappers.Satellite_Management
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Apps.Sections.Sections;
     using Skyline.DataMiner.Net.Messages;
@@ -6266,6 +6268,7 @@ namespace SharedMappers.Antenna_Management
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages;
 
@@ -6957,6 +6960,7 @@ namespace SharedMappers.Antenna_Management
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Apps.Sections.Sections;
     using Skyline.DataMiner.Net.Messages;
@@ -9577,6 +9581,7 @@ namespace SharedMappers.SlcWorkflow
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages;
 
@@ -10864,6 +10869,7 @@ namespace SharedMappers.SlcWorkflow
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Apps.Sections.Sections;
     using Skyline.DataMiner.Net.Messages;
@@ -17410,6 +17416,7 @@ namespace SharedMappers.SlcProperties
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages;
 
@@ -17685,6 +17692,7 @@ namespace SharedMappers.SlcProperties
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using SharedMappers.DomHelpers;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Apps.Sections.Sections;
     using Skyline.DataMiner.Net.Messages;

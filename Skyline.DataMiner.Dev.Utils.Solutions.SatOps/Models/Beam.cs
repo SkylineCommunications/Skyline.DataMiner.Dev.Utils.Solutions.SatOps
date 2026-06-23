@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace Skyline.DataMiner.SDM.SatOps.Common.Models
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.Models
 {
+    using System;
+
     /// <summary>
     /// Represents a beam entity associated with a satellite, including its unique identifier, link type, transmission type, and footprint information.
     /// </summary>
