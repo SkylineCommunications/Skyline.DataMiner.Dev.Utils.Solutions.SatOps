@@ -4,8 +4,8 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
-		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common</AssemblyName>
-		<RootNamespace>Skyline.DataMiner.SDM.SatOps.Common</RootNamespace>
+		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.GQI</AssemblyName>
+		<RootNamespace>Skyline.DataMiner.SDM.SatOps.GQI</RootNamespace>
 		<Copyright>Copyright © 2026</Copyright>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
@@ -27,14 +27,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Skyline.DataMiner.CICD.CSharpAnalysis.Analyzer" Version="2.1.2">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Skyline.DataMiner.Dev.Utils.SDM.Abstractions" Version="1.0.1" />
-		<PackageReference Include="Skyline.DataMiner.SDM" Version="1.0.1" />
-		<PackageReference Include="Skyline.DataMiner.SDM.Registration.Common" Version="2.0.5" />
-		<PackageReference Include="Skyline.DataMiner.SDM.SourceGenerator.Runtime" Version="1.0.1" />
 		<PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers" Version="2.2.3">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
