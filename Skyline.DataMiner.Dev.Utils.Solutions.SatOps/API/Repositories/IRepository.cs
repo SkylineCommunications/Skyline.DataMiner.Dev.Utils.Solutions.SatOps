@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories
 {
+    /// <summary>
+    /// Represents a repository for managing API objects of type <typeparamref name="T"/>.
+    /// This interface provides methods for counting, reading, creating, updating, and deleting API objects in the repository.
+    /// </summary>
+    /// <typeparam name="T">The type of API object managed by the repository.</typeparam>
     public interface IRepository<T> : IBulkRepository<T>
         where T : class
     {

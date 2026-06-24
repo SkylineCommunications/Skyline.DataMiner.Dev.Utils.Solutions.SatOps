@@ -8,6 +8,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
+    using SLDataGateway.API.Types.Querying;
 
     internal class SatelliteRepository : Repository, ISatelliteRepository
     {
@@ -17,25 +18,15 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
 
-        private static bool IsSatelliteInstance(DomInstance di)
+        private static bool IsSatelliteInstance(DomInstance instance)
         {
-            return di.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.Satellites);
+            return instance.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.Satellites);
         }
 
         public long Count()
         {
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
                 .LongCount(IsSatelliteInstance);
-        }
-
-        public long Count(Net.Messages.SLDataGateway.FilterElement<Satellite> filter)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long Count(SLDataGateway.API.Types.Querying.IQuery<Satellite> query)
-        {
-            throw new NotImplementedException();
         }
 
         public IReadOnlyCollection<Satellite> Create(IEnumerable<Satellite> oToCreate)
@@ -112,12 +103,125 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 .Select(di => Satellite.FromInstance(new SatellitesInstance(di)));
         }
 
-        public IEnumerable<Satellite> Read(Net.Messages.SLDataGateway.FilterElement<Satellite> filter)
+        public Satellite Update(Satellite oToUpdate)
+        {
+            var updatedInstance = oToUpdate.ToUpdatedInstance();
+            var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
+            return Satellite.FromInstance(new SatellitesInstance(updatedDomInstance));
+        }
+
+        public Satellite Activate(Guid id)
+        {
+            return DoTransition(id, SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Transitions.Draft_To_Active);
+        }
+        public Satellite Activate(Satellite satellite)
+        {
+            if (satellite == null)
+                throw new ArgumentNullException(nameof(satellite));
+
+            return Activate(satellite.Id);
+        }
+
+        public IReadOnlyCollection<Satellite> Activate(IEnumerable<Satellite> satellites)
+        {
+            if (satellites == null)
+                throw new ArgumentNullException(nameof(satellites));
+            return satellites.Select(s => Activate(s)).ToList();
+        }
+
+        public IReadOnlyCollection<Satellite> Activate(IEnumerable<Guid> satelliteIds)
+        {
+            if (satelliteIds == null)
+                throw new ArgumentNullException(nameof(satelliteIds));
+            return satelliteIds.Select(id => Activate(id)).ToList();
+        }
+
+        public Satellite Deprecate(Guid id)
+        {
+            return DoTransition(id, SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Transitions.Active_To_Deprecated);
+        }
+        public Satellite Deprecate(Satellite satellite)
+        {
+            if (satellite == null)
+                throw new ArgumentNullException(nameof(satellite));
+
+            return Deprecate(satellite.Id);
+        }
+
+        public IReadOnlyCollection<Satellite> Deprecate(IEnumerable<Satellite> satellites)
+        {
+            if (satellites == null)
+                throw new ArgumentNullException(nameof(satellites));
+            return satellites.Select(s => Deprecate(s)).ToList();
+        }
+
+        public IReadOnlyCollection<Satellite> Deprecate(IEnumerable<Guid> satelliteIds)
+        {
+            if (satelliteIds == null)
+                throw new ArgumentNullException(nameof(satelliteIds));
+            return satelliteIds.Select(id => Deprecate(id)).ToList();
+        }
+
+        public Satellite Reactivate(Guid id)
+        {
+            return DoTransition(id, SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Transitions.Deprecated_To_Active);
+        }
+
+        public Satellite Reactivate(Satellite satellite)
+        {
+            if (satellite == null)
+                throw new ArgumentNullException(nameof(satellite));
+
+            return Reactivate(satellite.Id);
+        }
+
+        public IReadOnlyCollection<Satellite> Reactivate(IEnumerable<Satellite> satellites)
+        {
+            if (satellites == null)
+                throw new ArgumentNullException(nameof(satellites));
+            return satellites.Select(s => Reactivate(s)).ToList();
+        }
+
+        public IReadOnlyCollection<Satellite> Reactivate(IEnumerable<Guid> satelliteIds)
+        {
+            if (satelliteIds == null)
+                throw new ArgumentNullException(nameof(satelliteIds));
+            return satelliteIds.Select(id => Reactivate(id)).ToList();
+        }
+
+        private Satellite DoTransition(Guid id, string transitionId)
+        {
+            var satellite = Read(id);
+            if (satellite == null)
+                throw new ArgumentException($"Satellite with id '{id}' was not found.", nameof(id));
+
+            var domInstanceId = satellite.ToOriginalInstance().ID;
+            var transitionedDomInstance = DomHelper.DomInstances.DoStatusTransition(domInstanceId, transitionId);
+            return Satellite.FromInstance(new SatellitesInstance(transitionedDomInstance));
+        }
+
+        #region Not Implemented Methods
+        public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)
+        {
+            return oToUpdate.Select(Update).ToList();
+        }
+
+        public long Count(FilterElement<Satellite> filter)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Satellite> Read(SLDataGateway.API.Types.Querying.IQuery<Satellite> query)
+        public long Count(IQuery<Satellite> query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Satellite> Read(FilterElement<Satellite> filter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Satellite> Read(IQuery<Satellite> query)
         {
             throw new NotImplementedException();
         }
@@ -132,37 +236,26 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IPagedResult<Satellite>> ReadPaged(Net.Messages.SLDataGateway.FilterElement<Satellite> filter)
+        public IEnumerable<IPagedResult<Satellite>> ReadPaged(FilterElement<Satellite> filter)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IPagedResult<Satellite>> ReadPaged(SLDataGateway.API.Types.Querying.IQuery<Satellite> query)
+        public IEnumerable<IPagedResult<Satellite>> ReadPaged(IQuery<Satellite> query)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IPagedResult<Satellite>> ReadPaged(Net.Messages.SLDataGateway.FilterElement<Satellite> filter, int pageSize)
+        public IEnumerable<IPagedResult<Satellite>> ReadPaged(FilterElement<Satellite> filter, int pageSize)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IPagedResult<Satellite>> ReadPaged(SLDataGateway.API.Types.Querying.IQuery<Satellite> query, int pageSize)
+        public IEnumerable<IPagedResult<Satellite>> ReadPaged(IQuery<Satellite> query, int pageSize)
         {
             throw new NotImplementedException();
         }
-
-        public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)
-        {
-            return oToUpdate.Select(Update).ToList();
-        }
-
-        public Satellite Update(Satellite oToUpdate)
-        {
-            var updatedInstance = oToUpdate.ToUpdatedInstance();
-            var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
-            return Satellite.FromInstance(new SatellitesInstance(updatedDomInstance));
-        }
+        #endregion
     }
 }
 

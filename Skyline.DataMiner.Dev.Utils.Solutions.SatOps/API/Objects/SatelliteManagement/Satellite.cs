@@ -40,6 +40,27 @@
         }
 
         /// <summary>
+        /// Gets the current lifecycle status of the satellite.
+        /// </summary>
+        public InstanceStatus SatelliteStatus
+        {
+            get
+            {
+                switch (originalInstance.Status)
+                {
+                    case DomModel.SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum.Active:
+                        return InstanceStatus.Active;
+                    case DomModel.SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum.Deprecated:
+                        return InstanceStatus.Deprecated;
+                    case DomModel.SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum.Error:
+                        return InstanceStatus.Error;
+                    default:
+                        return InstanceStatus.Draft;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the name of the satellite.
         /// </summary>
         public override string Name

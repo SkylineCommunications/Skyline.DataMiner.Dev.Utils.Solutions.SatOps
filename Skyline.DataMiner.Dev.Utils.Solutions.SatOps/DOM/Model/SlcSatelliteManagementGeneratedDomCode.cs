@@ -1443,7 +1443,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets the Status ID of the DOM Instance.
+        /// Gets the SatelliteStatus ID of the DOM Instance.
         /// </summary>
         public SlcSatellite_ManagementIds.Behaviors.TransponderPlansBehavior.StatusesEnum Status
         {
@@ -1563,7 +1563,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets the Status ID of the DOM Instance.
+        /// Gets the SatelliteStatus ID of the DOM Instance.
         /// </summary>
         public SlcSatellite_ManagementIds.Behaviors.TranspondersBehavior.StatusesEnum Status
         {
@@ -1683,7 +1683,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets the Status ID of the DOM Instance.
+        /// Gets the SatelliteStatus ID of the DOM Instance.
         /// </summary>
         public SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.StatusesEnum Status
         {
@@ -1803,7 +1803,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets the Status ID of the DOM Instance.
+        /// Gets the SatelliteStatus ID of the DOM Instance.
         /// </summary>
         public SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum Status
         {

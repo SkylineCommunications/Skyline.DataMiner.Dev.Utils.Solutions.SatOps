@@ -9,27 +9,63 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TrasponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
+    /// <summary>
+    /// Defines the main API interface for SatOps operations.
+    /// </summary>
     public interface ISatOpsApi
     {
+        /// <summary>
+        /// Gets the DataMiner connection.
+        /// </summary>
         IConnection Connection { get; }
 
+        /// <summary>
+        /// Gets the satellite repository.
+        /// </summary>
         ISatelliteRepository Satellites { get; }
 
+        /// <summary>
+        /// Gets the beam repository.
+        /// </summary>
         IBeamRepository Beams { get; }
 
+        /// <summary>
+        /// Gets the transponder repository.
+        /// </summary>
         ITransponderRepository Transponders { get; }
 
+        /// <summary>
+        /// Gets the transponder plan repository.
+        /// </summary>
         ITransponderPlanRepository TransponderPlans { get; }
 
+        /// <summary>
+        /// Gets the transponder plan row repository.
+        /// </summary>
         ITransponderPlanRowRepository TransponderPlanRows { get; }
 
+        /// <summary>
+        /// Gets the transponder slot repository.
+        /// </summary>
         ITransponderSlotRepository TransponderSlots { get; }
 
+        /// <summary>
+        /// Checks whether the SatOps solution is installed.
+        /// </summary>
+        /// <returns><c>true</c> if the solution is installed; otherwise, <c>false</c>.</returns>
         bool IsInstalled();
 
+        /// <summary>
+        /// Checks whether the SatOps solution is installed and retrieves the version.
+        /// </summary>
+        /// <param name="version">When this method returns, contains the version of the installed solution if it is installed; otherwise, <c>null</c>.</param>
+        /// <returns><c>true</c> if the solution is installed; otherwise, <c>false</c>.</returns>
         bool IsInstalled(out string version);
 
+        /// <summary>
+        /// Sets the logger for the API.
+        /// </summary>
+        /// <param name="logger">The logger instance to use.</param>
         void SetLogger(ILogger logger);
-
     }
 }

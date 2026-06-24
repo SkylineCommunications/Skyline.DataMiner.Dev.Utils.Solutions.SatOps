@@ -81,7 +81,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets the Status ID of the DOM Instance.
+        /// Gets the SatelliteStatus ID of the DOM Instance.
         /// </summary>
         public String StatusId
         {
