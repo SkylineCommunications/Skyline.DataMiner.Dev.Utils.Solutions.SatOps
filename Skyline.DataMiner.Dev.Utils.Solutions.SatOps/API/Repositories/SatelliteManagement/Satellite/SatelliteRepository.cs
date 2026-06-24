@@ -46,9 +46,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             var results = new List<Satellite>();
             foreach (var satellite in oToCreateOrUpdate)
             {
-                var updatedInstance = satellite.ToUpdatedInstance();
-                updatedInstance.Save(DomHelper);
-                results.Add(Satellite.FromInstance(updatedInstance.Clone()));
+                var existing = Read(satellite.Id);
+                var result = existing == null ? Create(satellite) : Update(satellite);
+                results.Add(result);
             }
 
             return results;

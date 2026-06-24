@@ -169,6 +169,76 @@
         }
 
         /// <summary>
+        /// Gets or sets the hemisphere of the satellite's orbital position.
+        /// </summary>
+        public HemisphereType? Hemisphere
+        {
+            get
+            {
+                var domHemisphere = originalInstance.General?.Hemisphere;
+                if (domHemisphere == null)
+                    return null;
+
+                switch (domHemisphere.Value)
+                {
+                    case DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Western: return HemisphereType.Western;
+                    case DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Eastern: return HemisphereType.Eastern;
+                    default: return null;
+                }
+            }
+            set
+            {
+                if (value == null)
+                {
+                    updatedInstance.General.Hemisphere = null;
+                    return;
+                }
+
+                switch (value.Value)
+                {
+                    case HemisphereType.Western: updatedInstance.General.Hemisphere = DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Western; break;
+                    case HemisphereType.Eastern: updatedInstance.General.Hemisphere = DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Eastern; break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the manufacturer of the satellite.
+        /// </summary>
+        public string Manufacturer
+        {
+            get => originalInstance.Origin?.Manufacturer;
+            set => updatedInstance.Origin.Manufacturer = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the country of origin of the satellite.
+        /// </summary>
+        public string Country
+        {
+            get => originalInstance.Origin?.Country;
+            set => updatedInstance.Origin.Country = value;
+        }
+
+        /// <summary>
+        /// Gets or sets launch information for the satellite.
+        /// </summary>
+        public string LaunchInfo
+        {
+            get => originalInstance.LaunchInformation?.LaunchInfo;
+            set => updatedInstance.LaunchInformation.LaunchInfo = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the in-service date of the satellite launch.
+        /// </summary>
+        public DateTime? LaunchInServiceDate
+        {
+            get => originalInstance.LaunchInformation?.LaunchInServiceDate;
+            set => updatedInstance.LaunchInformation.LaunchInServiceDate = value;
+        }
+
+        /// <summary>
         /// Returns the updated instance used by the repository to persist changes.
         /// </summary>
         internal DomModel.SatellitesInstance ToUpdatedInstance() => updatedInstance;
