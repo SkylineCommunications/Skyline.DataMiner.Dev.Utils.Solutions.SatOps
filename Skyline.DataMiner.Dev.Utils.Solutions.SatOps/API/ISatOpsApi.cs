@@ -1,26 +1,29 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API
 {
     using Skyline.DataMiner.Net;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TrasponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
     public interface ISatOpsApi
     {
         IConnection Connection { get; }
 
-        SatelliteRepository Satellites { get; }
+        ISatelliteRepository Satellites { get; }
 
-        BeamRepository Beams { get; }
+        IBeamRepository Beams { get; }
 
-        TransponderRepository Transponders { get; }
+        ITransponderRepository Transponders { get; }
 
-        TransponderPlanRepository TransponderPlans { get; }
+        ITransponderPlanRepository TransponderPlans { get; }
 
-        TransponderPlanRowRepository TransponderPlanRows { get; }
+        ITransponderPlanRowRepository TransponderPlanRows { get; }
 
-        TransponderSlotRepository TransponderSlots { get; }
-
-        void InstallDomModules();
+        ITransponderSlotRepository TransponderSlots { get; }
 
         bool IsInstalled();
 

@@ -1,84 +1,25 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement
 {
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
     using System;
 
-    public abstract class ApiObject<T> : IApiObjectReference, IEquatable<ApiObject<T>>
-        where T : ApiObject<T>
+    public abstract class ApiObject : IIdentifiable
     {
-        internal ApiObject(DomInstanceBase domInstance)
+        private protected ApiObject()
+            : this(Guid.NewGuid())
         {
-            DomInstance = domInstance ?? throw new ArgumentNullException(nameof(domInstance));
         }
 
-        internal DomInstanceBase DomInstance { get; }
-
-        public Guid ID => DomInstance.ID.Id;
-
-        public ApiObjectReference<T> Reference => new ApiObjectReference<T>(ID);
-
-        public DateTimeOffset CreatedAt => DomInstance.CreatedAt;
-
-        public string CreatedBy => DomInstance.CreatedBy;
-
-        public DateTimeOffset LastModified => DomInstance.LastModified;
-
-        public string LastModifiedBy => DomInstance.LastModifiedBy;
-
-        public override int GetHashCode()
+        private protected ApiObject(Guid id)
         {
-            return DomInstance.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as ApiObject<T>);
-        }
-
-        public virtual bool Equals(ApiObject<T> other)
-        {
-            if (ReferenceEquals(this, other))
+            if(id == Guid.Empty)
             {
-                return true;
+                throw new ArgumentException(nameof(id));
             }
 
-            if (other is null)
-            {
-                return false;
-            }
-
-            return DomInstance.Equals(other.DomInstance);
+            Id = id;
         }
 
-        public static bool operator ==(ApiObject<T> left, ApiObject<T> right)
-        {
-            if (ReferenceEquals(left, right))
-            {
-                return true;
-            }
-
-            if (left is null || right is null)
-            {
-                return false;
-            }
-
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(ApiObject<T> left, ApiObject<T> right)
-        {
-            return !(left == right);
-        }
-
-        public override string ToString()
-        {
-            if (!String.IsNullOrWhiteSpace(DomInstance.Name))
-            {
-                return $"{typeof(T).Name} '{DomInstance.Name}' [{ID}]";
-            }
-
-            return $"{typeof(T).Name} [{ID}]";
-        }
+        public Guid Id { get; private set; }
     }
 }

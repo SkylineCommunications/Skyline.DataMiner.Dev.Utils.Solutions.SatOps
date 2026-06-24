@@ -5,13 +5,25 @@
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.Registration;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TrasponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Helpers;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
     public class SatOpsApi : ISatOpsApi
     {
         private const string CatalogItemId = "08798aa7-6c1f-42a9-bdd2-4b3d8b4afea1";
+
+        private readonly Lazy<ISatelliteRepository> lazySatelliteRepository;
+        private readonly Lazy<IBeamRepository> lazyBeamRepository;
+        private readonly Lazy<ITransponderRepository> lazyTransponderRepository;
+        private readonly Lazy<ITransponderPlanRepository> lazyTransponderPlanRepository;
+        private readonly Lazy<ITransponderPlanRowRepository> lazyTransponderPlanRowRepository;
+        private readonly Lazy<ITransponderSlotRepository> lazyTransponderSlotRepository;
 
         public SatOpsApi(IConnection connection)
         {
@@ -20,40 +32,31 @@
 
             SlcSatelliteManagementHelper = new SlcSatelliteManagementHelper(connection);
 
-            Satellites = new SatelliteRepository(this);
-            Beams = new BeamRepository(this);
-            Transponders = new TransponderRepository(this);
-            TransponderPlans = new TransponderPlanRepository(this);
-            TransponderPlanRows = new TransponderPlanRowRepository(this);
-            TransponderSlots = new TransponderSlotRepository(this);
+            lazySatelliteRepository = new Lazy<ISatelliteRepository>(() => new SatelliteRepository(this));
+            lazyBeamRepository = new Lazy<IBeamRepository>(() => new BeamRepository(this));
+            lazyTransponderRepository = new Lazy<ITransponderRepository>(() => new TransponderRepository(this));
+            lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>(() => new TransponderPlanRepository(this));
+            lazyTransponderPlanRowRepository = new Lazy<ITransponderPlanRowRepository>(() => new TransponderPlanRowRepository(this));
+            lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>(() => new TransponderSlotRepository(this));
         }
 
         public IConnection Connection { get; }
 
-        public SatelliteRepository Satellites { get; }
+        public ISatelliteRepository Satellites => lazySatelliteRepository.Value;
 
-        public BeamRepository Beams { get; }
+        public IBeamRepository Beams => lazyBeamRepository.Value;
 
-        public TransponderRepository Transponders { get; }
+        public ITransponderRepository Transponders => lazyTransponderRepository.Value;
 
-        public TransponderPlanRepository TransponderPlans { get; }
+        public ITransponderPlanRepository TransponderPlans => lazyTransponderPlanRepository.Value;
 
-        public TransponderPlanRowRepository TransponderPlanRows { get; }
+        public ITransponderPlanRowRepository TransponderPlanRows => lazyTransponderPlanRowRepository.Value;
 
-        public TransponderSlotRepository TransponderSlots { get; }
+        public ITransponderSlotRepository TransponderSlots => lazyTransponderSlotRepository.Value;
 
         internal SlcSatelliteManagementHelper SlcSatelliteManagementHelper { get; }
 
         internal ILogger Logger { get; private set; }
-
-
-        public void InstallDomModules()
-        {
-            Action<string> logAction = x => Logger?.Information(x);
-
-            //TODO: Add Dom module install logic.
-
-        }
 
         public bool IsInstalled()
         {
