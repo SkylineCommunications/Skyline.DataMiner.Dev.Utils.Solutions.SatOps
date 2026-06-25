@@ -23,6 +23,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return instance.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.Satellites);
         }
 
+        public Satellite CreateNew()
+        {
+            return Satellite.CreateNewSatellite();
+        }
+
         public long Count()
         {
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
@@ -31,23 +36,36 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IReadOnlyCollection<Satellite> Create(IEnumerable<Satellite> oToCreate)
         {
+            if (oToCreate == null)
+                throw new ArgumentNullException(nameof(oToCreate));
+
             return oToCreate.Select(Create).ToList();
         }
 
         public Satellite Create(Satellite oToCreate)
         {
-            var updatedInstance = oToCreate.ToUpdatedInstance();
-            var createdDomInstance = DomHelper.DomInstances.Create(updatedInstance.ToInstance());
-            return Satellite.FromInstance(new SatellitesInstance(createdDomInstance));
+            if (oToCreate == null)
+                throw new ArgumentNullException(nameof(oToCreate));
+
+            if (Read(oToCreate.Id) != null)
+                throw new InvalidOperationException("Cannot create an existing satellite.");
+
+            return CreateInternal(oToCreate);
         }
 
         public IReadOnlyCollection<Satellite> CreateOrUpdate(IEnumerable<Satellite> oToCreateOrUpdate)
         {
+            if (oToCreateOrUpdate == null)
+                throw new ArgumentNullException(nameof(oToCreateOrUpdate));
+
             var results = new List<Satellite>();
             foreach (var satellite in oToCreateOrUpdate)
             {
+                if (satellite == null)
+                    throw new ArgumentException("Collection cannot contain null items.", nameof(oToCreateOrUpdate));
+
                 var existing = Read(satellite.Id);
-                var result = existing == null ? Create(satellite) : Update(satellite);
+                var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite);
                 results.Add(result);
             }
 
@@ -56,6 +74,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public void Delete(Guid apiObjectId)
         {
+            if (apiObjectId == Guid.Empty)
+                throw new ArgumentException("The value cannot be an empty GUID.", nameof(apiObjectId));
+
             var satellite = Read(apiObjectId);
             if (satellite != null)
                 satellite.ToOriginalInstance().Delete(DomHelper);
@@ -63,18 +84,37 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
         {
+            if (apiObjectIds == null)
+                throw new ArgumentNullException(nameof(apiObjectIds));
+
             foreach (var id in apiObjectIds)
+            {
+                if (id == Guid.Empty)
+                    throw new ArgumentException("Collection cannot contain empty GUID values.", nameof(apiObjectIds));
+
                 Delete(id);
+            }
         }
 
         public void Delete(IEnumerable<Satellite> oToDelete)
         {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
             foreach (var satellite in oToDelete)
+            {
+                if (satellite == null)
+                    throw new ArgumentException("Collection cannot contain null items.", nameof(oToDelete));
+
                 Delete(satellite);
+            }
         }
 
         public void Delete(Satellite oToDelete)
         {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
             oToDelete.ToOriginalInstance().Delete(DomHelper);
         }
 
@@ -87,6 +127,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public Satellite Read(Guid id)
         {
+            if (id == Guid.Empty)
+                throw new ArgumentException("The value cannot be an empty GUID.", nameof(id));
+
             var filter = DomInstanceExposers.Id.Equal(new DomInstanceId(id) { ModuleId = SlcSatellite_ManagementIds.ModuleId });
             var domInstance = DomHelper.DomInstances.Read(filter).FirstOrDefault();
             if (domInstance == null || !IsSatelliteInstance(domInstance))
@@ -97,7 +140,18 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IEnumerable<Satellite> Read(IEnumerable<Guid> ids)
         {
-            var idSet = new HashSet<Guid>(ids);
+            if (ids == null)
+                throw new ArgumentNullException(nameof(ids));
+
+            var idSet = new HashSet<Guid>();
+            foreach (var id in ids)
+            {
+                if (id == Guid.Empty)
+                    throw new ArgumentException("Collection cannot contain empty GUID values.", nameof(ids));
+
+                idSet.Add(id);
+            }
+
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
                 .Where(di => IsSatelliteInstance(di) && idSet.Contains(di.ID.Id))
                 .Select(di => Satellite.FromInstance(new SatellitesInstance(di)));
@@ -105,13 +159,20 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public Satellite Update(Satellite oToUpdate)
         {
-            var updatedInstance = oToUpdate.ToUpdatedInstance();
-            var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
-            return Satellite.FromInstance(new SatellitesInstance(updatedDomInstance));
+            if (oToUpdate == null)
+                throw new ArgumentNullException(nameof(oToUpdate));
+
+            if (Read(oToUpdate.Id) == null)
+                throw new InvalidOperationException("Cannot update a satellite that does not exist.");
+
+            return UpdateInternal(oToUpdate);
         }
 
         public Satellite Activate(Guid id)
         {
+            if (id == Guid.Empty)
+                throw new ArgumentException("The value cannot be an empty GUID.", nameof(id));
+
             return DoTransition(id, SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Transitions.Draft_To_Active);
         }
         public Satellite Activate(Satellite satellite)
@@ -126,6 +187,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (satellites == null)
                 throw new ArgumentNullException(nameof(satellites));
+
+            foreach (var satellite in satellites)
+            {
+                if (satellite == null)
+                    throw new ArgumentException("Collection cannot contain null items.", nameof(satellites));
+            }
+
             return satellites.Select(s => Activate(s)).ToList();
         }
 
@@ -133,11 +201,21 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (satelliteIds == null)
                 throw new ArgumentNullException(nameof(satelliteIds));
+
+            foreach (var satelliteId in satelliteIds)
+            {
+                if (satelliteId == Guid.Empty)
+                    throw new ArgumentException("Collection cannot contain empty GUID values.", nameof(satelliteIds));
+            }
+
             return satelliteIds.Select(id => Activate(id)).ToList();
         }
 
         public Satellite Deprecate(Guid id)
         {
+            if (id == Guid.Empty)
+                throw new ArgumentException("The value cannot be an empty GUID.", nameof(id));
+
             return DoTransition(id, SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Transitions.Active_To_Deprecated);
         }
         public Satellite Deprecate(Satellite satellite)
@@ -152,6 +230,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (satellites == null)
                 throw new ArgumentNullException(nameof(satellites));
+
+            foreach (var satellite in satellites)
+            {
+                if (satellite == null)
+                    throw new ArgumentException("Collection cannot contain null items.", nameof(satellites));
+            }
+
             return satellites.Select(s => Deprecate(s)).ToList();
         }
 
@@ -159,11 +244,21 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (satelliteIds == null)
                 throw new ArgumentNullException(nameof(satelliteIds));
+
+            foreach (var satelliteId in satelliteIds)
+            {
+                if (satelliteId == Guid.Empty)
+                    throw new ArgumentException("Collection cannot contain empty GUID values.", nameof(satelliteIds));
+            }
+
             return satelliteIds.Select(id => Deprecate(id)).ToList();
         }
 
         public Satellite Reactivate(Guid id)
         {
+            if (id == Guid.Empty)
+                throw new ArgumentException("The value cannot be an empty GUID.", nameof(id));
+
             return DoTransition(id, SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Transitions.Deprecated_To_Active);
         }
 
@@ -179,6 +274,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (satellites == null)
                 throw new ArgumentNullException(nameof(satellites));
+
+            foreach (var satellite in satellites)
+            {
+                if (satellite == null)
+                    throw new ArgumentException("Collection cannot contain null items.", nameof(satellites));
+            }
+
             return satellites.Select(s => Reactivate(s)).ToList();
         }
 
@@ -186,6 +288,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (satelliteIds == null)
                 throw new ArgumentNullException(nameof(satelliteIds));
+
+            foreach (var satelliteId in satelliteIds)
+            {
+                if (satelliteId == Guid.Empty)
+                    throw new ArgumentException("Collection cannot contain empty GUID values.", nameof(satelliteIds));
+            }
+
             return satelliteIds.Select(id => Reactivate(id)).ToList();
         }
 
@@ -200,9 +309,32 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return Satellite.FromInstance(new SatellitesInstance(transitionedDomInstance));
         }
 
+        private Satellite CreateInternal(Satellite satellite)
+        {
+            var updatedInstance = satellite.ToUpdatedInstance();
+            var createdDomInstance = DomHelper.DomInstances.Create(updatedInstance.ToInstance());
+            return Satellite.FromInstance(new SatellitesInstance(createdDomInstance));
+        }
+
+        private Satellite UpdateInternal(Satellite satellite)
+        {
+            var updatedInstance = satellite.ToUpdatedInstance();
+            var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
+            return Satellite.FromInstance(new SatellitesInstance(updatedDomInstance));
+        }
+
         #region Not Implemented Methods
         public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)
         {
+            if (oToUpdate == null)
+                throw new ArgumentNullException(nameof(oToUpdate));
+
+            foreach (var satellite in oToUpdate)
+            {
+                if (satellite == null)
+                    throw new ArgumentException("Collection cannot contain null items.", nameof(oToUpdate));
+            }
+
             return oToUpdate.Select(Update).ToList();
         }
 

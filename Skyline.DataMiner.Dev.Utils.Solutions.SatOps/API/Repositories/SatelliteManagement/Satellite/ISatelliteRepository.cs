@@ -89,5 +89,11 @@
         /// <param name="satelliteIds">The IDs of the satellites to reactivate.</param>
         /// <returns>A collection of updated <see cref="Satellite"/> instances after the transition.</returns>
         IReadOnlyCollection<Satellite> Reactivate(IEnumerable<Guid> satelliteIds);
+
+        /// <summary>
+        /// Creates a new instance of a <see cref="Satellite"/> object.
+        /// </summary>
+        /// <returns>A new <see cref="Satellite"/> instance.</returns>
+        Satellite CreateNew();
     }
 }

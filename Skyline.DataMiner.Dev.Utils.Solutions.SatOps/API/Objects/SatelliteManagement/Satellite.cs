@@ -33,7 +33,7 @@
         /// <summary>
         /// Creates a new <see cref="Satellite"/> backed by a new <see cref="DomModel.SatellitesInstance"/>.
         /// </summary>
-        internal static Satellite CreateNew()
+        internal static Satellite CreateNewSatellite()
         {
             var instance = new DomModel.SatellitesInstance();
             return new Satellite(instance, instance.Clone());
