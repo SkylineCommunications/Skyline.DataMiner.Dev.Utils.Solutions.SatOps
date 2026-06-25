@@ -11,7 +11,7 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TrasponderPlanRow;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Helpers;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.DOM.Helpers;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
     /// <summary>

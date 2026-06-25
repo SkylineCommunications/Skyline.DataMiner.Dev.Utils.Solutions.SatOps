@@ -1,5 +1,5 @@
 ﻿using Skyline.DataMiner.Net;
-namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Helpers
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.DOM.Helpers
 {
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
 

@@ -2,7 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
 
     public interface ISatelliteRepository : IRepository<Satellite>
     {
@@ -91,9 +91,9 @@
         IReadOnlyCollection<Satellite> Reactivate(IEnumerable<Guid> satelliteIds);
 
         /// <summary>
-        /// Creates a new instance of a <see cref="Satellite"/> object.
+        /// Initializes a new instance of a <see cref="Satellite"/> object.
         /// </summary>
         /// <returns>A new <see cref="Satellite"/> instance.</returns>
-        Satellite CreateNew();
+        Satellite Initialize();
     }
 }

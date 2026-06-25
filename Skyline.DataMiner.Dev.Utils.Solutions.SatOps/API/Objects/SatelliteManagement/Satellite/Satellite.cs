@@ -1,8 +1,9 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite
 {
     using System;
     using Skyline.DataMiner.SDM.SatOps.Common.API;
-    using DomModel = Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
+    using DomModel = DOM.Model;
 
     /// <summary>
     /// Represents a satellite in the SatOps API.
