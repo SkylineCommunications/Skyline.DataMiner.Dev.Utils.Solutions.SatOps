@@ -110,6 +110,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             inner.Delete(oToDelete);
         }
 
+        public Satellite Read(Guid id)
+        {
+            return inner.Read(id);
+        }
+
+        public IEnumerable<Satellite> Read(IEnumerable<Guid> ids)
+        {
+            return inner.Read(ids);
+        }
+
         public IEnumerable<Satellite> Read()
         {
             return inner.Read();
@@ -183,16 +193,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
 
             return inner.ReadPaged(query, pageSize);
-        }
-
-        public Satellite Read(Guid id)
-        {
-            return inner.Read(id);
-        }
-
-        public IEnumerable<Satellite> Read(IEnumerable<Guid> ids)
-        {
-            return inner.Read(ids);
         }
 
         public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)

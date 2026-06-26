@@ -9,7 +9,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
-    internal sealed class BeamValidationMiddleware : IMiddlewareMarker<Beam>, ICreatableMiddleware<Beam>, IBulkCreatableMiddleware<Beam>, IUpdatableMiddleware<Beam>, IBulkUpdatableMiddleware<Beam>, IBulkRepositoryMiddleware<Beam>
+    internal sealed class BeamValidationMiddleware : IBulkRepositoryMiddleware<Beam>
     {
         private readonly Func<Guid, Satellite> satelliteResolver;
 

@@ -8,7 +8,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
     using SLDataGateway.API.Types.Querying;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
-    internal sealed class SatelliteValidationMiddleware : IMiddlewareMarker<Satellite>, ICreatableMiddleware<Satellite>, IBulkCreatableMiddleware<Satellite>, IUpdatableMiddleware<Satellite>, IBulkUpdatableMiddleware<Satellite>, IBulkRepositoryMiddleware<Satellite>
+    internal sealed class SatelliteValidationMiddleware : IBulkRepositoryMiddleware<Satellite>
     {
         public Satellite OnCreate(Satellite oToCreate, Func<Satellite, Satellite> next)
         {
