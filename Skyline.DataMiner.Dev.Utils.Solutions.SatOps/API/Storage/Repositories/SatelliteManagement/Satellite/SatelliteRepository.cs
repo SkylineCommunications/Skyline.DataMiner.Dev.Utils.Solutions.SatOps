@@ -7,7 +7,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -15,14 +14,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
     internal class SatelliteRepository : Repository, ISatelliteRepository
     {
-        private readonly RepositorySavePipeline<Satellite> savePipeline;
 
         public SatelliteRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
-            savePipeline = new RepositorySavePipeline<Satellite>(new IBulkRepositoryMiddleware<Satellite>[]
-            {
-                new SatelliteMandatoryFieldsMiddleware(),
-            });
         }
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
@@ -59,7 +53,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingSatellite);
 
-            return savePipeline.ExecuteCreate(oToCreate, CreateInternal);
+            return CreateInternal(oToCreate);
         }
 
         public IReadOnlyCollection<Satellite> CreateOrUpdate(IEnumerable<Satellite> oToCreateOrUpdate)
@@ -67,21 +61,18 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (oToCreateOrUpdate == null)
                 throw new ArgumentNullException(nameof(oToCreateOrUpdate));
 
-            return savePipeline.ExecuteCreateOrUpdate(oToCreateOrUpdate, items =>
+            var results = new List<Satellite>();
+            foreach (var satellite in oToCreateOrUpdate)
             {
-                var results = new List<Satellite>();
-                foreach (var satellite in items)
-                {
-                    if (satellite == null)
-                        throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToCreateOrUpdate));
+                if (satellite == null)
+                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToCreateOrUpdate));
 
-                    var existing = Read(satellite.Id);
-                    var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite);
-                    results.Add(result);
-                }
+                var existing = Read(satellite.Id);
+                var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite);
+                results.Add(result);
+            }
 
-                return results;
-            });
+            return results;
         }
 
         public void Delete(Guid apiObjectId)
@@ -177,7 +168,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingSatellite);
 
-            return savePipeline.ExecuteUpdate(oToUpdate, UpdateInternal);
+            return UpdateInternal(oToUpdate);
         }
 
         public Satellite Activate(Guid id)

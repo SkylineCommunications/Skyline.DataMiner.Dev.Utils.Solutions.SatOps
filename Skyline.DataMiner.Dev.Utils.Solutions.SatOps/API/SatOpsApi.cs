@@ -5,6 +5,7 @@
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.Registration;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
@@ -41,8 +42,16 @@
 
             SlcSatelliteManagementHelper = new SlcSatelliteManagementHelper(connection);
 
-            lazySatelliteRepository = new Lazy<ISatelliteRepository>(() => new SatelliteRepository(this));
-            lazyBeamRepository = new Lazy<IBeamRepository>(() => new BeamRepository(this));
+            lazySatelliteRepository = new Lazy<ISatelliteRepository>
+                (
+                    () => new SatelliteRepository(this)
+                              .WithMiddleware(new SatelliteValidationMiddleware())
+                );
+            lazyBeamRepository = new Lazy<IBeamRepository>
+                (
+                    () => new BeamRepository(this)
+                              .WithMiddleware(new BeamValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
+                );
             lazyTransponderRepository = new Lazy<ITransponderRepository>(() => new TransponderRepository(this));
             lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>(() => new TransponderPlanRepository(this));
             lazyTransponderPlanRowRepository = new Lazy<ITransponderPlanRowRepository>(() => new TransponderPlanRowRepository(this));
