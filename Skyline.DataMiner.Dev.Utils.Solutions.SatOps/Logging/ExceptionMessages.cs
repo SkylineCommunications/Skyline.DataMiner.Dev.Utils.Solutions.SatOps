@@ -14,6 +14,10 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
         public const string CannotUpdateNonExistingSatellite = "Cannot update a satellite that does not exist.";
         public const string SatelliteWithIdWasNotFound = "Satellite with id '{0}' was not found.";
 
+        public const string CannotCreateExistingTransponder = "Cannot create an existing transponder.";
+        public const string CannotUpdateNonExistingTransponder = "Cannot update a transponder that does not exist.";
+        public const string TransponderWithIdWasNotFound = "Transponder with id '{0}' was not found.";
+
         public const string SatelliteNameIsRequired = "SatelliteName is required.";
         public const string SatelliteAbbreviationIsRequired = "SatelliteAbbreviation is required.";
         public const string BeamSatelliteIsRequired = "BeamSatellite is required.";

@@ -52,7 +52,11 @@
                     () => new BeamRepository(this)
                               .WithMiddleware(new BeamValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
                 );
-            lazyTransponderRepository = new Lazy<ITransponderRepository>(() => new TransponderRepository(this));
+            lazyTransponderRepository = new Lazy<ITransponderRepository>
+                (
+                    () => new TransponderRepository(this)
+                              .WithMiddleware(new TransponderValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
+                );
             lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>(() => new TransponderPlanRepository(this));
             lazyTransponderPlanRowRepository = new Lazy<ITransponderPlanRowRepository>(() => new TransponderPlanRowRepository(this));
             lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>(() => new TransponderSlotRepository(this));

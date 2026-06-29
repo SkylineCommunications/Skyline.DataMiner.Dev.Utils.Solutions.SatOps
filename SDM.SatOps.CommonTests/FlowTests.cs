@@ -56,6 +56,76 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.AreEqual("beam", argumentException.ParamName);
         }
 
+        [TestMethod]
+        public void TransponderValidationFlow_WhenNameMissing_ThrowsArgumentException()
+        {
+            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderValidationMiddleware", throwOnError: true);
+
+            var transponder = CreateApiObject(
+                transponderType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "Transponder.TransponderName", null);
+                    SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
+                    SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
+                    SetNestedProperty(dom, "Transponder.DownlinkStartFreq", (double?)4.0);
+                    SetNestedProperty(dom, "Transponder.DownlinkEndFreq", (double?)5.0);
+                    SetNestedProperty(dom, "Transponder.HardEndDate", (DateTime?)DateTime.UtcNow.AddDays(1));
+                    SetNestedProperty(dom, "Transponder.DOMResource", (Guid?)Guid.NewGuid());
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), satelliteType);
+            var resolver = BuildNullResolverDelegate(satelliteType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderType, typeof(Func<,>).MakeGenericType(transponderType, transponderType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponder, BuildIdentityDelegate(transponderType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponder", argumentException.ParamName);
+        }
+
+        [TestMethod]
+        public void TransponderValidationFlow_WhenSatelliteDoesNotExist_ThrowsArgumentException()
+        {
+            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderValidationMiddleware", throwOnError: true);
+
+            var transponder = CreateApiObject(
+                transponderType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "Transponder.TransponderName", "TP-1");
+                    SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
+                    SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
+                    SetNestedProperty(dom, "Transponder.DownlinkStartFreq", (double?)4.0);
+                    SetNestedProperty(dom, "Transponder.DownlinkEndFreq", (double?)5.0);
+                    SetNestedProperty(dom, "Transponder.HardEndDate", (DateTime?)DateTime.UtcNow.AddDays(1));
+                    SetNestedProperty(dom, "Transponder.DOMResource", (Guid?)Guid.NewGuid());
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), satelliteType);
+            var resolver = BuildNullResolverDelegate(satelliteType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderType, typeof(Func<,>).MakeGenericType(transponderType, transponderType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponder, BuildIdentityDelegate(transponderType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponder", argumentException.ParamName);
+        }
+
         private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);

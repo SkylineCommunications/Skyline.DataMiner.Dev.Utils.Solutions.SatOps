@@ -1,12 +1,102 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder
 {
-    public interface ITransponderRepository
+    using System;
+    using System.Collections.Generic;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+
+    /// <summary>
+    /// Represents a repository for managing <see cref="Transponder"/> entities.
+    /// </summary>
+    public interface ITransponderRepository : IRepository<Transponder>
     {
+        /// <summary>
+        /// Initializes a new <see cref="Transponder"/> instance.
+        /// </summary>
+        /// <returns>A new <see cref="Transponder"/> instance.</returns>
+        Transponder Initialize();
+
+        /// <summary>
+        /// Activates a transponder by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the transponder to activate.</param>
+        /// <returns>The activated <see cref="Transponder"/>.</returns>
+        Transponder Activate(Guid id);
+
+        /// <summary>
+        /// Activates the specified transponder.
+        /// </summary>
+        /// <param name="transponder">The transponder to activate.</param>
+        /// <returns>The activated <see cref="Transponder"/>.</returns>
+        Transponder Activate(Transponder transponder);
+
+        /// <summary>
+        /// Activates multiple transponders.
+        /// </summary>
+        /// <param name="transponders">The collection of transponders to activate.</param>
+        /// <returns>A read-only collection of activated transponders.</returns>
+        IReadOnlyCollection<Transponder> Activate(IEnumerable<Transponder> transponders);
+
+        /// <summary>
+        /// Activates multiple transponders by their unique identifiers.
+        /// </summary>
+        /// <param name="transponderIds">The collection of transponder identifiers to activate.</param>
+        /// <returns>A read-only collection of activated transponders.</returns>
+        IReadOnlyCollection<Transponder> Activate(IEnumerable<Guid> transponderIds);
+
+        /// <summary>
+        /// Deprecates a transponder by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the transponder to deprecate.</param>
+        /// <returns>The deprecated <see cref="Transponder"/>.</returns>
+        Transponder Deprecate(Guid id);
+
+        /// <summary>
+        /// Deprecates the specified transponder.
+        /// </summary>
+        /// <param name="transponder">The transponder to deprecate.</param>
+        /// <returns>The deprecated <see cref="Transponder"/>.</returns>
+        Transponder Deprecate(Transponder transponder);
+
+        /// <summary>
+        /// Deprecates multiple transponders.
+        /// </summary>
+        /// <param name="transponders">The collection of transponders to deprecate.</param>
+        /// <returns>A read-only collection of deprecated transponders.</returns>
+        IReadOnlyCollection<Transponder> Deprecate(IEnumerable<Transponder> transponders);
+
+        /// <summary>
+        /// Deprecates multiple transponders by their unique identifiers.
+        /// </summary>
+        /// <param name="transponderIds">The collection of transponder identifiers to deprecate.</param>
+        /// <returns>A read-only collection of deprecated transponders.</returns>
+        IReadOnlyCollection<Transponder> Deprecate(IEnumerable<Guid> transponderIds);
+
+        /// <summary>
+        /// Reactivates a transponder by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the transponder to reactivate.</param>
+        /// <returns>The reactivated <see cref="Transponder"/>.</returns>
+        Transponder Reactivate(Guid id);
+
+        /// <summary>
+        /// Reactivates the specified transponder.
+        /// </summary>
+        /// <param name="transponder">The transponder to reactivate.</param>
+        /// <returns>The reactivated <see cref="Transponder"/>.</returns>
+        Transponder Reactivate(Transponder transponder);
+
+        /// <summary>
+        /// Reactivates multiple transponders.
+        /// </summary>
+        /// <param name="transponders">The collection of transponders to reactivate.</param>
+        /// <returns>A read-only collection of reactivated transponders.</returns>
+        IReadOnlyCollection<Transponder> Reactivate(IEnumerable<Transponder> transponders);
+
+        /// <summary>
+        /// Reactivates multiple transponders by their unique identifiers.
+        /// </summary>
+        /// <param name="transponderIds">The collection of transponder identifiers to reactivate.</param>
+        /// <returns>A read-only collection of reactivated transponders.</returns>
+        IReadOnlyCollection<Transponder> Reactivate(IEnumerable<Guid> transponderIds);
     }
 }
