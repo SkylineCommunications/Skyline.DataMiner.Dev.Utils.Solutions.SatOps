@@ -38,17 +38,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IReadOnlyCollection<Beam> Create(IEnumerable<Beam> oToCreate)
         {
-            if (oToCreate == null)
-                throw new ArgumentNullException(nameof(oToCreate));
-
             return oToCreate.Select(Create).ToList();
         }
 
         public Beam Create(Beam oToCreate)
         {
-            if (oToCreate == null)
-                throw new ArgumentNullException(nameof(oToCreate));
-
             if (Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingBeam);
 
@@ -57,15 +51,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IReadOnlyCollection<Beam> CreateOrUpdate(IEnumerable<Beam> oToCreateOrUpdate)
         {
-            if (oToCreateOrUpdate == null)
-                throw new ArgumentNullException(nameof(oToCreateOrUpdate));
-
             var results = new List<Beam>();
             foreach (var beam in oToCreateOrUpdate)
             {
-                if (beam == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToCreateOrUpdate));
-
                 var existing = Read(beam.Id);
                 var result = existing == null ? CreateInternal(beam) : UpdateInternal(beam);
                 results.Add(result);
@@ -100,23 +88,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public void Delete(IEnumerable<Beam> oToDelete)
         {
-            if (oToDelete == null)
-                throw new ArgumentNullException(nameof(oToDelete));
-
             foreach (var beam in oToDelete)
             {
-                if (beam == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
-
                 Delete(beam);
             }
         }
 
         public void Delete(Beam oToDelete)
         {
-            if (oToDelete == null)
-                throw new ArgumentNullException(nameof(oToDelete));
-
             oToDelete.ToOriginalInstance().Delete(DomHelper);
         }
 
@@ -161,9 +140,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public Beam Update(Beam oToUpdate)
         {
-            if (oToUpdate == null)
-                throw new ArgumentNullException(nameof(oToUpdate));
-
             if (Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingBeam);
 
@@ -172,15 +148,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IReadOnlyCollection<Beam> Update(IEnumerable<Beam> oToUpdate)
         {
-            if (oToUpdate == null)
-                throw new ArgumentNullException(nameof(oToUpdate));
-
-            foreach (var beam in oToUpdate)
-            {
-                if (beam == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToUpdate));
-            }
-
             return oToUpdate.Select(Update).ToList();
         }
 

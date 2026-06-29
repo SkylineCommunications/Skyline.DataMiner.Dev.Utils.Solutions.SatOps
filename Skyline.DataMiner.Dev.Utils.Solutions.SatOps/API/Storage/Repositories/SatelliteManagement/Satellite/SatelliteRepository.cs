@@ -39,17 +39,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IReadOnlyCollection<Satellite> Create(IEnumerable<Satellite> oToCreate)
         {
-            if (oToCreate == null)
-                throw new ArgumentNullException(nameof(oToCreate));
-
             return oToCreate.Select(Create).ToList();
         }
 
         public Satellite Create(Satellite oToCreate)
         {
-            if (oToCreate == null)
-                throw new ArgumentNullException(nameof(oToCreate));
-
             if (Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingSatellite);
 
@@ -58,15 +52,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public IReadOnlyCollection<Satellite> CreateOrUpdate(IEnumerable<Satellite> oToCreateOrUpdate)
         {
-            if (oToCreateOrUpdate == null)
-                throw new ArgumentNullException(nameof(oToCreateOrUpdate));
-
             var results = new List<Satellite>();
             foreach (var satellite in oToCreateOrUpdate)
             {
-                if (satellite == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToCreateOrUpdate));
-
                 var existing = Read(satellite.Id);
                 var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite);
                 results.Add(result);
@@ -101,23 +89,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public void Delete(IEnumerable<Satellite> oToDelete)
         {
-            if (oToDelete == null)
-                throw new ArgumentNullException(nameof(oToDelete));
-
             foreach (var satellite in oToDelete)
             {
-                if (satellite == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
-
                 Delete(satellite);
             }
         }
 
         public void Delete(Satellite oToDelete)
         {
-            if (oToDelete == null)
-                throw new ArgumentNullException(nameof(oToDelete));
-
             oToDelete.ToOriginalInstance().Delete(DomHelper);
         }
 
@@ -162,9 +141,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public Satellite Update(Satellite oToUpdate)
         {
-            if (oToUpdate == null)
-                throw new ArgumentNullException(nameof(oToUpdate));
-
             if (Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingSatellite);
 
@@ -329,15 +305,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         #region Not Implemented Methods
         public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)
         {
-            if (oToUpdate == null)
-                throw new ArgumentNullException(nameof(oToUpdate));
-
-            foreach (var satellite in oToUpdate)
-            {
-                if (satellite == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToUpdate));
-            }
-
             return oToUpdate.Select(Update).ToList();
         }
 

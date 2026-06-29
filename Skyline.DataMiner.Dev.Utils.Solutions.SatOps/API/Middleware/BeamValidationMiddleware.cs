@@ -102,11 +102,28 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
 
         public void OnDelete(IEnumerable<Beam> oToDelete, Action<IEnumerable<Beam>> next)
         {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            foreach (var beam in oToDelete)
+            {
+                ValidateBeam(beam);
+            }
+
             next(oToDelete);
         }
 
         public void OnDelete(Beam oToDelete, Action<Beam> next)
         {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
             next(oToDelete);
         }
 
