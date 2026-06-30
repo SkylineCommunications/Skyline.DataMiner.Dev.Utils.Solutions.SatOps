@@ -163,31 +163,31 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponder));
 
             if (string.IsNullOrWhiteSpace(transponder.Name))
-                throw new ArgumentException("TransponderName is required.", nameof(transponder));
+                throw new ArgumentException("Transponder Name is required.", nameof(transponder));
 
             if (!transponder.TransponderSatellite.HasValue || transponder.TransponderSatellite.Value == Guid.Empty)
-                throw new ArgumentException("TransponderSatellite is required.", nameof(transponder));
+                throw new ArgumentException("Transponder Satellite is required.", nameof(transponder));
 
             if (!transponder.Bandwidth.HasValue)
                 throw new ArgumentException("Bandwidth is required.", nameof(transponder));
 
             if (!transponder.StartFrequency.HasValue)
-                throw new ArgumentException("StartFrequency is required.", nameof(transponder));
+                throw new ArgumentException("Start  Frequency is required.", nameof(transponder));
 
             if (!transponder.StopFrequency.HasValue)
                 throw new ArgumentException("StopFrequency is required.", nameof(transponder));
 
             if (!transponder.DownlinkStartFreq.HasValue)
-                throw new ArgumentException("DownlinkStartFreq is required.", nameof(transponder));
+                throw new ArgumentException("Downlink Start Frequency is required.", nameof(transponder));
 
             if (!transponder.DownlinkEndFreq.HasValue)
-                throw new ArgumentException("DownlinkEndFreq is required.", nameof(transponder));
+                throw new ArgumentException("Downlink End Frequency is required.", nameof(transponder));
 
             if (!transponder.HardEndDate.HasValue)
-                throw new ArgumentException("HardEndDate is required.", nameof(transponder));
+                throw new ArgumentException("Hard End Date is required.", nameof(transponder));
 
             if (!transponder.DOMResource.HasValue || transponder.DOMResource.Value == Guid.Empty)
-                throw new ArgumentException("DOMResource is required.", nameof(transponder));
+                throw new ArgumentException("Resource DOM is required.", nameof(transponder));
 
             var satelliteId = transponder.TransponderSatellite.Value;
             if (satelliteResolver(satelliteId) == null)
