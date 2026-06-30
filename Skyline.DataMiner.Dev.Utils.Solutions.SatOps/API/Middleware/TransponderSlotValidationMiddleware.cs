@@ -166,22 +166,22 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                 throw new ArgumentException("TransponderPlan is required.", nameof(transponderSlot));
 
             if (string.IsNullOrWhiteSpace(transponderSlot.SlotName))
-                throw new ArgumentException("SlotName is required.", nameof(transponderSlot));
+                throw new ArgumentException("Slot Name is required.", nameof(transponderSlot));
 
             if (!transponderSlot.SlotStartFrequency.HasValue)
-                throw new ArgumentException("SlotStartFrequency is required.", nameof(transponderSlot));
+                throw new ArgumentException("Slot Start Frequency is required.", nameof(transponderSlot));
 
             if (!transponderSlot.SlotEndFrequency.HasValue)
-                throw new ArgumentException("SlotEndFrequency is required.", nameof(transponderSlot));
+                throw new ArgumentException("Slot End Frequency is required.", nameof(transponderSlot));
 
             if (!transponderSlot.Bandwidth.HasValue)
                 throw new ArgumentException("Bandwidth is required.", nameof(transponderSlot));
 
             if (!transponderSlot.UplinkFreq.HasValue)
-                throw new ArgumentException("UplinkFreq is required.", nameof(transponderSlot));
+                throw new ArgumentException("Uplink Frequency is required.", nameof(transponderSlot));
 
             if (!transponderSlot.DownlinkFreq.HasValue)
-                throw new ArgumentException("DownlinkFreq is required.", nameof(transponderSlot));
+                throw new ArgumentException("Downlink Frequency is required.", nameof(transponderSlot));
 
             var transponderPlanId = transponderSlot.TransponderPlan.Value;
             if (transponderPlanResolver(transponderPlanId) == null)

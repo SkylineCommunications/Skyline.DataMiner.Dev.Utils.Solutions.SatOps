@@ -163,13 +163,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlanRow));
 
             if (!transponderPlanRow.TransponderPlan.HasValue || transponderPlanRow.TransponderPlan.Value == Guid.Empty)
-                throw new ArgumentException("TransponderPlan is required.", nameof(transponderPlanRow));
+                throw new ArgumentException("Transponder Plan is required.", nameof(transponderPlanRow));
 
             if (!transponderPlanRow.Bandwidth.HasValue)
                 throw new ArgumentException("Bandwidth is required.", nameof(transponderPlanRow));
 
             if (!transponderPlanRow.StepSize.HasValue)
-                throw new ArgumentException("StepSize is required.", nameof(transponderPlanRow));
+                throw new ArgumentException("Step Size is required.", nameof(transponderPlanRow));
 
             if (!transponderPlanRow.Offset.HasValue)
                 throw new ArgumentException("Offset is required.", nameof(transponderPlanRow));
