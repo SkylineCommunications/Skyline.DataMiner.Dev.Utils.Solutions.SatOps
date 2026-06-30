@@ -62,8 +62,16 @@
                     () => new TransponderPlanRepository(this)
                               .WithMiddleware(new TransponderPlanValidationMiddleware(transponderId => Transponders.Read(transponderId)))
                 );
-            lazyTransponderPlanRowRepository = new Lazy<ITransponderPlanRowRepository>(() => new TransponderPlanRowRepository(this));
-            lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>(() => new TransponderSlotRepository(this));
+            lazyTransponderPlanRowRepository = new Lazy<ITransponderPlanRowRepository>
+                (
+                    () => new TransponderPlanRowRepository(this)
+                              .WithMiddleware(new TransponderPlanRowValidationMiddleware(transponderPlanId => TransponderPlans.Read(transponderPlanId)))
+                );
+            lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>
+                (
+                    () => new TransponderSlotRepository(this)
+                              .WithMiddleware(new TransponderSlotValidationMiddleware(transponderPlanId => TransponderPlans.Read(transponderPlanId)))
+                );
         }
 
         /// <summary>

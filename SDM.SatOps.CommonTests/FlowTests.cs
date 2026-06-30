@@ -184,6 +184,132 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.AreEqual("transponderPlan", argumentException.ParamName);
         }
 
+        [TestMethod]
+        public void TransponderPlanRowValidationFlow_WhenTransponderPlanMissing_ThrowsArgumentException()
+        {
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
+
+            var transponderPlanRow = CreateApiObject(
+                transponderPlanRowType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", null);
+                    SetNestedProperty(dom, "TransponderPlanRow.Bandwidth", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderPlanRow.StepSize", (double?)0.1);
+                    SetNestedProperty(dom, "TransponderPlanRow.Offset", (double?)0.0);
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
+            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponderPlanRow", argumentException.ParamName);
+        }
+
+        [TestMethod]
+        public void TransponderPlanRowValidationFlow_WhenTransponderPlanDoesNotExist_ThrowsArgumentException()
+        {
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
+
+            var transponderPlanRow = CreateApiObject(
+                transponderPlanRowType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "TransponderPlanRow.Bandwidth", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderPlanRow.StepSize", (double?)0.1);
+                    SetNestedProperty(dom, "TransponderPlanRow.Offset", (double?)0.0);
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
+            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponderPlanRow", argumentException.ParamName);
+        }
+
+        [TestMethod]
+        public void TransponderSlotValidationFlow_WhenSlotNameMissing_ThrowsArgumentException()
+        {
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderSlotType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderSlotValidationMiddleware", throwOnError: true);
+
+            var transponderSlot = CreateApiObject(
+                transponderSlotType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "TransponderSlot.SlotName", null);
+                    SetNestedProperty(dom, "TransponderSlot.SlotStartFrequency", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.SlotEndFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "TransponderSlot.Bandwidth", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.UplinkFreq", (double?)14.0);
+                    SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
+            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderSlotType, typeof(Func<,>).MakeGenericType(transponderSlotType, transponderSlotType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponderSlot, BuildIdentityDelegate(transponderSlotType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponderSlot", argumentException.ParamName);
+        }
+
+        [TestMethod]
+        public void TransponderSlotValidationFlow_WhenTransponderPlanDoesNotExist_ThrowsArgumentException()
+        {
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderSlotType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderSlotValidationMiddleware", throwOnError: true);
+
+            var transponderSlot = CreateApiObject(
+                transponderSlotType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "TransponderSlot.SlotName", "Slot-1");
+                    SetNestedProperty(dom, "TransponderSlot.SlotStartFrequency", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.SlotEndFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "TransponderSlot.Bandwidth", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.UplinkFreq", (double?)14.0);
+                    SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
+            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderSlotType, typeof(Func<,>).MakeGenericType(transponderSlotType, transponderSlotType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponderSlot, BuildIdentityDelegate(transponderSlotType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponderSlot", argumentException.ParamName);
+        }
+
         private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);
