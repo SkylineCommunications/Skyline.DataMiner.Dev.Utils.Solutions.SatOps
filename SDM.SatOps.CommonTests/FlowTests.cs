@@ -126,6 +126,64 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.AreEqual("transponder", argumentException.ParamName);
         }
 
+        [TestMethod]
+        public void TransponderPlanValidationFlow_WhenNameMissing_ThrowsArgumentException()
+        {
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+
+            var transponderPlan = CreateApiObject(
+                transponderPlanType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", null);
+                    SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
+            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponderPlan", argumentException.ParamName);
+        }
+
+        [TestMethod]
+        public void TransponderPlanValidationFlow_WhenTransponderDoesNotExist_ThrowsArgumentException()
+        {
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+
+            var transponderPlan = CreateApiObject(
+                transponderPlanType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
+            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponderPlan", argumentException.ParamName);
+        }
+
         private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);
