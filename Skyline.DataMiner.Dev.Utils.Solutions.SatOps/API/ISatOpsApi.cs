@@ -1,13 +1,13 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API
 {
     using Skyline.DataMiner.Net;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TrasponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Beam;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderPlanRow;
 
     /// <summary>
     /// Defines the main API interface for SatOps operations.

@@ -1,11 +1,11 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderPlan
 {
-    using System;
-    using System.Collections.Generic;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Generic;
 
     internal sealed class TransponderPlanRepositoryMiddleware : ITransponderPlanRepository
     {

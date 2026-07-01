@@ -1,8 +1,9 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderPlan
 {
     using System;
     using System.Collections.Generic;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
 
     /// <summary>
     /// Represents a repository for managing <see cref="TransponderPlan"/> entities.

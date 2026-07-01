@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Beam
 {
     using System;
     using System.Collections.Generic;

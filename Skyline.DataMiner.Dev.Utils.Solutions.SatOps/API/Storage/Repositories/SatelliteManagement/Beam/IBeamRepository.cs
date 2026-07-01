@@ -1,8 +1,9 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Beam
 {
     using System;
     using System.Collections.Generic;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
 
     /// <summary>
     /// Represents a repository for managing <see cref="Beam"/> entities.

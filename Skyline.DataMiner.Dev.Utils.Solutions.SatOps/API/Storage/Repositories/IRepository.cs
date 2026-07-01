@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Represents a repository for managing API objects of type <typeparamref name="T"/>.
     /// This interface provides methods for counting, reading, creating, updating, and deleting API objects in the repository.

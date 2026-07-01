@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Satellite
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     internal class SatelliteRepository : Repository, ISatelliteRepository
     {

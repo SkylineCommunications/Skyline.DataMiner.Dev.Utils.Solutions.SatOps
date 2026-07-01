@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderSlot
 {
     using System;
     using System.Collections.Generic;
@@ -6,6 +6,7 @@
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;

@@ -1,19 +1,19 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API
 {
-    using System;
-    using System.Linq;
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.Registration;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Middleware;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TrasponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.DOM.Helpers;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Beam;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using System;
+    using System.Linq;
 
     /// <summary>
     /// Provides access to the SatOps (Satellite Operations) API and its repositories.

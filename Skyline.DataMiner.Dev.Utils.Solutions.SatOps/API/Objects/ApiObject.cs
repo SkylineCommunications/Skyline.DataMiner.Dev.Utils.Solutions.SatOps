@@ -1,6 +1,6 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement
 {
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using System;
 
     public abstract class ApiObject : IIdentifiable

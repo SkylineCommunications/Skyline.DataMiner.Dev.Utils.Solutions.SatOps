@@ -1,8 +1,9 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories.SatelliteManagement.Satellite
 {
     using System;
     using System.Collections.Generic;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
 
     public interface ISatelliteRepository : IRepository<Satellite>
     {
