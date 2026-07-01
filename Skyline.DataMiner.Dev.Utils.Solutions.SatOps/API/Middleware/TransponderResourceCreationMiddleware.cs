@@ -60,10 +60,14 @@
             return next(transponders);
         }
 
-
         private void CreateResource(Transponder transponder)
         {
-            var satelliteName = _satelliteResolver(transponder.TransponderSatellite.Value).Name;
+            if (!transponder.TransponderSatellite.HasValue)
+                throw new ArgumentException($"Transponder satellite ID is not set for '{transponder.Name}'.", nameof(transponder));
+
+            var satellite = _satelliteResolver(transponder.TransponderSatellite.Value) ?? 
+                throw new ArgumentException($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.", nameof(transponder));
+            var satelliteName = satellite.Name;
 
             Guid transponderCapabilityId;
             try
@@ -110,10 +114,10 @@
             if (!transponder.DOMResource.HasValue)
                 return;
 
-            var resource = _mediaOpsPlanApi.Resources.Read(transponder.DOMResource.Value);
-
             try
             {
+                var resource = _mediaOpsPlanApi.Resources.Read(transponder.DOMResource.Value);
+
                 if (resource == null)
                 {
                     _logger?.Error($"Resource not found for transponder '{transponder.Name}' (Id: {transponder.Id}).");
@@ -128,7 +132,20 @@
                     changed = true;
                 }
 
-                var satelliteName = _satelliteResolver(transponder.TransponderSatellite.Value).Name;
+                if (!transponder.TransponderSatellite.HasValue)
+                {
+                    _logger?.Error($"Transponder satellite ID is not set for '{transponder.Name}'.");
+                    return;
+                }
+
+                var satellite = _satelliteResolver(transponder.TransponderSatellite.Value);
+                if (satellite == null)
+                {
+                    _logger?.Error($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.");
+                    return;
+                }
+
+                var satelliteName = satellite.Name;
                 var transponderCapabilityId = CreateOrGetTransponderCapability(satelliteName);
                 var transponderCapacityId = CreateOrGetTransponderCapacity();
 
@@ -166,7 +183,7 @@
             }
             catch (Exception e)
             {
-                _logger?.Error($"Failed to update resource for transponder '{transponder.Name}' (Resource ID: {transponder.DOMResource}).", e);
+                _logger?.Error($"Failed to update resource for transponder '{transponder.Name}' (Resource ID: {transponder.DOMResource.Value}).", e);
             }
         }
 
