@@ -56,6 +56,7 @@
                 (
                     () => new TransponderRepository(this)
                               .WithMiddleware(new TransponderValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
+                              .WithMiddleware(new TransponderResourceCreationMiddleware(connection, satelliteId => Satellites.Read(satelliteId), Logger))
                 );
             lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>
                 (
