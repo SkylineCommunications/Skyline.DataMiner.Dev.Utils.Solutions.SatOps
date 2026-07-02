@@ -33,13 +33,13 @@ if (api.IsInstalled())
 
 ### Architecture
 
+The `SDM.SatOps.GQI` and `SDM.SatOps.Automation` packages are thin DevPacks that build on top of the core library rather than talking to DOM directly: automation scripts consume `SDM.SatOps.Automation`, while low-code apps/dashboards consume `SDM.SatOps.GQI` as a data source. `SDM.SatOps.CommonTests` provides MSTest coverage for the core library.
+
+![SatOps package layout](../docs/architecture.svg)
+
 Every repository is built as a small pipeline: the public interface (e.g. `IBeamRepository`) is implemented by a repository-specific **decorator middleware** (e.g. `BeamRepositoryMiddleware`), which optionally forwards the call to a **validation middleware** (e.g. `BeamValidationMiddleware`) before reaching the actual **repository** (e.g. `BeamRepository`) that talks to DataMiner DOM instances through `DomHelper`. This keeps validation/business rules decoupled from persistence, and lets new cross-cutting behavior be added without touching the storage code.
 
 The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
-
-The `SDM.SatOps.GQI` and `SDM.SatOps.Automation` packages are thin DevPacks that build on top of this core library rather than talking to DOM directly.
-
-![SatOps architecture overview](../docs/architecture.svg)
 
 <!-- Uncomment below and add more info to provide more information about how to use this package. -->
 <!-- ## Getting Started -->
