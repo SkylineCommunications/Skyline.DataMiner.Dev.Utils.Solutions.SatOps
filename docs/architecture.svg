@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 620" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2b6cb0"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd6b20"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="620" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="590" y="36" text-anchor="middle" font-size="22" font-weight="700" fill="#1a202c">SatOps DevPack &#8211; Package Layout</text>
+
+  <!-- Consumers -->
+  <rect x="60" y="80" width="270" height="60" rx="8" fill="#2d3748"/>
+  <text x="195" y="106" text-anchor="middle" font-size="13.5" fill="#ffffff" font-weight="600">Automation script</text>
+  <text x="195" y="126" text-anchor="middle" font-size="10.5" fill="#cbd5e0">(DataMiner automation)</text>
+
+  <rect x="460" y="80" width="270" height="60" rx="8" fill="#2d3748"/>
+  <text x="595" y="106" text-anchor="middle" font-size="13.5" fill="#ffffff" font-weight="600">Low-code app / dashboard</text>
+  <text x="595" y="126" text-anchor="middle" font-size="10.5" fill="#cbd5e0">(via GQI data source)</text>
+
+  <!-- Automation DevPack -->
+  <rect x="60" y="210" width="270" height="65" rx="8" fill="#ebf8ff" stroke="#2b6cb0" stroke-width="1.5"/>
+  <text x="195" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#1a365d">SDM.SatOps.Automation</text>
+  <text x="195" y="258" text-anchor="middle" font-size="11" fill="#2c5282">Automation script DevPack</text>
+
+  <!-- GQI DevPack -->
+  <rect x="460" y="210" width="270" height="65" rx="8" fill="#ebf8ff" stroke="#2b6cb0" stroke-width="1.5"/>
+  <text x="595" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#1a365d">SDM.SatOps.GQI</text>
+  <text x="595" y="258" text-anchor="middle" font-size="11" fill="#2c5282">GQI data source DevPack</text>
+
+  <!-- Placeholder / future -->
+  <rect x="870" y="210" width="250" height="65" rx="8" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="995" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#4a5568">Other consumers</text>
+  <text x="995" y="258" text-anchor="middle" font-size="11" fill="#718096">(future DevPacks)</text>
+
+  <!-- consumer -> devpack arrows (dedicated, not shared) -->
+  <line x1="195" y1="140" x2="195" y2="207" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="595" y1="140" x2="595" y2="207" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Common lib -->
+  <rect x="280" y="340" width="440" height="70" rx="8" fill="#2b6cb0"/>
+  <text x="500" y="370" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">Skyline.DataMiner.Dev.Utils.Solutions.SatOps</text>
+  <text x="500" y="392" text-anchor="middle" font-size="11" fill="#ebf8ff">(SDM.SatOps.Common) &#8211; core API library, entry point: SatOpsApi</text>
+
+  <!-- devpack -> common arrows -->
+  <line x1="195" y1="275" x2="440" y2="338" stroke="#2b6cb0" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="595" y1="275" x2="560" y2="338" stroke="#2b6cb0" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="995" y1="275" x2="740" y2="338" stroke="#a0aec0" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- Common tests, docked directly beneath/against the Common lib it verifies -->
+  <rect x="340" y="450" width="320" height="70" rx="8" fill="#fffaf0" stroke="#dd6b20" stroke-width="1.5"/>
+  <!-- simple flask/test-tube icon -->
+  <g transform="translate(360, 468)">
+    <path d="M10 2 h10 v3 l7 14 a4 4 0 0 1 -3.6 5.7 h-16.8 a4 4 0 0 1 -3.6 -5.7 l7 -14 z"
+          fill="#fed7aa" stroke="#dd6b20" stroke-width="1.4"/>
+    <line x1="8" y1="2" x2="22" y2="2" stroke="#dd6b20" stroke-width="1.6"/>
+    <line x1="9" y1="16" x2="21" y2="16" stroke="#dd6b20" stroke-width="1.2"/>
+    <circle cx="15" cy="20" r="1.4" fill="#dd6b20"/>
+    <circle cx="19" cy="22" r="1" fill="#dd6b20"/>
+  </g>
+  <text x="470" y="480" text-anchor="middle" font-size="13" font-weight="700" fill="#7b341e">SDM.SatOps.CommonTests</text>
+  <text x="470" y="500" text-anchor="middle" font-size="11" fill="#9c4221">MSTest unit tests for SatOps.Common</text>
+
+  <line x1="500" y1="410" x2="500" y2="447" stroke="#dd6b20" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowOrange)"/>
+  <text x="510" y="432" font-size="10.5" fill="#9c4221">tests</text>
+</svg>

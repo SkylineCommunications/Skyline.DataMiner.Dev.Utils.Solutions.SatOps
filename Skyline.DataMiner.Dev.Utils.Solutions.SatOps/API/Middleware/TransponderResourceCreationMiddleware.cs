@@ -62,10 +62,19 @@
 
         private void CreateResource(Transponder transponder)
         {
-            if (!transponder.TransponderSatellite.HasValue)
-                throw new ArgumentException($"Transponder satellite ID is not set for '{transponder.Name}'.", nameof(transponder));
+            if (transponder == null)
+                throw new ArgumentNullException(nameof(transponder));
 
-            var satellite = _satelliteResolver(transponder.TransponderSatellite.Value) ?? 
+            if (string.IsNullOrWhiteSpace(transponder.Name))
+                throw new ArgumentException("Transponder name is required.", nameof(transponder));
+
+            if (!transponder.Bandwidth.HasValue)
+                throw new ArgumentException("Bandwidth is required.", nameof(transponder));
+
+            if (!transponder.TransponderSatellite.HasValue || transponder.TransponderSatellite.Value == Guid.Empty)
+                throw new ArgumentException("Transponder satellite ID is required.", nameof(transponder));
+
+            var satellite = _satelliteResolver(transponder.TransponderSatellite.Value) ??
                 throw new ArgumentException($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.", nameof(transponder));
             var satelliteName = satellite.Name;
 
