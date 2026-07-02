@@ -173,7 +173,7 @@
 
             if (connection.IsShuttingDown)
             {
-                throw new InvalidOperationException("The the provided connection is shutting down.");
+                throw new InvalidOperationException("The provided connection is shutting down.");
             }
         }
     }
