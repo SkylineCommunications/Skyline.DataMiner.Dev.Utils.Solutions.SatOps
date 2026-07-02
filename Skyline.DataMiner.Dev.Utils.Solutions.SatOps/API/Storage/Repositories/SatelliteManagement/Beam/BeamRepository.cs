@@ -283,57 +283,98 @@
             return beamIds.Select(Reactivate).ToList();
         }
 
-        #region Not Implemented Methods
         public long Count(FilterElement<Beam> filter)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return Read(filter).LongCount();
         }
 
         public long Count(IQuery<Beam> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query).LongCount();
         }
 
         public IEnumerable<Beam> Read(FilterElement<Beam> filter)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return Read();
         }
 
         public IEnumerable<Beam> Read(IQuery<Beam> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query.Filter);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged()
         {
-            throw new NotImplementedException();
+            return ReadPaged(new TRUEFilterElement<Beam>());
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(int pageSize)
         {
-            throw new NotImplementedException();
+            return ReadPaged(new TRUEFilterElement<Beam>(), pageSize);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(FilterElement<Beam> filter)
         {
-            throw new NotImplementedException();
+            return ReadPaged(filter, 100);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(IQuery<Beam> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return ReadPaged(query.Filter);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(FilterElement<Beam> filter, int pageSize)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return CreatePagedResults(Read(filter), pageSize);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(IQuery<Beam> query, int pageSize)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return CreatePagedResults(Read(query.Filter), pageSize);
         }
-        #endregion
+
+        private static IEnumerable<IPagedResult<Beam>> CreatePagedResults(IEnumerable<Beam> items, int pageSize)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            if (pageSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+            var list = items.ToList();
+            if (list.Count == 0)
+                return Enumerable.Empty<IPagedResult<Beam>>();
+
+            var totalPages = (list.Count + pageSize - 1) / pageSize;
+            var pages = new List<IPagedResult<Beam>>(totalPages);
+            for (var page = 0; page < totalPages; page++)
+            {
+                pages.Add(PagedResult<Beam>.Create(list, pageSize, page));
+            }
+
+            return pages;
+        }
 
         private Beam DoTransition(Guid id, string transitionId)
         {

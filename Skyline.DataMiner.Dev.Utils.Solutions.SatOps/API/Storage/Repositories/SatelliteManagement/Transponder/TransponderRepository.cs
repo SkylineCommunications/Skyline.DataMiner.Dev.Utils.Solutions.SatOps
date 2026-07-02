@@ -283,57 +283,98 @@
             return transponderIds.Select(Reactivate).ToList();
         }
 
-        #region Not Implemented Methods
         public long Count(FilterElement<Transponder> filter)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return Read(filter).LongCount();
         }
 
         public long Count(IQuery<Transponder> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query).LongCount();
         }
 
         public IEnumerable<Transponder> Read(FilterElement<Transponder> filter)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return Read();
         }
 
         public IEnumerable<Transponder> Read(IQuery<Transponder> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query.Filter);
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged()
         {
-            throw new NotImplementedException();
+            return ReadPaged(new TRUEFilterElement<Transponder>());
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged(int pageSize)
         {
-            throw new NotImplementedException();
+            return ReadPaged(new TRUEFilterElement<Transponder>(), pageSize);
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged(FilterElement<Transponder> filter)
         {
-            throw new NotImplementedException();
+            return ReadPaged(filter, 100);
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged(IQuery<Transponder> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return ReadPaged(query.Filter);
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged(FilterElement<Transponder> filter, int pageSize)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return CreatePagedResults(Read(filter), pageSize);
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged(IQuery<Transponder> query, int pageSize)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return CreatePagedResults(Read(query.Filter), pageSize);
         }
-        #endregion
+
+        private static IEnumerable<IPagedResult<Transponder>> CreatePagedResults(IEnumerable<Transponder> items, int pageSize)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            if (pageSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+            var list = items.ToList();
+            if (list.Count == 0)
+                return Enumerable.Empty<IPagedResult<Transponder>>();
+
+            var totalPages = (list.Count + pageSize - 1) / pageSize;
+            var pages = new List<IPagedResult<Transponder>>(totalPages);
+            for (var page = 0; page < totalPages; page++)
+            {
+                pages.Add(PagedResult<Transponder>.Create(list, pageSize, page));
+            }
+
+            return pages;
+        }
 
         private Transponder DoTransition(Guid id, string transitionId)
         {

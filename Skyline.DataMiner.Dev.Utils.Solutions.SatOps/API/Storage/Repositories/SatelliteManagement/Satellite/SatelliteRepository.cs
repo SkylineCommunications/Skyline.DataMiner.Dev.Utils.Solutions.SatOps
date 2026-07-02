@@ -302,7 +302,6 @@
             return Satellite.FromInstance(new SatellitesInstance(updatedDomInstance));
         }
 
-        #region Not Implemented Methods
         public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)
         {
             return oToUpdate.Select(Update).ToList();
@@ -310,54 +309,96 @@
 
         public long Count(FilterElement<Satellite> filter)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return Read(filter).LongCount();
         }
 
         public long Count(IQuery<Satellite> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query).LongCount();
         }
 
         public IEnumerable<Satellite> Read(FilterElement<Satellite> filter)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return Read();
         }
 
         public IEnumerable<Satellite> Read(IQuery<Satellite> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query.Filter);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged()
         {
-            throw new NotImplementedException();
+            return ReadPaged(new TRUEFilterElement<Satellite>());
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(int pageSize)
         {
-            throw new NotImplementedException();
+            return ReadPaged(new TRUEFilterElement<Satellite>(), pageSize);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(FilterElement<Satellite> filter)
         {
-            throw new NotImplementedException();
+            return ReadPaged(filter, 100);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(IQuery<Satellite> query)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return ReadPaged(query.Filter);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(FilterElement<Satellite> filter, int pageSize)
         {
-            throw new NotImplementedException();
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            return CreatePagedResults(Read(filter), pageSize);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(IQuery<Satellite> query, int pageSize)
         {
-            throw new NotImplementedException();
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return CreatePagedResults(Read(query.Filter), pageSize);
         }
-        #endregion
+
+        private static IEnumerable<IPagedResult<Satellite>> CreatePagedResults(IEnumerable<Satellite> items, int pageSize)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            if (pageSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+            var list = items.ToList();
+            if (list.Count == 0)
+                return Enumerable.Empty<IPagedResult<Satellite>>();
+
+            var totalPages = (list.Count + pageSize - 1) / pageSize;
+            var pages = new List<IPagedResult<Satellite>>(totalPages);
+            for (var page = 0; page < totalPages; page++)
+            {
+                pages.Add(PagedResult<Satellite>.Create(list, pageSize, page));
+            }
+
+            return pages;
+        }
     }
 }
 
