@@ -165,7 +165,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
             if (!transponderSlot.TransponderPlan.HasValue || transponderSlot.TransponderPlan.Value == Guid.Empty)
                 throw new ArgumentException("TransponderPlan is required.", nameof(transponderSlot));
 
-            if (string.IsNullOrWhiteSpace(transponderSlot.SlotName))
+            if (string.IsNullOrWhiteSpace(transponderSlot.Name))
                 throw new ArgumentException("Slot Name is required.", nameof(transponderSlot));
 
             if (!transponderSlot.SlotStartFrequency.HasValue)

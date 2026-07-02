@@ -1,13 +1,13 @@
 namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot
 {
     using System;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
+    using Skyline.DataMiner.SDM.SatOps.Common.API;
     using DomModel = DOM.Model;
 
     /// <summary>
     /// Represents a transponder slot in the SatOps API.
     /// </summary>
-    public class TransponderSlot : ApiObject
+    public class TransponderSlot : ApiNamedObject
     {
         private readonly DomModel.TransponderSlotsInstance originalInstance;
         private readonly DomModel.TransponderSlotsInstance updatedInstance;
@@ -51,7 +51,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// <summary>
         /// Gets or sets the slot name.
         /// </summary>
-        public string SlotName
+        public override string Name
         {
             get => originalInstance.TransponderSlot?.SlotName;
             set => updatedInstance.TransponderSlot.SlotName = value;

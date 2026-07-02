@@ -40,4 +40,12 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="API\Querying\TransponderSlot\" />
+	  <Folder Include="API\Querying\TransponderPlanRow\" />
+	  <Folder Include="API\Querying\TransponderPlan\" />
+	  <Folder Include="API\Querying\Transponder\" />
+	  <Folder Include="API\Querying\Satellite\" />
+	</ItemGroup>
 </Project>

@@ -1,6 +1,5 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API
 {
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
     using System;
 
     /// <summary>

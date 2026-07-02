@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement
+﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API
 {
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using System;
