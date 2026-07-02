@@ -12,9 +12,9 @@
 
         private protected ApiObject(Guid id)
         {
-            if(id == Guid.Empty)
+            if (id == Guid.Empty)
             {
-                throw new ArgumentException(nameof(id));
+                throw new ArgumentException("The value cannot be an empty GUID.", nameof(id));
             }
 
             Id = id;
