@@ -2,7 +2,7 @@
 
 ## About
 
-DevPack for the SatOps Solution
+DevPack solution for SatOps (Satellite Operations), providing a core API library plus GQI and Automation DevPacks built on top of it.
 
 ### About DataMiner
 
@@ -19,27 +19,23 @@ A unique catalog of 7000+ connectors already exists. In addition, you can levera
 
 At Skyline Communications, we deal in world-class solutions that are deployed by leading companies around the globe. Check out [our proven track record](https://aka.dataminer.services/about-skyline) and see how we make our customers' lives easier by empowering them to take their operations to the next level.
 
-## Getting Started
+## Solution layout
 
-`SatOpsApi` is the single entry point of this library. Give it a DataMiner `IConnection` and it exposes one repository per satellite-operations entity (`Satellites`, `Beams`, `Transponders`, `TransponderPlans`, `TransponderPlanRows`, `TransponderSlots`), each created lazily on first use:
+| Project | Description |
+|---|---|
+| [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps/README.md) (`SDM.SatOps.Common`) | Core API library, entry point `SatOpsApi` |
+| [`SDM.SatOps.GQI`](SDM.SatOps.GQI/README.md) | GQI data source DevPack, built on top of the core library |
+| [`SDM.SatOps.Automation`](SDM.SatOps.Automation/README.md) | Automation script DevPack, built on top of the core library |
+| `SDM.SatOps.CommonTests` | MSTest unit tests for the core library |
 
-```csharp
-var api = new SatOpsApi(connection);
-if (api.IsInstalled())
-{
-    var satellites = api.Satellites.Read();
-}
-```
+## Architecture
 
-### Architecture
+`SatOpsApi` is the single entry point of the core library. Given a DataMiner `IConnection`, it exposes one repository per satellite-operations entity (`Satellites`, `Beams`, `Transponders`, `TransponderPlans`, `TransponderPlanRows`, `TransponderSlots`), each created lazily on first use.
 
 The `SDM.SatOps.GQI` and `SDM.SatOps.Automation` packages are thin DevPacks that build on top of the core library rather than talking to DOM directly: automation scripts consume `SDM.SatOps.Automation`, while low-code apps/dashboards consume `SDM.SatOps.GQI` as a data source. `SDM.SatOps.CommonTests` provides MSTest coverage for the core library.
 
-![SatOps package layout](../docs/architecture.svg)
+![SatOps package layout](docs/architecture.svg)
 
 Every repository is built as a small pipeline: the public interface (e.g. `IBeamRepository`) is implemented by a repository-specific **decorator middleware** (e.g. `BeamRepositoryMiddleware`), which optionally forwards the call to a **validation middleware** (e.g. `BeamValidationMiddleware`) before reaching the actual **repository** (e.g. `BeamRepository`) that talks to DataMiner DOM instances through `DomHelper`. This keeps validation/business rules decoupled from persistence, and lets new cross-cutting behavior be added without touching the storage code.
 
 The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
-
-<!-- Uncomment below and add more info to provide more information about how to use this package. -->
-<!-- ## Getting Started -->
