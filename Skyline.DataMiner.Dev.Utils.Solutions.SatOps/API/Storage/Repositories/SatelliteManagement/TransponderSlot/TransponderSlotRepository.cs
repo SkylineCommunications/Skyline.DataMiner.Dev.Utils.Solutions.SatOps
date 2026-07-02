@@ -87,14 +87,23 @@
 
         public void Delete(IEnumerable<TransponderSlot> oToDelete)
         {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
             foreach (var transponderSlot in oToDelete)
             {
+                if (transponderSlot == null)
+                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
+
                 Delete(transponderSlot);
             }
         }
 
         public void Delete(TransponderSlot oToDelete)
         {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
             oToDelete.ToOriginalInstance().Delete(DomHelper);
         }
 

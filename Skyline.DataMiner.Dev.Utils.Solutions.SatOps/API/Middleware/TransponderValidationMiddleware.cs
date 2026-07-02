@@ -110,7 +110,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
 
             foreach (var transponder in oToDelete)
             {
-                ValidateTransponder(transponder);
+                if (transponder == null)
+                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
             }
 
             next(oToDelete);
