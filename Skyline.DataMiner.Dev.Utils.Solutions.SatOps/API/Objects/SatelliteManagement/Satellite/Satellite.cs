@@ -43,7 +43,7 @@
         /// <summary>
         /// Gets the current lifecycle status of the satellite.
         /// </summary>
-        public InstanceStatus SatelliteStatus
+        public InstanceStatus Status
         {
             get
             {
