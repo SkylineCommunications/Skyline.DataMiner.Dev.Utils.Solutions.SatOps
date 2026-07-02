@@ -19,5 +19,27 @@ A unique catalog of 7000+ connectors already exists. In addition, you can levera
 
 At Skyline Communications, we deal in world-class solutions that are deployed by leading companies around the globe. Check out [our proven track record](https://aka.dataminer.services/about-skyline) and see how we make our customers' lives easier by empowering them to take their operations to the next level.
 
+## Getting Started
+
+`SatOpsApi` is the single entry point of this library. Give it a DataMiner `IConnection` and it exposes one repository per satellite-operations entity (`Satellites`, `Beams`, `Transponders`, `TransponderPlans`, `TransponderPlanRows`, `TransponderSlots`), each created lazily on first use:
+
+```csharp
+var api = new SatOpsApi(connection);
+if (api.IsInstalled())
+{
+    var satellites = api.Satellites.Read();
+}
+```
+
+### Architecture
+
+Every repository is built as a small pipeline: the public interface (e.g. `IBeamRepository`) is implemented by a repository-specific **decorator middleware** (e.g. `BeamRepositoryMiddleware`), which optionally forwards the call to a **validation middleware** (e.g. `BeamValidationMiddleware`) before reaching the actual **repository** (e.g. `BeamRepository`) that talks to DataMiner DOM instances through `DomHelper`. This keeps validation/business rules decoupled from persistence, and lets new cross-cutting behavior be added without touching the storage code.
+
+The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
+
+The `SDM.SatOps.GQI` and `SDM.SatOps.Automation` packages are thin DevPacks that build on top of this core library rather than talking to DOM directly.
+
+![SatOps architecture overview](../docs/architecture.svg)
+
 <!-- Uncomment below and add more info to provide more information about how to use this package. -->
 <!-- ## Getting Started -->
