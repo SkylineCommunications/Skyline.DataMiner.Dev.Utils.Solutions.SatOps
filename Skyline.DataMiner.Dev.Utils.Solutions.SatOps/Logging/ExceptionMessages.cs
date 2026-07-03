@@ -32,5 +32,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
         public const string SatelliteAbbreviationIsRequired = "SatelliteAbbreviation is required.";
         public const string BeamSatelliteIsRequired = "BeamSatellite is required.";
         public const string BeamSatelliteDoesNotExist = "Beam satellite with id '{0}' does not exist.";
+
+        public const string PageSizeNumberException = "Page size must be greater than zero.";
     }
 }

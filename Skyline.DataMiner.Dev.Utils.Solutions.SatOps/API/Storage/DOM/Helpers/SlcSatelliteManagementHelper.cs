@@ -15,6 +15,8 @@
     using System;
     using System.Collections.Generic;
 
+    using ExceptionMessages = Logging.ExceptionMessages;
+
     internal class SlcSatelliteManagementHelper : DomModuleHelperBase
     {
         public SlcSatelliteManagementHelper(IConnection connection) : base(SlcSatellite_ManagementIds.ModuleId, connection)
@@ -130,7 +132,7 @@
 
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
             }
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
@@ -146,7 +148,7 @@
 
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
             }
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
@@ -162,7 +164,7 @@
 
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
             }
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
@@ -178,7 +180,7 @@
 
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
             }
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
@@ -194,7 +196,7 @@
 
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
             }
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
@@ -210,7 +212,7 @@
 
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
             }
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
