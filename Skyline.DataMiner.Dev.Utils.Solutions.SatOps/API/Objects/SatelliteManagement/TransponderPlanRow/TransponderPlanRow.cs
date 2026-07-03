@@ -1,6 +1,8 @@
 namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Skyline.DataMiner.SDM.SatOps.Common.API;
     using DomModel = DOM.Model;
 
@@ -93,5 +95,23 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// Returns the original instance used by the repository for reference comparison.
         /// </summary>
         internal DomModel.TransponderPlanRowsInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<TransponderPlanRow> InstantiateTransponderPlanRows(IEnumerable<DomModel.TransponderPlanRowsInstance> instances)
+        {
+            if (instances == null)
+                throw new ArgumentNullException(nameof(instances));
+            if (!instances.Any())
+                return Enumerable.Empty<TransponderPlanRow>();
+
+            return InstantiateTransponderPlanRowsIterator(instances);
+        }
+
+        private static IEnumerable<TransponderPlanRow> InstantiateTransponderPlanRowsIterator(IEnumerable<DomModel.TransponderPlanRowsInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new TransponderPlanRow(instance, instance.Clone());
+            }
+        }
     }
 }

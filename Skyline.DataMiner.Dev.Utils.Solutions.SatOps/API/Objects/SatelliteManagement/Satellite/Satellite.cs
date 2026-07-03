@@ -1,6 +1,8 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Skyline.DataMiner.SDM.SatOps.Common.API;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
     using DomModel = DOM.Model;
@@ -248,6 +250,24 @@
         /// Returns the original instance used by the repository for reference comparison.
         /// </summary>
         internal DomModel.SatellitesInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<Satellite> InstantiateSatellites(IEnumerable<DomModel.SatellitesInstance> instances)
+        {
+            if (instances == null)
+                throw new ArgumentNullException(nameof(instances));
+            if (!instances.Any())
+                return Enumerable.Empty<Satellite>();
+
+            return InstantiateSatellitesIterator(instances);
+        }
+
+        private static IEnumerable<Satellite> InstantiateSatellitesIterator(IEnumerable<DomModel.SatellitesInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new Satellite(instance, instance.Clone());
+            }
+        }
     }
 }
 

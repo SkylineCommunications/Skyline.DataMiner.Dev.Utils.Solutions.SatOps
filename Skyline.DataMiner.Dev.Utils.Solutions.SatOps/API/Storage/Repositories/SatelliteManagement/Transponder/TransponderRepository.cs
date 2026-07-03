@@ -4,6 +4,7 @@
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -17,6 +18,8 @@
         public TransponderRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
         }
+
+        private readonly TransponderFilterTranslator filterTranslator = new TransponderFilterTranslator();
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
 
@@ -285,10 +288,13 @@
 
         public long Count(FilterElement<Transponder> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return 0;
+            }
 
-            return Read(filter).LongCount();
+            var domFilter = filterTranslator.Translate(filter);
+            return SatOpsApi.SlcSatelliteManagementHelper.CountSatelliteManagementInstances(domFilter);
         }
 
         public long Count(IQuery<Transponder> query)
@@ -296,15 +302,18 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query).LongCount();
+            return Count(query.Filter);
         }
 
         public IEnumerable<Transponder> Read(FilterElement<Transponder> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<Transponder>();
+            }
 
-            return Read();
+            var domFilter = filterTranslator.Translate(filter);
+            return Transponder.InstantiateTransponders(SatOpsApi.SlcSatelliteManagementHelper.GetTransponders(domFilter));
         }
 
         public IEnumerable<Transponder> Read(IQuery<Transponder> query)
@@ -343,7 +352,7 @@
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return CreatePagedResults(Read(filter), pageSize);
+            return ReadPagedIterator(filter, pageSize);
         }
 
         public IEnumerable<IPagedResult<Transponder>> ReadPaged(IQuery<Transponder> query, int pageSize)
@@ -351,29 +360,24 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return CreatePagedResults(Read(query.Filter), pageSize);
+            return ReadPaged(query.Filter, pageSize);
         }
 
-        private static IEnumerable<IPagedResult<Transponder>> CreatePagedResults(IEnumerable<Transponder> items, int pageSize)
+        private IEnumerable<IPagedResult<Transponder>> ReadPagedIterator(FilterElement<Transponder> filter, int pageSize)
         {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
+            var pageNumber = 0;
+            var domFilter = filterTranslator.Translate(filter);
+            var items = SatOpsApi.SlcSatelliteManagementHelper.GetTranspondersPaged(domFilter, pageSize);
 
-            if (pageSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            var enumerator = items.GetEnumerator();
+            var hasNext = enumerator.MoveNext();
 
-            var list = items.ToList();
-            if (list.Count == 0)
-                return Enumerable.Empty<IPagedResult<Transponder>>();
-
-            var totalPages = (list.Count + pageSize - 1) / pageSize;
-            var pages = new List<IPagedResult<Transponder>>(totalPages);
-            for (var page = 0; page < totalPages; page++)
+            while (hasNext)
             {
-                pages.Add(PagedResult<Transponder>.Create(list, pageSize, page));
+                var page = enumerator.Current;
+                hasNext = enumerator.MoveNext();
+                yield return new PagedResult<Transponder>(Transponder.InstantiateTransponders(page), pageNumber++, pageSize, hasNext);
             }
-
-            return pages;
         }
 
         private Transponder DoTransition(Guid id, string transitionId)

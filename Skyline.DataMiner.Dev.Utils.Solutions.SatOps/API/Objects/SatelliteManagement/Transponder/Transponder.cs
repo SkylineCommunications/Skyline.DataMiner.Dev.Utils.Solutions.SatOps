@@ -1,6 +1,8 @@
 namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Skyline.DataMiner.SDM.SatOps.Common.API;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
     using DomModel = DOM.Model;
@@ -330,5 +332,23 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// Returns the original instance used by the repository for reference comparison.
         /// </summary>
         internal DomModel.TranspondersInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<Transponder> InstantiateTransponders(IEnumerable<DomModel.TranspondersInstance> instances)
+        {
+            if (instances == null)
+                throw new ArgumentNullException(nameof(instances));
+            if (!instances.Any())
+                return Enumerable.Empty<Transponder>();
+
+            return InstantiateTranspondersIterator(instances);
+        }
+
+        private static IEnumerable<Transponder> InstantiateTranspondersIterator(IEnumerable<DomModel.TranspondersInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new Transponder(instance, instance.Clone());
+            }
+        }
     }
 }

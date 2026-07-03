@@ -4,6 +4,7 @@
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -17,6 +18,8 @@
         public TransponderPlanRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
         }
+
+        private readonly TransponderPlanFilterTranslator filterTranslator = new TransponderPlanFilterTranslator();
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
 
@@ -285,10 +288,13 @@
 
         public long Count(FilterElement<TransponderPlan> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return 0;
+            }
 
-            return Read(filter).LongCount();
+            var domFilter = filterTranslator.Translate(filter);
+            return SatOpsApi.SlcSatelliteManagementHelper.CountSatelliteManagementInstances(domFilter);
         }
 
         public long Count(IQuery<TransponderPlan> query)
@@ -296,15 +302,18 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query).LongCount();
+            return Count(query.Filter);
         }
 
         public IEnumerable<TransponderPlan> Read(FilterElement<TransponderPlan> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<TransponderPlan>();
+            }
 
-            return Read();
+            var domFilter = filterTranslator.Translate(filter);
+            return TransponderPlan.InstantiateTransponderPlans(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlans(domFilter));
         }
 
         public IEnumerable<TransponderPlan> Read(IQuery<TransponderPlan> query)
@@ -332,7 +341,10 @@
 
         public IEnumerable<IPagedResult<TransponderPlan>> ReadPaged(IQuery<TransponderPlan> query)
         {
-            return ReadPaged(query.Filter, 100);
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return ReadPaged(query.Filter);
         }
 
         public IEnumerable<IPagedResult<TransponderPlan>> ReadPaged(FilterElement<TransponderPlan> filter, int pageSize)
@@ -340,7 +352,7 @@
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return CreatePagedResults(Read(filter), pageSize);
+            return ReadPagedIterator(filter, pageSize);
         }
 
         public IEnumerable<IPagedResult<TransponderPlan>> ReadPaged(IQuery<TransponderPlan> query, int pageSize)
@@ -348,29 +360,24 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return CreatePagedResults(Read(query.Filter), pageSize);
+            return ReadPaged(query.Filter, pageSize);
         }
 
-        private static IEnumerable<IPagedResult<TransponderPlan>> CreatePagedResults(IEnumerable<TransponderPlan> items, int pageSize)
+        private IEnumerable<IPagedResult<TransponderPlan>> ReadPagedIterator(FilterElement<TransponderPlan> filter, int pageSize)
         {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
+            var pageNumber = 0;
+            var domFilter = filterTranslator.Translate(filter);
+            var items = SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlansPaged(domFilter, pageSize);
 
-            if (pageSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            var enumerator = items.GetEnumerator();
+            var hasNext = enumerator.MoveNext();
 
-            var list = items.ToList();
-            if (list.Count == 0)
-                return Enumerable.Empty<IPagedResult<TransponderPlan>>();
-
-            var totalPages = (list.Count + pageSize - 1) / pageSize;
-            var pages = new List<IPagedResult<TransponderPlan>>(totalPages);
-            for (var page = 0; page < totalPages; page++)
+            while (hasNext)
             {
-                pages.Add(PagedResult<TransponderPlan>.Create(list, pageSize, page));
+                var page = enumerator.Current;
+                hasNext = enumerator.MoveNext();
+                yield return new PagedResult<TransponderPlan>(TransponderPlan.InstantiateTransponderPlans(page), pageNumber++, pageSize, hasNext);
             }
-
-            return pages;
         }
 
         private TransponderPlan DoTransition(Guid id, string transitionId)

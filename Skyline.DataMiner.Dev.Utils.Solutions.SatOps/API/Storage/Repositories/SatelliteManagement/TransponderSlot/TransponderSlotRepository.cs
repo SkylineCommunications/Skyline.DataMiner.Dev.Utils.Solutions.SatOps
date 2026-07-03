@@ -6,6 +6,7 @@
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -16,6 +17,8 @@
         public TransponderSlotRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
         }
+
+        private readonly TransponderSlotFilterTranslator filterTranslator = new TransponderSlotFilterTranslator();
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
 
@@ -161,10 +164,13 @@
 
         public long Count(FilterElement<TransponderSlot> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return 0;
+            }
 
-            return Read(filter).LongCount();
+            var domFilter = filterTranslator.Translate(filter);
+            return SatOpsApi.SlcSatelliteManagementHelper.CountSatelliteManagementInstances(domFilter);
         }
 
         public long Count(IQuery<TransponderSlot> query)
@@ -172,15 +178,18 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query).LongCount();
+            return Count(query.Filter);
         }
 
         public IEnumerable<TransponderSlot> Read(FilterElement<TransponderSlot> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<TransponderSlot>();
+            }
 
-            return Read();
+            var domFilter = filterTranslator.Translate(filter);
+            return TransponderSlot.InstantiateTransponderSlots(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderSlots(domFilter));
         }
 
         public IEnumerable<TransponderSlot> Read(IQuery<TransponderSlot> query)
@@ -208,6 +217,9 @@
 
         public IEnumerable<IPagedResult<TransponderSlot>> ReadPaged(IQuery<TransponderSlot> query)
         {
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
             return ReadPaged(query.Filter);
         }
 
@@ -216,7 +228,7 @@
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return CreatePagedResults(Read(filter), pageSize);
+            return ReadPagedIterator(filter, pageSize);
         }
 
         public IEnumerable<IPagedResult<TransponderSlot>> ReadPaged(IQuery<TransponderSlot> query, int pageSize)
@@ -224,29 +236,24 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return CreatePagedResults(Read(query.Filter), pageSize);
+            return ReadPaged(query.Filter, pageSize);
         }
 
-        private static IEnumerable<IPagedResult<TransponderSlot>> CreatePagedResults(IEnumerable<TransponderSlot> items, int pageSize)
+        private IEnumerable<IPagedResult<TransponderSlot>> ReadPagedIterator(FilterElement<TransponderSlot> filter, int pageSize)
         {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
+            var pageNumber = 0;
+            var domFilter = filterTranslator.Translate(filter);
+            var items = SatOpsApi.SlcSatelliteManagementHelper.GetTransponderSlotsPaged(domFilter, pageSize);
 
-            if (pageSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            var enumerator = items.GetEnumerator();
+            var hasNext = enumerator.MoveNext();
 
-            var list = items.ToList();
-            if (list.Count == 0)
-                return Enumerable.Empty<IPagedResult<TransponderSlot>>();
-
-            var totalPages = (list.Count + pageSize - 1) / pageSize;
-            var pages = new List<IPagedResult<TransponderSlot>>(totalPages);
-            for (var page = 0; page < totalPages; page++)
+            while (hasNext)
             {
-                pages.Add(PagedResult<TransponderSlot>.Create(list, pageSize, page));
+                var page = enumerator.Current;
+                hasNext = enumerator.MoveNext();
+                yield return new PagedResult<TransponderSlot>(TransponderSlot.InstantiateTransponderSlots(page), pageNumber++, pageSize, hasNext);
             }
-
-            return pages;
         }
 
         private TransponderSlot CreateInternal(TransponderSlot transponderSlot)

@@ -6,6 +6,7 @@
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -16,6 +17,8 @@
         public TransponderPlanRowRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
         }
+
+        private readonly TransponderPlanRowFilterTranslator filterTranslator = new TransponderPlanRowFilterTranslator();
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
 
@@ -152,10 +155,13 @@
 
         public long Count(FilterElement<TransponderPlanRow> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return 0;
+            }
 
-            return Read(filter).LongCount();
+            var domFilter = filterTranslator.Translate(filter);
+            return SatOpsApi.SlcSatelliteManagementHelper.CountSatelliteManagementInstances(domFilter);
         }
 
         public long Count(IQuery<TransponderPlanRow> query)
@@ -163,15 +169,18 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query).LongCount();
+            return Count(query.Filter);
         }
 
         public IEnumerable<TransponderPlanRow> Read(FilterElement<TransponderPlanRow> filter)
         {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<TransponderPlanRow>();
+            }
 
-            return Read();
+            var domFilter = filterTranslator.Translate(filter);
+            return TransponderPlanRow.InstantiateTransponderPlanRows(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlanRows(domFilter));
         }
 
         public IEnumerable<TransponderPlanRow> Read(IQuery<TransponderPlanRow> query)
@@ -210,7 +219,7 @@
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return CreatePagedResults(Read(filter), pageSize);
+            return ReadPagedIterator(filter, pageSize);
         }
 
         public IEnumerable<IPagedResult<TransponderPlanRow>> ReadPaged(IQuery<TransponderPlanRow> query, int pageSize)
@@ -218,29 +227,24 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return CreatePagedResults(Read(query.Filter), pageSize);
+            return ReadPaged(query.Filter, pageSize);
         }
 
-        private static IEnumerable<IPagedResult<TransponderPlanRow>> CreatePagedResults(IEnumerable<TransponderPlanRow> items, int pageSize)
+        private IEnumerable<IPagedResult<TransponderPlanRow>> ReadPagedIterator(FilterElement<TransponderPlanRow> filter, int pageSize)
         {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
+            var pageNumber = 0;
+            var domFilter = filterTranslator.Translate(filter);
+            var items = SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlanRowsPaged(domFilter, pageSize);
 
-            if (pageSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            var enumerator = items.GetEnumerator();
+            var hasNext = enumerator.MoveNext();
 
-            var list = items.ToList();
-            if (list.Count == 0)
-                return Enumerable.Empty<IPagedResult<TransponderPlanRow>>();
-
-            var totalPages = (list.Count + pageSize - 1) / pageSize;
-            var pages = new List<IPagedResult<TransponderPlanRow>>(totalPages);
-            for (var page = 0; page < totalPages; page++)
+            while (hasNext)
             {
-                pages.Add(PagedResult<TransponderPlanRow>.Create(list, pageSize, page));
+                var page = enumerator.Current;
+                hasNext = enumerator.MoveNext();
+                yield return new PagedResult<TransponderPlanRow>(TransponderPlanRow.InstantiateTransponderPlanRows(page), pageNumber++, pageSize, hasNext);
             }
-
-            return pages;
         }
 
         private TransponderPlanRow CreateInternal(TransponderPlanRow transponderPlanRow)
