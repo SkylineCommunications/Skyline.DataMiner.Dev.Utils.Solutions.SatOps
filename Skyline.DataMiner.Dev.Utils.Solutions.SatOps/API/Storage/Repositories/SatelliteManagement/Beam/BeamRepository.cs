@@ -4,6 +4,7 @@
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Beam;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Storage.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -17,6 +18,8 @@
         public BeamRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
         }
+
+        private readonly BeamFilterTranslator filterTranslator = new BeamFilterTranslator();
 
         private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
 
@@ -34,6 +37,25 @@
         {
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
                 .LongCount(IsBeamInstance);
+        }
+
+        public long Count(FilterElement<Beam> filter)
+        {
+            if (filter.isEmpty())
+            {
+                return 0;
+            }
+            
+            var domFilter = filterTranslator.Translate(filter);
+            return SatOpsApi.SlcSatelliteManagementHelper.CountSatelliteManagementInstances(domFilter);
+        }
+
+        public long Count(IQuery<Beam> query)
+        {
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Count(query.Filter);
         }
 
         public IReadOnlyCollection<Beam> Create(IEnumerable<Beam> oToCreate)
@@ -136,6 +158,25 @@
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
                 .Where(di => IsBeamInstance(di) && idSet.Contains(di.ID.Id))
                 .Select(di => Beam.FromInstance(new BeamsInstance(di)));
+        }
+
+        public IEnumerable<Beam> Read(FilterElement<Beam> filter)
+        {
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<Beam>();
+            }
+
+            var domFilter = filterTranslator.Translate(filter);
+            return Beam.InstantiateBeams(SatOpsApi.SlcSatelliteManagementHelper.GetBeams(domFilter));
+        }
+
+        public IEnumerable<Beam> Read(IQuery<Beam> query)
+        {
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            return Read(query.Filter);
         }
 
         public Beam Update(Beam oToUpdate)
@@ -283,38 +324,6 @@
             return beamIds.Select(Reactivate).ToList();
         }
 
-        public long Count(FilterElement<Beam> filter)
-        {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
-
-            return Read(filter).LongCount();
-        }
-
-        public long Count(IQuery<Beam> query)
-        {
-            if (query == null)
-                throw new ArgumentNullException(nameof(query));
-
-            return Read(query).LongCount();
-        }
-
-        public IEnumerable<Beam> Read(FilterElement<Beam> filter)
-        {
-            if (filter == null)
-                throw new ArgumentNullException(nameof(filter));
-
-            return Read();
-        }
-
-        public IEnumerable<Beam> Read(IQuery<Beam> query)
-        {
-            if (query == null)
-                throw new ArgumentNullException(nameof(query));
-
-            return Read(query.Filter);
-        }
-
         public IEnumerable<IPagedResult<Beam>> ReadPaged()
         {
             return ReadPaged(new TRUEFilterElement<Beam>());
@@ -343,7 +352,7 @@
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return CreatePagedResults(Read(filter), pageSize);
+            return ReadPagedIterator(filter, pageSize);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(IQuery<Beam> query, int pageSize)
@@ -351,29 +360,7 @@
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return CreatePagedResults(Read(query.Filter), pageSize);
-        }
-
-        private static IEnumerable<IPagedResult<Beam>> CreatePagedResults(IEnumerable<Beam> items, int pageSize)
-        {
-            if (items == null)
-                throw new ArgumentNullException(nameof(items));
-
-            if (pageSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(pageSize));
-
-            var list = items.ToList();
-            if (list.Count == 0)
-                return Enumerable.Empty<IPagedResult<Beam>>();
-
-            var totalPages = (list.Count + pageSize - 1) / pageSize;
-            var pages = new List<IPagedResult<Beam>>(totalPages);
-            for (var page = 0; page < totalPages; page++)
-            {
-                pages.Add(PagedResult<Beam>.Create(list, pageSize, page));
-            }
-
-            return pages;
+            return ReadPaged(query.Filter, pageSize);
         }
 
         private Beam DoTransition(Guid id, string transitionId)
@@ -399,6 +386,25 @@
             var updatedInstance = beam.ToUpdatedInstance();
             var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
             return Beam.FromInstance(new BeamsInstance(updatedDomInstance));
+        }
+
+        private IEnumerable<IPagedResult<Beam>> ReadPagedIterator(FilterElement<Beam> filter, int pageSize)
+        {
+            var pageNumber = 0;
+            var paramFilter = filterTranslator.Translate(filter);
+
+            var items = SatOpsApi.SlcSatelliteManagementHelper.GetBeamsPaged(paramFilter, pageSize);
+
+            var enumerator = items.GetEnumerator();
+            var hasNext = enumerator.MoveNext();
+
+            while (hasNext)
+            {
+                var page = enumerator.Current;
+                hasNext = enumerator.MoveNext();
+                yield return new PagedResult<Beam>(Beam.InstantiateBeams(page),pageNumber++,pageSize,hasNext);
+            }
+
         }
     }
 }

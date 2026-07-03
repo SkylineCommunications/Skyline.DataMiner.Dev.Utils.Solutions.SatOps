@@ -1,8 +1,11 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Skyline.DataMiner.SDM.SatOps.Common.API;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
+    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using DomModel = DOM.Model;
 
     /// <summary>
@@ -171,5 +174,23 @@
         /// Returns the original instance used by the repository for reference comparison.
         /// </summary>
         internal DomModel.BeamsInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<Beam> InstantiateBeams(IEnumerable<BeamsInstance> instances)
+        {
+            if(instances == null)
+                throw new ArgumentNullException(nameof(instances));
+            if(!instances.Any())
+                return Enumerable.Empty<Beam>();
+
+           return InstantiateBeamsIterator(instances);
+        }
+
+        private static IEnumerable<Beam> InstantiateBeamsIterator(IEnumerable<BeamsInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new Beam(instance, instance.Clone());
+            }
+        }
     }
 }
