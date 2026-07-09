@@ -28,9 +28,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
         public const string CannotCreateExistingTransponderSlot = "Cannot create an existing transponder slot.";
         public const string CannotUpdateNonExistingTransponderSlot = "Cannot update a transponder slot that does not exist.";
 
-        public const string SatelliteNameIsRequired = "SatelliteName is required.";
-        public const string SatelliteAbbreviationIsRequired = "SatelliteAbbreviation is required.";
-        public const string BeamSatelliteIsRequired = "BeamSatellite is required.";
+        public const string SatelliteNameIsRequired = "Satellite name is required.";
+        public const string SatelliteAbbreviationIsRequired = "Satellite abbreviation is required.";
+        public const string BeamSatelliteIsRequired = "Beam satellite is required.";
         public const string BeamSatelliteDoesNotExist = "Beam satellite with id '{0}' does not exist.";
 
         public const string PageSizeNumberException = "Page size must be greater than zero.";
