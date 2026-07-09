@@ -2,11 +2,14 @@
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Utils.DOM.Extensions;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -268,6 +271,145 @@
             var updatedInstance = transponderSlot.ToUpdatedInstance();
             var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
             return TransponderSlot.FromInstance(new TransponderSlotsInstance(updatedDomInstance));
+        }
+
+        public IReadOnlyCollection<TransponderSlot> GenerateSlots(Guid transponderPlanId)
+        {
+            if (transponderPlanId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
+
+            var plan = SatOpsApi.TransponderPlans.Read(transponderPlanId);
+            if (plan == null)
+                throw new ArgumentException(string.Format(ExceptionMessages.TransponderPlanWithIdWasNotFound, transponderPlanId), nameof(transponderPlanId));
+
+            if (!plan.Transponder.HasValue || plan.Transponder.Value == Guid.Empty)
+                throw new InvalidOperationException(string.Format(ExceptionMessages.TransponderPlanHasNoAssociatedTransponder, transponderPlanId));
+
+            var transponder = SatOpsApi.Transponders.Read(plan.Transponder.Value);
+            if (transponder == null)
+                throw new InvalidOperationException(string.Format(ExceptionMessages.TransponderForPlanWasNotFound, plan.Transponder.Value, transponderPlanId));
+
+            var planRows = SatOpsApi.TransponderPlanRows
+                .Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId))
+                .ToList();
+
+            DeleteByTransponderPlan(transponderPlanId);
+
+            double transponderBandwidth = transponder.Bandwidth.GetValueOrDefault();
+            double transponderStartFrequency = transponder.StartFrequency.GetValueOrDefault();
+            double transponderDownlinkStartFrequency = transponder.DownlinkStartFreq.GetValueOrDefault();
+
+            var createdSlots = new List<TransponderSlot>();
+            foreach (var row in planRows)
+            {
+                double offset = row.Offset.GetValueOrDefault();
+                double step = row.StepSize.GetValueOrDefault();
+                double bandwidth = row.Bandwidth.GetValueOrDefault();
+                double limit = row.Limit.GetValueOrDefault();
+
+                foreach (var calc in CalculateSlots(transponderBandwidth, transponderStartFrequency, transponderDownlinkStartFrequency, offset, step, bandwidth, limit))
+                {
+                    var slot = Initialize();
+                    slot.TransponderPlan = transponderPlanId;
+                    slot.Name = calc.SlotName;
+                    slot.SlotStartFrequency = calc.StartFrequency;
+                    slot.SlotEndFrequency = calc.StopFrequency;
+                    slot.Bandwidth = bandwidth;
+                    slot.UplinkFreq = calc.UplinkFrequency;
+                    slot.DownlinkFreq = calc.DownlinkFrequency;
+                    createdSlots.Add(CreateInternal(slot));
+                }
+            }
+
+            return createdSlots;
+        }
+
+        public IReadOnlyCollection<TransponderSlot> GenerateSlots(TransponderPlan transponderPlan)
+        {
+            if (transponderPlan == null)
+                throw new ArgumentNullException(nameof(transponderPlan));
+
+            return GenerateSlots(transponderPlan.Id);
+        }
+
+        public IEnumerable<TransponderSlot> ReadByTransponderPlan(Guid transponderPlanId)
+        {
+            if (transponderPlanId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
+
+            return Read(TransponderSlotExposers.TransponderPlan.Equal(transponderPlanId));
+        }
+
+        public void DeleteByTransponderPlan(Guid transponderPlanId)
+        {
+            if (transponderPlanId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
+
+            var domFilter = DomInstanceExposers.FieldValues
+                .DomInstanceField(SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan)
+                .Equal(transponderPlanId);
+            var existingInstances = DomHelper.DomInstances.Read(domFilter).ToList();
+            if (existingInstances.Count > 0)
+                DomHelper.DomInstances.DeleteInBatches(existingInstances);
+        }
+
+        private static IEnumerable<SlotCalculation> CalculateSlots(
+            double transponderBandwidth,
+            double transponderStartFrequency,
+            double transponderDownlinkStartFrequency,
+            double offset,
+            double step,
+            double bandwidth,
+            double limit)
+        {
+            if (bandwidth <= 0)
+                yield break;
+
+            int numberOfSlots = (int)Math.Round(transponderBandwidth / bandwidth, MidpointRounding.AwayFromZero);
+            for (int i = 0; i < numberOfSlots; i++)
+            {
+                double startFreq = Math.Round(offset + (i * step), FrequencyPrecision, MidpointRounding.AwayFromZero);
+                double stopFreq = Math.Round(startFreq + bandwidth, FrequencyPrecision, MidpointRounding.AwayFromZero);
+
+                if ((limit > 0 && stopFreq - limit > FrequencyComparisonTolerance) ||
+                    stopFreq - transponderBandwidth > FrequencyComparisonTolerance)
+                    yield break;
+
+                double midpoint = (startFreq + stopFreq) / 2;
+                yield return new SlotCalculation
+                {
+                    SlotName = $"{GetAlphabetLetter(i)}{bandwidth}",
+                    StartFrequency = startFreq,
+                    StopFrequency = stopFreq,
+                    UplinkFrequency = midpoint + transponderStartFrequency,
+                    DownlinkFrequency = midpoint + transponderDownlinkStartFrequency,
+                };
+            }
+        }
+
+        private static string GetAlphabetLetter(int index)
+        {
+            const int alphabetLength = 26;
+            if (index < alphabetLength)
+                return ((char)('A' + index)).ToString();
+
+            return $"{(char)('A' + (index / alphabetLength) - 1)}{(char)('A' + (index % alphabetLength))}";
+        }
+
+        private const int FrequencyPrecision = 12;
+        private const double FrequencyComparisonTolerance = 1e-12;
+
+        private sealed class SlotCalculation
+        {
+            public string SlotName { get; set; }
+
+            public double StartFrequency { get; set; }
+
+            public double StopFrequency { get; set; }
+
+            public double UplinkFrequency { get; set; }
+
+            public double DownlinkFrequency { get; set; }
         }
     }
 }

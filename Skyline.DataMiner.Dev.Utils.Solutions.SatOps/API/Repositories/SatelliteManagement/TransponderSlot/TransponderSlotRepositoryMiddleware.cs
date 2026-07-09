@@ -2,6 +2,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -213,6 +214,26 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
 
             return inner.Update(oToUpdate);
+        }
+
+        public IReadOnlyCollection<TransponderSlot> GenerateSlots(Guid transponderPlanId)
+        {
+            return inner.GenerateSlots(transponderPlanId);
+        }
+
+        public IReadOnlyCollection<TransponderSlot> GenerateSlots(TransponderPlan transponderPlan)
+        {
+            return inner.GenerateSlots(transponderPlan);
+        }
+
+        public IEnumerable<TransponderSlot> ReadByTransponderPlan(Guid transponderPlanId)
+        {
+            return inner.ReadByTransponderPlan(transponderPlanId);
+        }
+
+        public void DeleteByTransponderPlan(Guid transponderPlanId)
+        {
+            inner.DeleteByTransponderPlan(transponderPlanId);
         }
     }
 

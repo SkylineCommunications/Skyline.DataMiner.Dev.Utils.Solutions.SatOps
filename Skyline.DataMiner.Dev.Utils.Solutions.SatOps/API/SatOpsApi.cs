@@ -70,8 +70,13 @@
                 );
             lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>
                 (
-                    () => new TransponderSlotRepository(this)
-                              .WithMiddleware(new TransponderSlotValidationMiddleware(transponderPlanId => TransponderPlans.Read(transponderPlanId)))
+                    () =>
+                    {
+                        var repo = new TransponderSlotRepository(this);
+                        return repo
+                            .WithMiddleware(new TransponderSlotValidationMiddleware(transponderPlanId => TransponderPlans.Read(transponderPlanId)))
+                            .WithMiddleware(new SlotOverlapValidationMiddleware(planId => repo.ReadByTransponderPlan(planId)));
+                    }
                 );
         }
 
