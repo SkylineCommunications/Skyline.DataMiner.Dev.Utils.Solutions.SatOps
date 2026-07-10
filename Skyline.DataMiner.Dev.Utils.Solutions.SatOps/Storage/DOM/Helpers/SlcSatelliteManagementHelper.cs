@@ -375,33 +375,6 @@
             }
         }
 
-        /// <summary>
-        /// Gets a job DOM instance by identifier.
-        /// </summary>
-        /// <param name="workflowHelper">The workflow DOM helper.</param>
-        /// <param name="jobId">The job identifier.</param>
-        /// <returns>The matching DOM instance.</returns>
-        public DomInstance GetJobInstance(DomHelper workflowHelper, Guid jobId)
-        {
-            if (workflowHelper == null)
-            {
-                throw new ArgumentNullException(nameof(workflowHelper));
-            }
-
-            if (jobId == Guid.Empty)
-            {
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(jobId));
-            }
-
-            var jobInstance = workflowHelper.DomInstances.Read(DomInstanceExposers.Id.Equal(jobId)).FirstOrDefault();
-            if (jobInstance == null)
-            {
-                throw new InvalidOperationException($"Job instance with ID '{jobId}' not found.");
-            }
-
-            return jobInstance;
-        }
-
         internal IEnumerable<IEnumerable<BeamsInstance>> GetBeamsPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
             if (paramFilter == null)
