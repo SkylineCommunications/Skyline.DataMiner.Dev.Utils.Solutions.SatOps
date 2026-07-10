@@ -109,6 +109,14 @@
                 .Select(di => Transponder.FromInstance(new TranspondersInstance(di)));
         }
 
+        public IEnumerable<Transponder> ReadBySatellite(Guid satelliteId)
+        {
+            if (satelliteId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(satelliteId));
+
+            return Read(TransponderExposers.TransponderSatellite.Equal(satelliteId));
+        }
+
         public Transponder Read(Guid id)
         {
             if (id == Guid.Empty)

@@ -17,6 +17,13 @@
         Transponder Initialize();
 
         /// <summary>
+        /// Reads all transponders that belong to the specified satellite.
+        /// </summary>
+        /// <param name="satelliteId">The unique identifier of the satellite.</param>
+        /// <returns>An enumerable of <see cref="Transponder"/> instances for the satellite.</returns>
+        IEnumerable<Transponder> ReadBySatellite(Guid satelliteId);
+
+        /// <summary>
         /// Activates a transponder by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the transponder to activate.</param>

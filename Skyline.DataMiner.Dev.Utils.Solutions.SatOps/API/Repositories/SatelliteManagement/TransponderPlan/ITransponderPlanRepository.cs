@@ -17,6 +17,13 @@
         TransponderPlan Initialize();
 
         /// <summary>
+        /// Reads all transponder plans that belong to the specified transponder.
+        /// </summary>
+        /// <param name="transponderId">The unique identifier of the transponder.</param>
+        /// <returns>An enumerable of <see cref="TransponderPlan"/> instances for the transponder.</returns>
+        IEnumerable<TransponderPlan> ReadByTransponder(Guid transponderId);
+
+        /// <summary>
         /// Activates a transponder plan by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the transponder plan to activate.</param>

@@ -109,6 +109,14 @@
                 .Select(di => TransponderPlan.FromInstance(new TransponderPlansInstance(di)));
         }
 
+        public IEnumerable<TransponderPlan> ReadByTransponder(Guid transponderId)
+        {
+            if (transponderId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderId));
+
+            return Read(TransponderPlanExposers.Transponder.Equal(transponderId));
+        }
+
         public TransponderPlan Read(Guid id)
         {
             if (id == Guid.Empty)
