@@ -9,11 +9,13 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying;
     using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Tools;
     using Skyline.DataMiner.Utils.DOM.Extensions;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using ExceptionMessages = Logging.ExceptionMessages;
 
@@ -121,6 +123,283 @@
             }
 
             return InstanceFactory.ReadAndCreateInstances(DomHelper, filter, instance => new TransponderSlotsInstance(instance));
+        }
+
+        /// <summary>
+        /// Gets all transponders that belong to the specified satellite.
+        /// </summary>
+        /// <param name="satellite">The satellite whose transponders should be retrieved.</param>
+        /// <returns>An enumerable of <see cref="DomInstance"/>.</returns>
+        public IEnumerable<DomInstance> GetTranspondersFromSatelliteName(SatellitesInstance satellite)
+        {
+            if (satellite == null)
+            {
+                throw new ArgumentNullException(nameof(satellite));
+            }
+
+            var filter = DomInstanceExposers.FieldValues.DomInstanceField(
+                SlcSatellite_ManagementIds.Sections.Transponder.TransponderSatellite)
+                .Equal(satellite.ID.Id);
+
+            return DomHelper.DomInstances.Read(filter);
+        }
+
+        /// <summary>
+        /// Gets transponder plans for the specified transponder.
+        /// </summary>
+        /// <param name="transponderId">The transponder identifier.</param>
+        /// <returns>An enumerable of <see cref="TransponderPlansInstance"/>.</returns>
+        public IEnumerable<TransponderPlansInstance> GetTransponderPlansByTransponderId(Guid transponderId)
+        {
+            if (transponderId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderId));
+            }
+
+            var filter = DomInstanceExposers.FieldValues.DomInstanceField(
+                SlcSatellite_ManagementIds.Sections.TransponderPlan.Transponder)
+                .Contains(transponderId);
+
+            return GetTransponderPlans(filter);
+        }
+
+        /// <summary>
+        /// Gets a transponder plan by its identifier.
+        /// </summary>
+        /// <param name="planId">The transponder plan identifier.</param>
+        /// <returns>An enumerable of matching <see cref="TransponderPlansInstance"/> instances.</returns>
+        public IEnumerable<TransponderPlansInstance> GetTransponderPlanById(Guid planId)
+        {
+            if (planId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(planId));
+            }
+
+            var filter = DomInstanceExposers.Id.Equal(new DomInstanceId(planId) { ModuleId = SlcSatellite_ManagementIds.ModuleId });
+            return GetTransponderPlans(filter);
+        }
+
+        /// <summary>
+        /// Gets transponder slots for the specified transponder plan.
+        /// </summary>
+        /// <param name="planId">The transponder plan identifier.</param>
+        /// <returns>An enumerable of <see cref="TransponderSlotsInstance"/>.</returns>
+        public IEnumerable<TransponderSlotsInstance> GetSlotsByTransponderPlanId(Guid planId)
+        {
+            if (planId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(planId));
+            }
+
+            var filter = DomInstanceExposers.FieldValues.DomInstanceField(
+                SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan)
+                .Contains(planId);
+
+            return GetTransponderSlots(filter);
+        }
+
+        /// <summary>
+        /// Gets transponder plans for a satellite by following Satellite -> Transponder -> Plan.
+        /// </summary>
+        /// <param name="satellite">The satellite to resolve.</param>
+        /// <returns>An enumerable of <see cref="TransponderPlansInstance"/>.</returns>
+        public IEnumerable<TransponderPlansInstance> GetTransponderPlansByTransponderFilter(SatellitesInstance satellite)
+        {
+            if (satellite == null)
+            {
+                throw new ArgumentNullException(nameof(satellite));
+            }
+
+            var transponders = GetTranspondersFromSatelliteName(satellite).ToList();
+            return GetTransponderPlansByTransponderFilter(transponders);
+        }
+
+        /// <summary>
+        /// Gets transponder plans for the specified transponders.
+        /// </summary>
+        /// <param name="transponders">The transponders to resolve.</param>
+        /// <returns>An enumerable of <see cref="TransponderPlansInstance"/>.</returns>
+        public IEnumerable<TransponderPlansInstance> GetTransponderPlansByTransponderFilter(IEnumerable<DomInstance> transponders)
+        {
+            if (transponders == null)
+            {
+                throw new ArgumentNullException(nameof(transponders));
+            }
+
+            var transponderList = transponders.ToList();
+            if (!transponderList.Any())
+            {
+                return Enumerable.Empty<TransponderPlansInstance>();
+            }
+
+            var filter = DomInstanceFilterHelper.BuildOrFilter(
+                SlcSatellite_ManagementIds.Sections.TransponderPlan.Transponder,
+                transponderList.Select(transponder => transponder.ID.Id));
+
+            return GetTransponderPlans(filter);
+        }
+
+        /// <summary>
+        /// Gets transponder slots for a satellite by following Satellite -> Transponder -> Plan -> Slot.
+        /// </summary>
+        /// <param name="satellite">The satellite to resolve.</param>
+        /// <returns>An enumerable of <see cref="TransponderSlotsInstance"/>.</returns>
+        public IEnumerable<TransponderSlotsInstance> GetSlotsByTransponderFilter(SatellitesInstance satellite)
+        {
+            if (satellite == null)
+            {
+                throw new ArgumentNullException(nameof(satellite));
+            }
+
+            var transponders = GetTranspondersFromSatelliteName(satellite).ToList();
+            return GetSlotsByTransponderFilter(transponders);
+        }
+
+        /// <summary>
+        /// Gets transponder slots for the specified transponders.
+        /// </summary>
+        /// <param name="transponders">The transponders to resolve.</param>
+        /// <returns>An enumerable of <see cref="TransponderSlotsInstance"/>.</returns>
+        public IEnumerable<TransponderSlotsInstance> GetSlotsByTransponderFilter(IEnumerable<DomInstance> transponders)
+        {
+            if (transponders == null)
+            {
+                throw new ArgumentNullException(nameof(transponders));
+            }
+
+            var transponderList = transponders.ToList();
+            if (!transponderList.Any())
+            {
+                return Enumerable.Empty<TransponderSlotsInstance>();
+            }
+
+            var plansFilter = DomInstanceFilterHelper.BuildOrFilter(
+                SlcSatellite_ManagementIds.Sections.TransponderPlan.Transponder,
+                transponderList.Select(transponder => transponder.ID.Id));
+
+            var plans = GetTransponderPlans(plansFilter).ToList();
+            if (!plans.Any())
+            {
+                return Enumerable.Empty<TransponderSlotsInstance>();
+            }
+
+            var slotsFilter = DomInstanceFilterHelper.BuildOrFilter(
+                SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan,
+                plans.Select(plan => plan.ID.Id));
+
+            return GetTransponderSlots(slotsFilter);
+        }
+
+        /// <summary>
+        /// Builds a flattened and sorted list of plan intervals.
+        /// </summary>
+        /// <param name="permanentPlans">The permanent plans.</param>
+        /// <param name="nonPermanentPlans">The non-permanent plans.</param>
+        /// <returns>The ordered interval list.</returns>
+        public List<(DateTime? Start, DateTime? End, TransponderPlansInstance Plan, bool IsPermanent)> GetTransponderPlanIntervals(
+            List<TransponderPlansInstance> permanentPlans,
+            List<TransponderPlansInstance> nonPermanentPlans)
+        {
+            if (permanentPlans == null)
+            {
+                throw new ArgumentNullException(nameof(permanentPlans));
+            }
+
+            if (nonPermanentPlans == null)
+            {
+                throw new ArgumentNullException(nameof(nonPermanentPlans));
+            }
+
+            var intervals = new List<(DateTime? Start, DateTime? End, TransponderPlansInstance Plan, bool IsPermanent)>();
+
+            foreach (var plan in permanentPlans)
+            {
+                intervals.Add((plan.TransponderPlan.StartTime, plan.TransponderPlan.EndTime, plan, true));
+            }
+
+            foreach (var plan in nonPermanentPlans)
+            {
+                intervals.Add((plan.TransponderPlan.StartTime, plan.TransponderPlan.EndTime, plan, false));
+            }
+
+            return intervals.OrderBy(interval => interval.Start).ToList();
+        }
+
+        /// <summary>
+        /// Splits overlapping plan intervals into non-overlapping chopped segments.
+        /// </summary>
+        /// <param name="choppedPlans">The output list.</param>
+        /// <param name="intervals">The input intervals.</param>
+        /// <param name="timePoints">The partition points.</param>
+        public void GetChoppedTransponderPlans(
+            List<(TransponderPlansInstance Plan, DateTime Start, DateTime End)> choppedPlans,
+            List<(DateTime? Start, DateTime? End, TransponderPlansInstance Plan, bool IsPermanent)> intervals,
+            List<DateTime?> timePoints)
+        {
+            if (choppedPlans == null)
+            {
+                throw new ArgumentNullException(nameof(choppedPlans));
+            }
+
+            if (intervals == null)
+            {
+                throw new ArgumentNullException(nameof(intervals));
+            }
+
+            if (timePoints == null)
+            {
+                throw new ArgumentNullException(nameof(timePoints));
+            }
+
+            for (var index = 0; index < timePoints.Count - 1; index++)
+            {
+                var intervalStart = timePoints[index];
+                var intervalEnd = timePoints[index + 1];
+
+                var active = intervals.Where(interval => interval.Start < intervalEnd && interval.End > intervalStart).ToList();
+                if (!active.Any())
+                {
+                    continue;
+                }
+
+                var chosen = active.FirstOrDefault(interval => !interval.IsPermanent);
+                if (chosen.Equals(default((DateTime? Start, DateTime? End, TransponderPlansInstance Plan, bool IsPermanent))))
+                {
+                    chosen = active[0];
+                }
+
+                if (intervalStart < intervalEnd)
+                {
+                    choppedPlans.Add((chosen.Plan, intervalStart.GetValueOrDefault(), intervalEnd.GetValueOrDefault()));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a job DOM instance by identifier.
+        /// </summary>
+        /// <param name="workflowHelper">The workflow DOM helper.</param>
+        /// <param name="jobId">The job identifier.</param>
+        /// <returns>The matching DOM instance.</returns>
+        public DomInstance GetJobInstance(DomHelper workflowHelper, Guid jobId)
+        {
+            if (workflowHelper == null)
+            {
+                throw new ArgumentNullException(nameof(workflowHelper));
+            }
+
+            if (jobId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(jobId));
+            }
+
+            var jobInstance = workflowHelper.DomInstances.Read(DomInstanceExposers.Id.Equal(jobId)).FirstOrDefault();
+            if (jobInstance == null)
+            {
+                throw new InvalidOperationException($"Job instance with ID '{jobId}' not found.");
+            }
+
+            return jobInstance;
         }
 
         internal IEnumerable<IEnumerable<BeamsInstance>> GetBeamsPaged(FilterElement<DomInstance> paramFilter, int pageSize)
