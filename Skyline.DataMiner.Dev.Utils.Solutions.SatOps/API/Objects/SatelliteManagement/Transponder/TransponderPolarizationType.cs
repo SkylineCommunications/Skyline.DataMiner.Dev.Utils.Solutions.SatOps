@@ -5,7 +5,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
     /// </summary>
     public enum TransponderPolarizationType
     {
+        /// <summary>
+        /// Circular polarization.
+        /// </summary>
         Circular,
+
+        /// <summary>
+        /// Linear polarization.
+        /// </summary>
         Linear,
     }
 }

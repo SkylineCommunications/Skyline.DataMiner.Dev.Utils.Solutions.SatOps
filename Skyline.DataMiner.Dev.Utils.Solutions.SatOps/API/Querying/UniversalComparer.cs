@@ -58,8 +58,7 @@
                 return false;
             }
 
-            var equatableT = x as IEquatable<T>;
-            if (equatableT != null)
+            if (x is IEquatable<T> equatableT)
             {
                 return equatableT.Equals(y);
             }
