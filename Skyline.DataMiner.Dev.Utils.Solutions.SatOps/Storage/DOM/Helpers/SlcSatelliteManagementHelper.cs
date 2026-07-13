@@ -126,6 +126,21 @@
         }
 
         /// <summary>
+        /// Gets transponder reservations matching the specified filter.
+        /// </summary>
+        /// <param name="filter">The filter to apply.</param>
+        /// <returns>An enumerable of <see cref="TransponderReservation"/>.</returns>
+        public IEnumerable<TransponderReservationsInstance> GetTransponderReservations(FilterElement<DomInstance> filter)
+        {
+            if (filter == null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            return InstanceFactory.ReadAndCreateInstances(DomHelper, filter, instance => new TransponderReservationsInstance(instance));
+        }
+
+        /// <summary>
         /// Gets all transponders that belong to the specified satellite.
         /// </summary>
         /// <param name="satellite">The satellite whose transponders should be retrieved.</param>
@@ -469,6 +484,22 @@
 
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
             return InstanceFactory.CreateInstances(pages, instance => new TransponderSlotsInstance(instance));
+        }
+
+        internal IEnumerable<IEnumerable<TransponderReservationsInstance>> GetTransponderReservationsPaged(FilterElement<DomInstance> paramFilter, int pageSize)
+        {
+            if (paramFilter == null)
+            {
+                throw new ArgumentNullException(nameof(paramFilter));
+            }
+
+            if (pageSize <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize), ExceptionMessages.PageSizeNumberException);
+            }
+
+            var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
+            return InstanceFactory.CreateInstances(pages, instance => new TransponderReservationsInstance(instance));
         }
     }
 }

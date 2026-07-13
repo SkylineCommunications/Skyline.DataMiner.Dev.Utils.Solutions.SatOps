@@ -27,10 +27,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
 
         public const string CannotCreateExistingTransponderSlot = "Cannot create an existing transponder slot.";
         public const string CannotUpdateNonExistingTransponderSlot = "Cannot update a transponder slot that does not exist.";
+        public const string CannotCreateExistingTransponderRangeReservation = "Cannot create an existing transponder range reservation.";
+        public const string CannotUpdateNonExistingTransponderRangeReservation = "Cannot update a transponder range reservation that does not exist.";
         public const string TransponderPlanHasNoAssociatedTransponder = "Transponder plan with id '{0}' has no associated transponder configured.";
         public const string TransponderForPlanWasNotFound = "Transponder with id '{0}' referenced by transponder plan '{1}' was not found.";
         public const string SlotOverlapDetected = "Slot '{0}' overlaps with slot '{1}' in the same transponder plan.";
         public const string DuplicateSlotNameDetected = "Duplicate slot name '{0}' detected within the same transponder plan.";
+        public const string ReservationOverlapDetected = "Reservation '{0}' overlaps with reservation '{1}' for the same transponder.";
 
         public const string SatelliteNameIsRequired = "Satellite name is required.";
         public const string SatelliteAbbreviationIsRequired = "Satellite abbreviation is required.";

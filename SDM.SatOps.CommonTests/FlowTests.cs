@@ -310,6 +310,70 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.AreEqual("transponderSlot", argumentException.ParamName);
         }
 
+        [TestMethod]
+        public void TransponderRangeReservationValidationFlow_WhenTransponderMissing_ThrowsArgumentException()
+        {
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
+
+            var reservation = CreateApiObject(
+                reservationType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderReservation.Transponder", null);
+                    SetNestedProperty(dom, "TransponderReservation.RelativeStartFrequency", (double?)10.0);
+                    SetNestedProperty(dom, "TransponderReservation.RelativeEndFrequency", (double?)20.0);
+                    SetNestedProperty(dom, "TransponderReservation.StartTime", (DateTime?)DateTime.UtcNow);
+                    SetNestedProperty(dom, "TransponderReservation.EndTime", (DateTime?)DateTime.UtcNow.AddHours(1));
+                    SetNestedProperty(dom, "TransponderReservation.ReservationName", "Reservation-1");
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
+            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { reservationType, typeof(Func<,>).MakeGenericType(reservationType, reservationType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, reservation, BuildIdentityDelegate(reservationType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("reservation", argumentException.ParamName);
+        }
+
+        [TestMethod]
+        public void TransponderRangeReservationValidationFlow_WhenTimeWindowInvalid_ThrowsArgumentException()
+        {
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
+
+            var reservation = CreateApiObject(
+                reservationType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance",
+                dom =>
+                {
+                    SetNestedProperty(dom, "TransponderReservation.Transponder", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "TransponderReservation.RelativeStartFrequency", (double?)10.0);
+                    SetNestedProperty(dom, "TransponderReservation.RelativeEndFrequency", (double?)20.0);
+                    SetNestedProperty(dom, "TransponderReservation.StartTime", (DateTime?)DateTime.UtcNow.AddHours(1));
+                    SetNestedProperty(dom, "TransponderReservation.EndTime", (DateTime?)DateTime.UtcNow);
+                    SetNestedProperty(dom, "TransponderReservation.ReservationName", "Reservation-2");
+                });
+
+            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
+            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var onCreate = middlewareType.GetMethod("OnCreate", new[] { reservationType, typeof(Func<,>).MakeGenericType(reservationType, reservationType) });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, reservation, BuildIdentityDelegate(reservationType));
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("reservation", argumentException.ParamName);
+        }
+
         private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);

@@ -6,6 +6,7 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
 
@@ -43,6 +44,11 @@
         /// Gets the transponder plan row repository.
         /// </summary>
         ITransponderPlanRowRepository TransponderPlanRows { get; }
+
+        /// <summary>
+        /// Gets the transponder range reservation repository.
+        /// </summary>
+        ITransponderRangeReservationRepository TransponderRangeReservations { get; }
 
         /// <summary>
         /// Gets the transponder slot repository.

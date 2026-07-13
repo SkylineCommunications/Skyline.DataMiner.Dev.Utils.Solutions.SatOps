@@ -9,6 +9,7 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Helpers;
@@ -27,6 +28,7 @@
         private readonly Lazy<ITransponderRepository> lazyTransponderRepository;
         private readonly Lazy<ITransponderPlanRepository> lazyTransponderPlanRepository;
         private readonly Lazy<ITransponderPlanRowRepository> lazyTransponderPlanRowRepository;
+        private readonly Lazy<ITransponderRangeReservationRepository> lazyTransponderRangeReservationRepository;
         private readonly Lazy<ITransponderSlotRepository> lazyTransponderSlotRepository;
 
         /// <summary>
@@ -67,6 +69,16 @@
                 (
                     () => new TransponderPlanRowRepository(this)
                               .WithMiddleware(new TransponderPlanRowValidationMiddleware(transponderPlanId => TransponderPlans.Read(transponderPlanId)))
+                );
+            lazyTransponderRangeReservationRepository = new Lazy<ITransponderRangeReservationRepository>
+                (
+                    () =>
+                    {
+                        var repository = new TransponderRangeReservationRepository(this);
+                        return repository
+                            .WithMiddleware(new TransponderRangeReservationValidationMiddleware(transponderId => Transponders.Read(transponderId)))
+                            .WithMiddleware(new TransponderRangeReservationOverlapValidationMiddleware(transponderId => repository.ReadByTransponder(transponderId)));
+                    }
                 );
             lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>
                 (
@@ -109,6 +121,11 @@
         /// Gets the repository for managing transponder plan row entities.
         /// </summary>
         public ITransponderPlanRowRepository TransponderPlanRows => lazyTransponderPlanRowRepository.Value;
+
+        /// <summary>
+        /// Gets the repository for managing transponder range reservation entities.
+        /// </summary>
+        public ITransponderRangeReservationRepository TransponderRangeReservations => lazyTransponderRangeReservationRepository.Value;
 
         /// <summary>
         /// Gets the repository for managing transponder slot entities.
