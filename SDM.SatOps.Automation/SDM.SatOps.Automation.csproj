@@ -18,8 +18,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>1.0.0</Version>
-		<VersionSuffix>alpha-001</VersionSuffix>
+		<Version>0.0.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

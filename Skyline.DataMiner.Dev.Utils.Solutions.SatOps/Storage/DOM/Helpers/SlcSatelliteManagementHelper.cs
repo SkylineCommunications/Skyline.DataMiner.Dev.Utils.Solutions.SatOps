@@ -129,7 +129,7 @@
         /// Gets transponder reservations matching the specified filter.
         /// </summary>
         /// <param name="filter">The filter to apply.</param>
-        /// <returns>An enumerable of <see cref="TransponderReservation"/>.</returns>
+        /// <returns>An enumerable of <see cref="TransponderReservationsInstance"/>.</returns>
         public IEnumerable<TransponderReservationsInstance> GetTransponderReservations(FilterElement<DomInstance> filter)
         {
             if (filter == null)
