@@ -2,6 +2,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
@@ -12,10 +13,17 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
     internal sealed class TransponderPlanRowValidationMiddleware : IBulkRepositoryMiddleware<TransponderPlanRow>
     {
         private readonly Func<Guid, TransponderPlan> transponderPlanResolver;
+        private readonly Func<Guid, IEnumerable<TransponderPlanRow>> transponderPlanRowsResolver;
 
         public TransponderPlanRowValidationMiddleware(Func<Guid, TransponderPlan> transponderPlanResolver)
+            : this(transponderPlanResolver, _ => Enumerable.Empty<TransponderPlanRow>())
+        {
+        }
+
+        public TransponderPlanRowValidationMiddleware(Func<Guid, TransponderPlan> transponderPlanResolver, Func<Guid, IEnumerable<TransponderPlanRow>> transponderPlanRowsResolver)
         {
             this.transponderPlanResolver = transponderPlanResolver ?? throw new ArgumentNullException(nameof(transponderPlanResolver));
+            this.transponderPlanRowsResolver = transponderPlanRowsResolver ?? throw new ArgumentNullException(nameof(transponderPlanRowsResolver));
         }
 
         public TransponderPlanRow OnCreate(TransponderPlanRow oToCreate, Func<TransponderPlanRow, TransponderPlanRow> next)
@@ -38,12 +46,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlanRow in oToCreate)
+            var rowsToCreate = oToCreate.ToList();
+            foreach (var transponderPlanRow in rowsToCreate)
             {
                 ValidateTransponderPlanRow(transponderPlanRow);
             }
 
-            return next(oToCreate);
+            ValidateDuplicateBandwidthInBatch(rowsToCreate);
+            return next(rowsToCreate);
         }
 
         public TransponderPlanRow OnUpdate(TransponderPlanRow oToUpdate, Func<TransponderPlanRow, TransponderPlanRow> next)
@@ -66,12 +76,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlanRow in oToUpdate)
+            var rowsToUpdate = oToUpdate.ToList();
+            foreach (var transponderPlanRow in rowsToUpdate)
             {
                 ValidateTransponderPlanRow(transponderPlanRow);
             }
 
-            return next(oToUpdate);
+            ValidateDuplicateBandwidthInBatch(rowsToUpdate);
+            return next(rowsToUpdate);
         }
 
         public IReadOnlyCollection<TransponderPlanRow> OnCreateOrUpdate(IEnumerable<TransponderPlanRow> oToCreateOrUpdate, Func<IEnumerable<TransponderPlanRow>, IReadOnlyCollection<TransponderPlanRow>> next)
@@ -82,12 +94,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlanRow in oToCreateOrUpdate)
+            var rowsToCreateOrUpdate = oToCreateOrUpdate.ToList();
+            foreach (var transponderPlanRow in rowsToCreateOrUpdate)
             {
                 ValidateTransponderPlanRow(transponderPlanRow);
             }
 
-            return next(oToCreateOrUpdate);
+            ValidateDuplicateBandwidthInBatch(rowsToCreateOrUpdate);
+            return next(rowsToCreateOrUpdate);
         }
 
         public long OnCount(FilterElement<TransponderPlanRow> filter, Func<FilterElement<TransponderPlanRow>, long> next)
@@ -166,10 +180,19 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                 throw new ArgumentException("Transponder Plan is required.", nameof(transponderPlanRow));
 
             if (!transponderPlanRow.Bandwidth.HasValue)
-                throw new ArgumentException("Bandwidth is required.", nameof(transponderPlanRow));
+                throw new ArgumentException(ExceptionMessages.TransponderPlanRowBandwidthIsRequired, nameof(transponderPlanRow));
+
+            if (transponderPlanRow.Bandwidth.Value <= 0)
+                throw new ArgumentException(ExceptionMessages.TransponderPlanRowBandwidthMustBeGreaterThanZero, nameof(transponderPlanRow));
 
             if (!transponderPlanRow.StepSize.HasValue)
-                throw new ArgumentException("Step Size is required.", nameof(transponderPlanRow));
+                throw new ArgumentException(ExceptionMessages.TransponderPlanRowStepSizeIsRequired, nameof(transponderPlanRow));
+
+            if (transponderPlanRow.StepSize.Value <= 0)
+                throw new ArgumentException(ExceptionMessages.TransponderPlanRowStepSizeMustBeGreaterThanZero, nameof(transponderPlanRow));
+
+            if (transponderPlanRow.StepSize.Value < transponderPlanRow.Bandwidth.Value)
+                throw new ArgumentException(ExceptionMessages.TransponderPlanRowStepSizeMustBeGreaterThanOrEqualToBandwidth, nameof(transponderPlanRow));
 
             if (!transponderPlanRow.Offset.HasValue)
                 throw new ArgumentException("Offset is required.", nameof(transponderPlanRow));
@@ -177,6 +200,39 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
             var transponderPlanId = transponderPlanRow.TransponderPlan.Value;
             if (transponderPlanResolver(transponderPlanId) == null)
                 throw new ArgumentException($"Transponder plan with id '{transponderPlanId}' does not exist.", nameof(transponderPlanRow));
+
+            ValidateDuplicateBandwidthAgainstExistingRows(transponderPlanRow, transponderPlanId);
+        }
+
+        private void ValidateDuplicateBandwidthAgainstExistingRows(TransponderPlanRow transponderPlanRow, Guid transponderPlanId)
+        {
+            var duplicateExists = (transponderPlanRowsResolver(transponderPlanId) ?? Enumerable.Empty<TransponderPlanRow>())
+                .Where(row => row != null && row.Id != transponderPlanRow.Id && row.Bandwidth.HasValue)
+                .Any(row => row.Bandwidth.Value == transponderPlanRow.Bandwidth.Value);
+
+            if (!duplicateExists)
+                return;
+
+            throw new ArgumentException(
+                string.Format(ExceptionMessages.DuplicateTransponderPlanRowBandwidthDetected, transponderPlanRow.Bandwidth.Value, transponderPlanId),
+                nameof(transponderPlanRow));
+        }
+
+        private static void ValidateDuplicateBandwidthInBatch(IEnumerable<TransponderPlanRow> transponderPlanRows)
+        {
+            var duplicate = transponderPlanRows
+                .Where(row => row != null
+                    && row.TransponderPlan.HasValue
+                    && row.TransponderPlan.Value != Guid.Empty
+                    && row.Bandwidth.HasValue)
+                .GroupBy(row => new { PlanId = row.TransponderPlan.Value, Bandwidth = row.Bandwidth.Value })
+                .FirstOrDefault(group => group.Count() > 1);
+
+            if (duplicate == null)
+                return;
+
+            throw new ArgumentException(
+                string.Format(ExceptionMessages.DuplicateTransponderPlanRowBandwidthDetected, duplicate.Key.Bandwidth, duplicate.Key.PlanId));
         }
     }
 }

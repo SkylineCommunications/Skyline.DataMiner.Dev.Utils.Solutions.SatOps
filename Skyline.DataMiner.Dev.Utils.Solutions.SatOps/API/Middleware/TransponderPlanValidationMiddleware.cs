@@ -2,8 +2,10 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
@@ -12,10 +14,17 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
     internal sealed class TransponderPlanValidationMiddleware : IBulkRepositoryMiddleware<TransponderPlan>
     {
         private readonly Func<Guid, Transponder> transponderResolver;
+        private readonly Func<Guid, IEnumerable<TransponderPlan>> transponderPlansResolver;
 
         public TransponderPlanValidationMiddleware(Func<Guid, Transponder> transponderResolver)
+            : this(transponderResolver, _ => Enumerable.Empty<TransponderPlan>())
+        {
+        }
+
+        public TransponderPlanValidationMiddleware(Func<Guid, Transponder> transponderResolver, Func<Guid, IEnumerable<TransponderPlan>> transponderPlansResolver)
         {
             this.transponderResolver = transponderResolver ?? throw new ArgumentNullException(nameof(transponderResolver));
+            this.transponderPlansResolver = transponderPlansResolver ?? throw new ArgumentNullException(nameof(transponderPlansResolver));
         }
 
         public TransponderPlan OnCreate(TransponderPlan oToCreate, Func<TransponderPlan, TransponderPlan> next)
@@ -163,17 +172,59 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlan));
 
             if (string.IsNullOrWhiteSpace(transponderPlan.Name))
-                throw new ArgumentException("PlanName is required.", nameof(transponderPlan));
+                throw new ArgumentException(ExceptionMessages.TransponderPlanNameIsRequired, nameof(transponderPlan));
 
             if (!transponderPlan.DefaultSlotSize.HasValue)
-                throw new ArgumentException("DefaultSlotSize is required.", nameof(transponderPlan));
+                throw new ArgumentException(ExceptionMessages.TransponderPlanDefaultSlotSizeIsRequired, nameof(transponderPlan));
+
+            if (transponderPlan.DefaultSlotSize.Value <= 0)
+                throw new ArgumentException(ExceptionMessages.TransponderPlanDefaultSlotSizeMustBeGreaterThanZero, nameof(transponderPlan));
 
             if (!transponderPlan.Transponder.HasValue || transponderPlan.Transponder.Value == Guid.Empty)
-                throw new ArgumentException("Transponder is required.", nameof(transponderPlan));
+                throw new ArgumentException(ExceptionMessages.TransponderPlanTransponderIsRequired, nameof(transponderPlan));
 
             var transponderId = transponderPlan.Transponder.Value;
             if (transponderResolver(transponderId) == null)
-                throw new ArgumentException($"Transponder with id '{transponderId}' does not exist.", nameof(transponderPlan));
+                throw new ArgumentException(string.Format(ExceptionMessages.TransponderWithIdDoesNotExist, transponderId), nameof(transponderPlan));
+
+            ValidatePlanConstraints(transponderPlan, transponderId);
+        }
+
+        private void ValidatePlanConstraints(TransponderPlan transponderPlan, Guid transponderId)
+        {
+            var existingPlans = (transponderPlansResolver(transponderId) ?? Enumerable.Empty<TransponderPlan>())
+                .Where(plan => plan != null && plan.Status != InstanceStatus.Deprecated && plan.Id != transponderPlan.Id)
+                .ToList();
+
+            if (transponderPlan.IsPermanent.GetValueOrDefault())
+            {
+                if (existingPlans.Any(plan => plan.IsPermanent.GetValueOrDefault()))
+                {
+                    throw new ArgumentException(string.Format(ExceptionMessages.PermanentTransponderPlanAlreadyExists, transponderId), nameof(transponderPlan));
+                }
+
+                return;
+            }
+
+            if (!transponderPlan.StartTime.HasValue)
+                throw new ArgumentException(ExceptionMessages.NonPermanentTransponderPlanStartTimeIsRequired, nameof(transponderPlan));
+
+            if (!transponderPlan.EndTime.HasValue)
+                throw new ArgumentException(ExceptionMessages.NonPermanentTransponderPlanEndTimeIsRequired, nameof(transponderPlan));
+
+            if (transponderPlan.StartTime.Value >= transponderPlan.EndTime.Value)
+                throw new ArgumentException(ExceptionMessages.NonPermanentTransponderPlanTimeWindowInvalid, nameof(transponderPlan));
+
+            foreach (var existingPlan in existingPlans.Where(plan => !plan.IsPermanent.GetValueOrDefault()))
+            {
+                if (!existingPlan.StartTime.HasValue || !existingPlan.EndTime.HasValue)
+                    continue;
+
+                if (transponderPlan.StartTime.Value < existingPlan.EndTime.Value && existingPlan.StartTime.Value < transponderPlan.EndTime.Value)
+                {
+                    throw new ArgumentException(string.Format(ExceptionMessages.TransponderPlanTimeRangeOverlaps, existingPlan.Name), nameof(transponderPlan));
+                }
+            }
         }
     }
 }

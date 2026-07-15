@@ -34,6 +34,22 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
         public const string SlotOverlapDetected = "Slot '{0}' overlaps with slot '{1}' in the same transponder plan.";
         public const string DuplicateSlotNameDetected = "Duplicate slot name '{0}' detected within the same transponder plan.";
         public const string ReservationOverlapDetected = "Reservation '{0}' overlaps with reservation '{1}' for the same transponder.";
+        public const string TransponderPlanNameIsRequired = "Plan name is required.";
+        public const string TransponderPlanDefaultSlotSizeIsRequired = "Default slot size is required.";
+        public const string TransponderPlanDefaultSlotSizeMustBeGreaterThanZero = "Default slot size must be greater than zero.";
+        public const string TransponderPlanTransponderIsRequired = "Transponder is required.";
+        public const string TransponderWithIdDoesNotExist = "Transponder with id '{0}' does not exist.";
+        public const string NonPermanentTransponderPlanStartTimeIsRequired = "Start time is required for non-permanent transponder plans.";
+        public const string NonPermanentTransponderPlanEndTimeIsRequired = "End time is required for non-permanent transponder plans.";
+        public const string NonPermanentTransponderPlanTimeWindowInvalid = "End time must be greater than start time for non-permanent transponder plans.";
+        public const string PermanentTransponderPlanAlreadyExists = "A permanent transponder plan already exists for transponder '{0}'.";
+        public const string TransponderPlanTimeRangeOverlaps = "Transponder plan time range overlaps with existing plan '{0}'.";
+        public const string TransponderPlanRowBandwidthIsRequired = "Bandwidth is required.";
+        public const string TransponderPlanRowBandwidthMustBeGreaterThanZero = "Bandwidth must be greater than zero.";
+        public const string TransponderPlanRowStepSizeIsRequired = "Step Size is required.";
+        public const string TransponderPlanRowStepSizeMustBeGreaterThanZero = "Step Size must be greater than zero.";
+        public const string TransponderPlanRowStepSizeMustBeGreaterThanOrEqualToBandwidth = "Step Size must be greater than or equal to Bandwidth.";
+        public const string DuplicateTransponderPlanRowBandwidthDetected = "Duplicate bandwidth '{0}' detected within transponder plan '{1}'.";
 
         public const string SatelliteNameIsRequired = "Satellite name is required.";
         public const string SatelliteAbbreviationIsRequired = "Satellite abbreviation is required.";
