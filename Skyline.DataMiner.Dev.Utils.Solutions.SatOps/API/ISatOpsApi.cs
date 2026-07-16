@@ -9,6 +9,7 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
 
     /// <summary>
     /// Defines the main API interface for SatOps operations.
@@ -19,6 +20,11 @@
         /// Gets the DataMiner connection.
         /// </summary>
         IConnection Connection { get; }
+
+        /// <summary>
+        /// Gets the MediaOps.Plan API used for job and resource orchestration.
+        /// </summary>
+        IMediaOpsPlanApi MediaOpsPlan { get; }
 
         /// <summary>
         /// Gets the satellite repository.

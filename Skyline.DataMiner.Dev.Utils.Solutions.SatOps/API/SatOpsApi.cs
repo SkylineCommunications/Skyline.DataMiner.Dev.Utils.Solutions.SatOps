@@ -14,6 +14,7 @@
     using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderPlanRow;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Helpers;
+    using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using System;
     using System.Linq;
 
@@ -31,6 +32,7 @@
         private readonly Lazy<ITransponderPlanRowRepository> lazyTransponderPlanRowRepository;
         private readonly Lazy<ITransponderRangeReservationRepository> lazyTransponderRangeReservationRepository;
         private readonly Lazy<ITransponderSlotRepository> lazyTransponderSlotRepository;
+        private readonly Lazy<IMediaOpsPlanApi> lazyMediaOpsPlanApi;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SatOpsApi"/> class.
@@ -44,6 +46,8 @@
             ValidateConnection(connection);
 
             SlcSatelliteManagementHelper = new SlcSatelliteManagementHelper(connection);
+
+            lazyMediaOpsPlanApi = new Lazy<IMediaOpsPlanApi>(() => connection.GetMediaOpsPlanApi());
 
             lazySatelliteRepository = new Lazy<ISatelliteRepository>
                 (
@@ -109,6 +113,11 @@
         /// Gets the DataMiner connection used by this API instance.
         /// </summary>
         public IConnection Connection { get; }
+
+        /// <summary>
+        /// Gets the MediaOps.Plan API used for job and resource orchestration.
+        /// </summary>
+        public IMediaOpsPlanApi MediaOpsPlan => lazyMediaOpsPlanApi.Value;
 
         /// <summary>
         /// Gets the repository for managing satellite entities.

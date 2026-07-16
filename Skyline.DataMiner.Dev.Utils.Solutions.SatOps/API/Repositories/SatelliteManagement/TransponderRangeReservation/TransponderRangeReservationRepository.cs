@@ -3,14 +3,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReservation;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using SLDataGateway.API.Types.Querying;
 
     internal class TransponderRangeReservationRepository : Repository, ITransponderRangeReservationRepository
@@ -22,47 +24,77 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
         }
 
-        private DomHelper DomHelper => SatOpsApi.SlcSatelliteManagementHelper.DomHelper;
-
-        private static bool IsTransponderRangeReservationInstance(DomInstance instance)
-        {
-            return instance.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.TransponderReservations);
-        }
+        private IJobsRepository Jobs => SatOpsApi.MediaOpsPlan.Jobs;
 
         public TransponderRangeReservation Initialize()
         {
-            return TransponderRangeReservation.CreateNewTransponderRangeReservation();
+            return TransponderRangeReservation.CreateNew();
         }
 
         public long Count()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
-                .LongCount(IsTransponderRangeReservationInstance);
+            return ReadAllReservationJobs().LongCount();
+        }
+
+        public long Count(FilterElement<TransponderRangeReservation> filter)
+        {
+            if (filter == null || filter.isEmpty())
+            {
+                return 0;
+            }
+
+            return Read(filter).LongCount();
+        }
+
+        public long Count(IQuery<TransponderRangeReservation> query)
+        {
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            return Count(query.Filter);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> Create(IEnumerable<TransponderRangeReservation> oToCreate)
         {
+            if (oToCreate == null)
+            {
+                throw new ArgumentNullException(nameof(oToCreate));
+            }
+
             return oToCreate.Select(Create).ToList();
         }
 
         public TransponderRangeReservation Create(TransponderRangeReservation oToCreate)
         {
-            if (Read(oToCreate.Id) != null)
+            if (oToCreate == null)
+            {
+                throw new ArgumentNullException(nameof(oToCreate));
+            }
+
+            if (oToCreate.Id != Guid.Empty && Read(oToCreate.Id) != null)
             {
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingTransponderRangeReservation);
             }
 
-            return CreateInternal(oToCreate);
+            var job = BuildJob(oToCreate, existingJob: null);
+            var createdJob = Jobs.Create(job);
+            return ReadJobAsReservation(createdJob);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> CreateOrUpdate(IEnumerable<TransponderRangeReservation> oToCreateOrUpdate)
         {
+            if (oToCreateOrUpdate == null)
+            {
+                throw new ArgumentNullException(nameof(oToCreateOrUpdate));
+            }
+
             var results = new List<TransponderRangeReservation>();
             foreach (var reservation in oToCreateOrUpdate)
             {
-                var existing = Read(reservation.Id);
-                var result = existing == null ? CreateInternal(reservation) : UpdateInternal(reservation);
-                results.Add(result);
+                var existing = reservation != null && reservation.Id != Guid.Empty ? Read(reservation.Id) : null;
+                results.Add(existing == null ? Create(reservation) : Update(reservation));
             }
 
             return results;
@@ -75,11 +107,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(apiObjectId));
             }
 
-            var reservation = Read(apiObjectId);
-            if (reservation != null)
+            if (Read(apiObjectId) == null)
             {
-                reservation.ToOriginalInstance().Delete(DomHelper);
+                return;
             }
+
+            Jobs.Delete(apiObjectId);
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
@@ -125,14 +158,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentNullException(nameof(oToDelete));
             }
 
-            oToDelete.ToOriginalInstance().Delete(DomHelper);
+            Delete(oToDelete.Id);
         }
 
         public IEnumerable<TransponderRangeReservation> Read()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
-                .Where(IsTransponderRangeReservationInstance)
-                .Select(di => TransponderRangeReservation.FromInstance(new TransponderReservationsInstance(di)));
+            return ReadAllReservationJobs().Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTransponder(Guid transponderId)
@@ -142,18 +173,24 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderId));
             }
 
-            return Read(TransponderRangeReservationExposers.Transponder.Equal(transponderId));
+            var resourceId = TryGetResourceId(transponderId);
+            if (!resourceId.HasValue)
+            {
+                return Enumerable.Empty<TransponderRangeReservation>();
+            }
+
+            return ReadAllReservationJobs()
+                .Where(pair => pair.Node.ResourceId == resourceId.Value)
+                .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTimeWindow(DateTime startTimeUtc, DateTime endTimeUtc)
         {
             ValidateTimeWindow(startTimeUtc, endTimeUtc);
 
-            var filter = new ANDFilterElement<TransponderRangeReservation>(
-                TransponderRangeReservationExposers.StartTime.LessThan(endTimeUtc),
-                TransponderRangeReservationExposers.EndTime.GreaterThan(startTimeUtc));
-
-            return Read(filter);
+            return ReadAllReservationJobs()
+                .Where(pair => OverlapsWindow(pair.Job, startTimeUtc, endTimeUtc))
+                .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTransponderAndTimeWindow(Guid transponderId, DateTime startTimeUtc, DateTime endTimeUtc)
@@ -165,12 +202,15 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             ValidateTimeWindow(startTimeUtc, endTimeUtc);
 
-            var filter = new ANDFilterElement<TransponderRangeReservation>(
-                TransponderRangeReservationExposers.Transponder.Equal(transponderId),
-                TransponderRangeReservationExposers.StartTime.LessThan(endTimeUtc),
-                TransponderRangeReservationExposers.EndTime.GreaterThan(startTimeUtc));
+            var resourceId = TryGetResourceId(transponderId);
+            if (!resourceId.HasValue)
+            {
+                return Enumerable.Empty<TransponderRangeReservation>();
+            }
 
-            return Read(filter);
+            return ReadAllReservationJobs()
+                .Where(pair => pair.Node.ResourceId == resourceId.Value && OverlapsWindow(pair.Job, startTimeUtc, endTimeUtc))
+                .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
         public TransponderRangeReservation Read(Guid id)
@@ -180,14 +220,22 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(id));
             }
 
-            var filter = DomInstanceExposers.Id.Equal(new DomInstanceId(id) { ModuleId = SlcSatellite_ManagementIds.ModuleId });
-            var domInstance = DomHelper.DomInstances.Read(filter).FirstOrDefault();
-            if (domInstance == null || !IsTransponderRangeReservationInstance(domInstance))
+            Job job;
+            try
+            {
+                job = Jobs.Read(id);
+            }
+            catch
             {
                 return null;
             }
 
-            return TransponderRangeReservation.FromInstance(new TransponderReservationsInstance(domInstance));
+            if (job == null || !IsReservationJob(job, out var node))
+            {
+                return null;
+            }
+
+            return ToReservation(job, node);
         }
 
         public IEnumerable<TransponderRangeReservation> Read(IEnumerable<Guid> ids)
@@ -197,67 +245,76 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentNullException(nameof(ids));
             }
 
-            var idSet = new HashSet<Guid>();
             foreach (var id in ids)
             {
                 if (id == Guid.Empty)
                 {
                     throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(ids));
                 }
-
-                idSet.Add(id);
             }
 
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
-                .Where(di => IsTransponderRangeReservationInstance(di) && idSet.Contains(di.ID.Id))
-                .Select(di => TransponderRangeReservation.FromInstance(new TransponderReservationsInstance(di)));
+            var idSet = new HashSet<Guid>(ids);
+            return ReadAllReservationJobs()
+                .Where(pair => idSet.Contains(pair.Job.Id))
+                .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
         public TransponderRangeReservation Update(TransponderRangeReservation oToUpdate)
         {
-            if (Read(oToUpdate.Id) == null)
+            if (oToUpdate == null)
+            {
+                throw new ArgumentNullException(nameof(oToUpdate));
+            }
+
+            Job existing;
+            try
+            {
+                existing = Jobs.Read(oToUpdate.Id);
+            }
+            catch
+            {
+                existing = null;
+            }
+
+            if (existing == null || !IsReservationJob(existing, out _))
             {
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
             }
 
-            return UpdateInternal(oToUpdate);
+            var updatedJob = BuildJob(oToUpdate, existing);
+            var persistedJob = Jobs.Update(updatedJob);
+            return ReadJobAsReservation(persistedJob);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> Update(IEnumerable<TransponderRangeReservation> oToUpdate)
         {
+            if (oToUpdate == null)
+            {
+                throw new ArgumentNullException(nameof(oToUpdate));
+            }
+
             return oToUpdate.Select(Update).ToList();
-        }
-
-        public long Count(FilterElement<TransponderRangeReservation> filter)
-        {
-            if (filter.isEmpty())
-            {
-                return 0;
-            }
-
-            var domFilter = filterTranslator.Translate(filter);
-            return SatOpsApi.SlcSatelliteManagementHelper.CountSatelliteManagementInstances(domFilter);
-        }
-
-        public long Count(IQuery<TransponderRangeReservation> query)
-        {
-            if (query == null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return Count(query.Filter);
         }
 
         public IEnumerable<TransponderRangeReservation> Read(FilterElement<TransponderRangeReservation> filter)
         {
-            if (filter.isEmpty())
+            if (filter == null || filter.isEmpty())
             {
                 return Enumerable.Empty<TransponderRangeReservation>();
             }
 
-            var domFilter = filterTranslator.Translate(filter);
-            return TransponderRangeReservation.InstantiateTransponderRangeReservations(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderReservations(domFilter));
+            var jobFilter = filterTranslator.Translate(filter);
+            var matches = Jobs.Read(jobFilter).ToList();
+            var reservations = new List<TransponderRangeReservation>();
+            foreach (var job in matches)
+            {
+                if (IsReservationJob(job, out var node))
+                {
+                    reservations.Add(ToReservation(job, node));
+                }
+            }
+
+            return filterTranslator.ApplyClientSide(filter, reservations);
         }
 
         public IEnumerable<TransponderRangeReservation> Read(IQuery<TransponderRangeReservation> query)
@@ -302,6 +359,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentNullException(nameof(filter));
             }
 
+            if (pageSize <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize), "The page size must be greater than zero.");
+            }
+
             return ReadPagedIterator(filter, pageSize);
         }
 
@@ -317,18 +379,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPagedIterator(FilterElement<TransponderRangeReservation> filter, int pageSize)
         {
+            var results = filter is TRUEFilterElement<TransponderRangeReservation> ? Read().ToList() : Read(filter).ToList();
             var pageNumber = 0;
-            var domFilter = filterTranslator.Translate(filter);
-            var items = SatOpsApi.SlcSatelliteManagementHelper.GetTransponderReservationsPaged(domFilter, pageSize);
-
-            var enumerator = items.GetEnumerator();
-            var hasNext = enumerator.MoveNext();
-
-            while (hasNext)
+            for (var offset = 0; offset < results.Count; offset += pageSize)
             {
-                var page = enumerator.Current;
-                hasNext = enumerator.MoveNext();
-                yield return new PagedResult<TransponderRangeReservation>(TransponderRangeReservation.InstantiateTransponderRangeReservations(page), pageNumber++, pageSize, hasNext);
+                var slice = results.Skip(offset).Take(pageSize).ToList();
+                var hasNext = offset + pageSize < results.Count;
+                yield return new PagedResult<TransponderRangeReservation>(slice, pageNumber++, pageSize, hasNext);
             }
         }
 
@@ -336,22 +393,177 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         {
             if (startTimeUtc >= endTimeUtc)
             {
-                throw new ArgumentException("The startTimeUtc must be earlier than endTimeUtc.");
+                throw new ArgumentException("The start time must be earlier than the end time.");
             }
         }
 
-        private TransponderRangeReservation CreateInternal(TransponderRangeReservation reservation)
+        private static bool OverlapsWindow(Job job, DateTime startTimeUtc, DateTime endTimeUtc)
         {
-            var updatedInstance = reservation.ToUpdatedInstance();
-            var createdDomInstance = DomHelper.DomInstances.Create(updatedInstance.ToInstance());
-            return TransponderRangeReservation.FromInstance(new TransponderReservationsInstance(createdDomInstance));
+            var jobStart = job.Start.UtcDateTime;
+            var jobEnd = job.End.UtcDateTime;
+            return jobStart < endTimeUtc && jobEnd > startTimeUtc;
         }
 
-        private TransponderRangeReservation UpdateInternal(TransponderRangeReservation reservation)
+        private static bool IsReservationJob(Job job, out JobResourceNode resourceNode)
         {
-            var updatedInstance = reservation.ToUpdatedInstance();
-            var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
-            return TransponderRangeReservation.FromInstance(new TransponderReservationsInstance(updatedDomInstance));
+            resourceNode = null;
+            if (job?.NodeGraph == null)
+            {
+                return false;
+            }
+
+            var nodes = job.NodeGraph.Nodes;
+            if (nodes.Count != 1)
+            {
+                return false;
+            }
+
+            if (!nodes.First().IsResourceNode(out var candidate))
+            {
+                return false;
+            }
+
+            if (candidate.ResourcePoolId != PredefinedGuids.TransponderResourcePoolGuid)
+            {
+                return false;
+            }
+
+            resourceNode = candidate;
+            return true;
+        }
+
+        private IEnumerable<(Job Job, JobResourceNode Node)> ReadAllReservationJobs()
+        {
+            foreach (var job in Jobs.Read())
+            {
+                if (IsReservationJob(job, out var node))
+                {
+                    yield return (job, node);
+                }
+            }
+        }
+
+        private TransponderRangeReservation ToReservation(Job job, JobResourceNode node)
+        {
+            var reservation = TransponderRangeReservation.CreateWithId(job.Id);
+            reservation.Name = job.Name;
+            reservation.StartTime = job.Start.UtcDateTime;
+            reservation.EndTime = job.End.UtcDateTime;
+
+            reservation.Transponder = ResolveTransponderIdFromResource(node.ResourceId);
+
+            var rangeCapacity = node.OrchestrationSettings.Capacities
+                .OfType<RangeCapacitySetting>()
+                .FirstOrDefault(c => c.Id == PredefinedGuids.TransponderBandwidthGuid);
+            if (rangeCapacity != null)
+            {
+                reservation.RelativeStartFrequency = rangeCapacity.MinValue.HasValue ? (double?)(double)rangeCapacity.MinValue.Value : null;
+                reservation.RelativeEndFrequency = rangeCapacity.MaxValue.HasValue ? (double?)(double)rangeCapacity.MaxValue.Value : null;
+            }
+
+            return reservation;
+        }
+
+        private TransponderRangeReservation ReadJobAsReservation(Job job)
+        {
+            if (job == null || !IsReservationJob(job, out var node))
+            {
+                return null;
+            }
+
+            return ToReservation(job, node);
+        }
+
+        private Guid? ResolveTransponderIdFromResource(Guid resourceId)
+        {
+            if (resourceId == Guid.Empty)
+            {
+                return null;
+            }
+
+            var match = SatOpsApi.Transponders
+                .Read(TransponderExposers.TransponderDOMResource.Equal(resourceId))
+                .FirstOrDefault();
+
+            return match?.Id;
+        }
+
+        private Guid? TryGetResourceId(Guid transponderId)
+        {
+            var transponder = SatOpsApi.Transponders.Read(transponderId);
+            return transponder?.DOMResource;
+        }
+
+        private Job BuildJob(TransponderRangeReservation reservation, Job existingJob)
+        {
+            if (!reservation.Transponder.HasValue || reservation.Transponder.Value == Guid.Empty)
+            {
+                throw new ArgumentException("Transponder is required to build a reservation job.", nameof(reservation));
+            }
+
+            var resourceId = TryGetResourceId(reservation.Transponder.Value)
+                ?? throw new InvalidOperationException($"Transponder '{reservation.Transponder.Value}' has no associated MediaOps.Plan resource.");
+
+            var job = existingJob ?? (reservation.Id != Guid.Empty ? new Job(reservation.Id) : new Job());
+
+            job.Name = reservation.Name;
+            if (reservation.StartTime.HasValue)
+            {
+                job.Start = new DateTimeOffset(DateTime.SpecifyKind(reservation.StartTime.Value, DateTimeKind.Utc));
+            }
+
+            if (reservation.EndTime.HasValue)
+            {
+                job.End = new DateTimeOffset(DateTime.SpecifyKind(reservation.EndTime.Value, DateTimeKind.Utc));
+            }
+
+            var node = job.NodeGraph.Nodes.OfType<JobResourceNode>()
+                .FirstOrDefault(n => n.ResourcePoolId == PredefinedGuids.TransponderResourcePoolGuid);
+
+            if (node == null)
+            {
+                node = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
+                job.NodeGraph.AddNode(node);
+            }
+            else if (node.ResourceId != resourceId)
+            {
+                var replacement = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
+                job.NodeGraph.SwapNode(node, replacement);
+                node = replacement;
+            }
+
+            if (reservation.StartTime.HasValue)
+            {
+                node.Start = new DateTimeOffset(DateTime.SpecifyKind(reservation.StartTime.Value, DateTimeKind.Utc));
+            }
+
+            if (reservation.EndTime.HasValue)
+            {
+                node.End = new DateTimeOffset(DateTime.SpecifyKind(reservation.EndTime.Value, DateTimeKind.Utc));
+            }
+
+            ApplyBandwidthRange(node, reservation.RelativeStartFrequency, reservation.RelativeEndFrequency);
+
+            return job;
+        }
+
+        private static void ApplyBandwidthRange(JobResourceNode node, double? minValue, double? maxValue)
+        {
+            var existing = node.OrchestrationSettings.Capacities
+                .OfType<RangeCapacitySetting>()
+                .FirstOrDefault(c => c.Id == PredefinedGuids.TransponderBandwidthGuid);
+
+            if (existing != null)
+            {
+                node.OrchestrationSettings.RemoveCapacity(existing);
+            }
+
+            var setting = new RangeCapacitySetting(PredefinedGuids.TransponderBandwidthGuid)
+            {
+                MinValue = minValue.HasValue ? (decimal?)(decimal)minValue.Value : null,
+                MaxValue = maxValue.HasValue ? (decimal?)(decimal)maxValue.Value : null,
+            };
+            node.OrchestrationSettings.AddCapacity(setting);
         }
     }
 }
