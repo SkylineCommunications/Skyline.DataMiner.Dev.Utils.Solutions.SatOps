@@ -78,7 +78,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReser
                     return or.subFilters.Any(sub => Evaluate(sub, reservation));
 
                 case NOTFilterElement<TransponderRangeReservation> not:
-                    return not.subFilters.All(sub => !Evaluate(sub, reservation));
+                    return !Evaluate(not.original, reservation);
 
                 case ManagedFilterIdentifier managed:
                     return EvaluateManaged(managed, reservation);
@@ -109,7 +109,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReser
         {
             if (!actual.HasValue)
             {
-                return comparer == Comparer.NotEqual;
+                return comparer == Comparer.NotEquals;
             }
 
             var cmp = actual.Value.CompareTo(expected);
@@ -120,7 +120,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReser
         {
             if (!actual.HasValue)
             {
-                return comparer == Comparer.NotEqual;
+                return comparer == Comparer.NotEquals;
             }
 
             var cmp = actual.Value.CompareTo(expected);
@@ -131,7 +131,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReser
         {
             if (!actual.HasValue)
             {
-                return comparer == Comparer.NotEqual;
+                return comparer == Comparer.NotEquals;
             }
 
             var cmp = actual.Value.CompareTo(expected);
@@ -142,17 +142,17 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReser
         {
             switch (comparer)
             {
-                case Comparer.Equal:
+                case Comparer.Equals:
                     return equal;
-                case Comparer.NotEqual:
+                case Comparer.NotEquals:
                     return !equal;
-                case Comparer.LessThan:
+                case Comparer.LT:
                     return compareResult < 0;
-                case Comparer.LessThanOrEqual:
+                case Comparer.LTE:
                     return compareResult <= 0;
-                case Comparer.GreaterThan:
+                case Comparer.GT:
                     return compareResult > 0;
-                case Comparer.GreaterThanOrEqual:
+                case Comparer.GTE:
                     return compareResult >= 0;
                 default:
                     throw new NotSupportedException($"Unsupported comparer: {comparer}");

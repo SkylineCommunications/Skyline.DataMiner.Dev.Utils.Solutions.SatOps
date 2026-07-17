@@ -3,14 +3,15 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Transponder;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReservation;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using SLDataGateway.API.Types.Querying;
@@ -107,11 +108,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(apiObjectId));
             }
 
-            if (Read(apiObjectId) == null)
+            var existing = Jobs.Read(apiObjectId);
+            if (existing == null || !IsReservationJob(existing, out _))
             {
                 return;
             }
 
+            EnsureJobIsMutable(existing);
             Jobs.Delete(apiObjectId);
         }
 
@@ -281,6 +284,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
             }
 
+            EnsureJobIsMutable(existing);
+
             var updatedJob = BuildJob(oToUpdate, existing);
             var persistedJob = Jobs.Update(updatedJob);
             return ReadJobAsReservation(persistedJob);
@@ -385,7 +390,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             {
                 var slice = results.Skip(offset).Take(pageSize).ToList();
                 var hasNext = offset + pageSize < results.Count;
-                yield return new PagedResult<TransponderRangeReservation>(slice, pageNumber++, pageSize, hasNext);
+                yield return new Skyline.DataMiner.SDM.PagedResult<TransponderRangeReservation>(slice, pageNumber++, pageSize, hasNext);
             }
         }
 
@@ -449,6 +454,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             reservation.Name = job.Name;
             reservation.StartTime = job.Start.UtcDateTime;
             reservation.EndTime = job.End.UtcDateTime;
+            reservation.NodeId = node.Id;
 
             reservation.Transponder = ResolveTransponderIdFromResource(node.ResourceId);
 
@@ -459,6 +465,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             {
                 reservation.RelativeStartFrequency = rangeCapacity.MinValue.HasValue ? (double?)(double)rangeCapacity.MinValue.Value : null;
                 reservation.RelativeEndFrequency = rangeCapacity.MaxValue.HasValue ? (double?)(double)rangeCapacity.MaxValue.Value : null;
+            }
+
+            var satelliteCapability = node.OrchestrationSettings.Capabilities
+                .FirstOrDefault(c => c.Id == PredefinedGuids.SatelliteCapabilityGuid);
+            if (satelliteCapability != null)
+            {
+                reservation.SatelliteName = satelliteCapability.Value;
             }
 
             return reservation;
@@ -523,26 +536,18 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (node == null)
             {
                 node = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
-                job.NodeGraph.AddNode(node);
+                job.NodeGraph.Add(node);
             }
             else if (node.ResourceId != resourceId)
             {
                 var replacement = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
-                job.NodeGraph.SwapNode(node, replacement);
+                job.NodeGraph.Swap(node, replacement);
                 node = replacement;
             }
 
-            if (reservation.StartTime.HasValue)
-            {
-                node.Start = new DateTimeOffset(DateTime.SpecifyKind(reservation.StartTime.Value, DateTimeKind.Utc));
-            }
-
-            if (reservation.EndTime.HasValue)
-            {
-                node.End = new DateTimeOffset(DateTime.SpecifyKind(reservation.EndTime.Value, DateTimeKind.Utc));
-            }
-
             ApplyBandwidthRange(node, reservation.RelativeStartFrequency, reservation.RelativeEndFrequency);
+            ApplyBandwidthSize(node, reservation.BandwidthSize);
+            ApplySatelliteCapability(node, reservation.SatelliteName);
 
             return job;
         }
@@ -564,6 +569,172 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 MaxValue = maxValue.HasValue ? (decimal?)(decimal)maxValue.Value : null,
             };
             node.OrchestrationSettings.AddCapacity(setting);
+        }
+
+        private static void ApplyBandwidthSize(JobResourceNode node, double? size)
+        {
+            var existing = node.OrchestrationSettings.Capacities
+                .OfType<NumberCapacitySetting>()
+                .FirstOrDefault(c => c.Id == PredefinedGuids.BandwidthSizeGuid);
+
+            if (existing != null)
+            {
+                node.OrchestrationSettings.RemoveCapacity(existing);
+            }
+
+            if (!size.HasValue)
+            {
+                return;
+            }
+
+            node.OrchestrationSettings.AddCapacity(new NumberCapacitySetting(PredefinedGuids.BandwidthSizeGuid)
+            {
+                Value = (decimal)size.Value,
+            });
+        }
+
+        private static void ApplySatelliteCapability(JobResourceNode node, string satelliteName)
+        {
+            var existing = node.OrchestrationSettings.Capabilities
+                .FirstOrDefault(c => c.Id == PredefinedGuids.SatelliteCapabilityGuid);
+
+            if (existing != null)
+            {
+                node.OrchestrationSettings.RemoveCapability(existing);
+            }
+
+            if (string.IsNullOrWhiteSpace(satelliteName))
+            {
+                return;
+            }
+
+            node.OrchestrationSettings.AddCapability(new CapabilitySetting(PredefinedGuids.SatelliteCapabilityGuid)
+            {
+                Value = satelliteName,
+            });
+        }
+
+        private static void EnsureJobIsMutable(Job job)
+        {
+            if (job.State == JobState.Running || job.State == JobState.Completed)
+            {
+                throw new InvalidOperationException(
+                    $"Reservation '{job.Id}' cannot be modified because its underlying job is in state '{job.State}'.");
+            }
+        }
+
+        public void ReserveRange(Guid reservationId, double startFrequency, double endFrequency)
+        {
+            ReserveRangeInternal(reservationId, startFrequency, endFrequency, satelliteName: null, applySatellite: false);
+        }
+
+        public void ReserveRange(Guid reservationId, double startFrequency, double endFrequency, string satelliteName)
+        {
+            ReserveRangeInternal(reservationId, startFrequency, endFrequency, satelliteName, applySatellite: true);
+        }
+
+        private void ReserveRangeInternal(Guid reservationId, double startFrequency, double endFrequency, string satelliteName, bool applySatellite)
+        {
+            if (reservationId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
+            }
+
+            var job = Jobs.Read(reservationId)
+                ?? throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
+
+            if (!IsReservationJob(job, out var node))
+            {
+                throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
+            }
+
+            EnsureJobIsMutable(job);
+
+            ApplyBandwidthRange(node, startFrequency, endFrequency);
+            ApplyBandwidthSize(node, endFrequency - startFrequency);
+
+            if (applySatellite)
+            {
+                ApplySatelliteCapability(node, satelliteName);
+            }
+
+            Jobs.Update(job);
+        }
+
+        public string GetFirstNodeId(Guid reservationId)
+        {
+            if (reservationId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
+            }
+
+            var job = Jobs.Read(reservationId)
+                ?? throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
+
+            var firstNode = job.NodeGraph?.Nodes?.FirstOrDefault()
+                ?? throw new InvalidOperationException($"Reservation '{reservationId}' has no nodes.");
+
+            return firstNode.Id;
+        }
+
+        public void AddSlotNameProperty(Guid reservationId, string slotName)
+        {
+            if (reservationId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
+            }
+
+            var nodeId = GetFirstNodeId(reservationId);
+            var propertiesHelper = new DomHelper(
+                SatOpsApi.Connection.HandleMessages,
+                SlcPropertiesIds.ModuleId);
+
+            var reservationIdString = reservationId.ToString();
+
+            var propertyInfoInstance = propertiesHelper.DomInstances
+                .Read(DomInstanceExposers.DomDefinitionId
+                    .Equal(SlcPropertiesIds.Definitions.Property.Id))
+                .Select(di => new PropertyInstance(di))
+                .FirstOrDefault(pi => pi.PropertyInfo.Name == NamingConstants.PropertyInfoName);
+
+            var propertyValueInstance = propertiesHelper.DomInstances
+                .Read(DomInstanceExposers.DomDefinitionId
+                    .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id))
+                .Select(di => new PropertyValuesInstance(di))
+                .FirstOrDefault(pvi => pvi.PropertyValueInfo.LinkedObjectID == reservationIdString
+                    && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName));
+
+            if (propertyValueInstance != null)
+            {
+                var existingEntry = propertyValueInstance.PropertyValue
+                    .FirstOrDefault(pv => pv.PropertyName == NamingConstants.PropertyInfoName);
+
+                if (existingEntry != null)
+                {
+                    existingEntry.Value = slotName;
+                    propertyValueInstance.Save(propertiesHelper);
+                    return;
+                }
+            }
+
+            var newInstance = new PropertyValuesInstance
+            {
+                PropertyValueInfo =
+                {
+                    LinkedObjectID = reservationIdString,
+                    Scope = NamingConstants.PropertyInfoScope,
+                    SubID = nodeId,
+                },
+            };
+
+            newInstance.PropertyValue.Add(new PropertyValueSection
+            {
+                PropertyName = NamingConstants.PropertyInfoName,
+                Value = slotName,
+                PropertyID = propertyInfoInstance?.ID.Id ?? Guid.Empty,
+            });
+
+            newInstance.Save(propertiesHelper);
         }
     }
 }
