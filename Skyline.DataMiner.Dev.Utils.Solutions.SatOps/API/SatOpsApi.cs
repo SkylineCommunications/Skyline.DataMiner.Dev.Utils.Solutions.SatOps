@@ -115,11 +115,6 @@
         public IConnection Connection { get; }
 
         /// <summary>
-        /// Gets the MediaOps.Plan API used for job and resource orchestration.
-        /// </summary>
-        public IMediaOpsPlanApi MediaOpsPlan => lazyMediaOpsPlanApi.Value;
-
-        /// <summary>
         /// Gets the repository for managing satellite entities.
         /// </summary>
         public ISatelliteRepository Satellites => lazySatelliteRepository.Value;
@@ -153,6 +148,11 @@
         /// Gets the repository for managing transponder slot entities.
         /// </summary>
         public ITransponderSlotRepository TransponderSlots => lazyTransponderSlotRepository.Value;
+
+        /// <summary>
+        /// Gets the MediaOps.Plan API used for job and resource orchestration.
+        /// </summary>
+        internal IMediaOpsPlanApi MediaOpsPlan => lazyMediaOpsPlanApi.Value;
 
         /// <summary>
         /// Gets the helper for satellite management operations.

@@ -22,11 +22,6 @@
         IConnection Connection { get; }
 
         /// <summary>
-        /// Gets the MediaOps.Plan API used for job and resource orchestration.
-        /// </summary>
-        IMediaOpsPlanApi MediaOpsPlan { get; }
-
-        /// <summary>
         /// Gets the satellite repository.
         /// </summary>
         ISatelliteRepository Satellites { get; }
