@@ -1,6 +1,9 @@
 ﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
 {
-    internal static class NamingConstants
+    /// <summary>
+    /// Contains naming constants used in the Satellite Operations API.
+    /// </summary>
+    public static class NamingConstants
     {
         /// <summary>
         /// Represents the name of the Transponders collection or entity.

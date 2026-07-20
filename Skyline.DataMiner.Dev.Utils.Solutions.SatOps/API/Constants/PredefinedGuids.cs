@@ -2,7 +2,10 @@
 {
     using System;
 
-    internal static class PredefinedGuids
+    /// <summary>
+    /// Contains predefined GUIDs for various entities in the Satellite Operations API.
+    /// </summary>
+    public static class PredefinedGuids
     {
         /// <summary>
         /// GUID representing the Satellite capability entity.
