@@ -10,7 +10,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void SatelliteManagementConstant_ExposesModuleId()
         {
-            Assert.AreEqual("(slc)satellite_management", SatelliteManagementConstant.ModuleId);
+            Assert.AreEqual("(slc)satellite_management", SatelliteManagementConstant.SatelliteManagementModuleId);
         }
 
         [TestMethod]
