@@ -7,10 +7,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
     /// </summary>
     public static class SatelliteManagementConstant
     {
+        #region SatOps Constants
         /// <summary>
         /// Gets the DOM module identifier for Satellite Management.
         /// </summary>
-        public static string ModuleId
+        public static string SatelliteManagementModuleId
         {
             get { return Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SlcSatellite_ManagementIds.ModuleId; }
         }
@@ -102,5 +103,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
         {
             get { return PredefinedGuids.TransponderResourcePoolGuid; }
         }
+#endregion
     }
 }
