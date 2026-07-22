@@ -72,11 +72,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         void AddSlotNameProperty(Guid reservationId, string slotName);
 
         /// <summary>
-        /// Retrieves the id of the first job node on the reservation.
+        /// Retrieves the id of the transponder job node on the reservation. When the underlying job
+        /// contains multiple nodes (e.g. additional non-transponder resource nodes), the id returned
+        /// is the id of the single transponder <c>JobResourceNode</c>.
         /// Equivalent of the classic <c>RangeReservationHelper.GetFirstNodeId</c>.
         /// </summary>
         /// <param name="reservationId">The reservation (job) identifier.</param>
-        /// <returns>The first node id of the underlying job.</returns>
+        /// <returns>The transponder node id of the underlying job.</returns>
         string GetFirstNodeId(Guid reservationId);
     }
 }

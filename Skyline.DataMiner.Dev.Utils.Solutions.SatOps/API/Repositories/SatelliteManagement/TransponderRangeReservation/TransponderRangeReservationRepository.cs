@@ -417,23 +417,34 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 return false;
             }
 
-            var nodes = job.NodeGraph.Nodes;
-            if (nodes.Count != 1)
+            JobResourceNode transponderNode = null;
+            foreach (var graphNode in job.NodeGraph.Nodes)
+            {
+                if (!graphNode.IsResourceNode(out var candidate))
+                {
+                    continue;
+                }
+
+                if (candidate.ResourcePoolId != PredefinedGuids.TransponderResourcePoolGuid)
+                {
+                    continue;
+                }
+
+                if (transponderNode != null)
+                {
+                    // More than one transponder node on the same job is not a valid range reservation shape.
+                    return false;
+                }
+
+                transponderNode = candidate;
+            }
+
+            if (transponderNode == null)
             {
                 return false;
             }
 
-            if (!nodes.First().IsResourceNode(out var candidate))
-            {
-                return false;
-            }
-
-            if (candidate.ResourcePoolId != PredefinedGuids.TransponderResourcePoolGuid)
-            {
-                return false;
-            }
-
-            resourceNode = candidate;
+            resourceNode = transponderNode;
             return true;
         }
 
@@ -671,10 +682,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             var job = Jobs.Read(reservationId)
                 ?? throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
 
-            var firstNode = job.NodeGraph?.Nodes?.FirstOrDefault()
-                ?? throw new InvalidOperationException($"Reservation '{reservationId}' has no nodes.");
+            if (!IsReservationJob(job, out var node))
+            {
+                throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
+            }
 
-            return firstNode.Id;
+            return node.Id;
         }
 
         public void AddSlotNameProperty(Guid reservationId, string slotName)
