@@ -46,7 +46,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public Guid? TransponderPlan
         {
-            get => originalInstance.TransponderSlot?.TransponderPlan;
+            get => updatedInstance.TransponderSlot?.TransponderPlan;
             set => updatedInstance.TransponderSlot.TransponderPlan = value;
         }
 
@@ -55,7 +55,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public override string Name
         {
-            get => originalInstance.TransponderSlot?.SlotName;
+            get => updatedInstance.TransponderSlot?.SlotName;
             set => updatedInstance.TransponderSlot.SlotName = value;
         }
 
@@ -64,7 +64,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? SlotStartFrequency
         {
-            get => originalInstance.TransponderSlot?.SlotStartFrequency;
+            get => updatedInstance.TransponderSlot?.SlotStartFrequency;
             set => updatedInstance.TransponderSlot.SlotStartFrequency = value;
         }
 
@@ -73,7 +73,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? SlotEndFrequency
         {
-            get => originalInstance.TransponderSlot?.SlotEndFrequency;
+            get => updatedInstance.TransponderSlot?.SlotEndFrequency;
             set => updatedInstance.TransponderSlot.SlotEndFrequency = value;
         }
 
@@ -82,7 +82,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? Bandwidth
         {
-            get => originalInstance.TransponderSlot?.Bandwidth;
+            get => updatedInstance.TransponderSlot?.Bandwidth;
             set => updatedInstance.TransponderSlot.Bandwidth = value;
         }
 
@@ -91,7 +91,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? UplinkFreq
         {
-            get => originalInstance.TransponderSlot?.UplinkFreq;
+            get => updatedInstance.TransponderSlot?.UplinkFreq;
             set => updatedInstance.TransponderSlot.UplinkFreq = value;
         }
 
@@ -100,7 +100,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? DownlinkFreq
         {
-            get => originalInstance.TransponderSlot?.DownlinkFreq;
+            get => updatedInstance.TransponderSlot?.DownlinkFreq;
             set => updatedInstance.TransponderSlot.DownlinkFreq = value;
         }
 

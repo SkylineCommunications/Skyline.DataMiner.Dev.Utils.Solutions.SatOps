@@ -68,7 +68,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public override string Name
         {
-            get => originalInstance.TransponderPlan?.PlanName;
+            get => updatedInstance.TransponderPlan?.PlanName;
             set => updatedInstance.TransponderPlan.PlanName = value;
         }
 
@@ -77,7 +77,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public DateTime? StartTime
         {
-            get => originalInstance.TransponderPlan?.StartTime;
+            get => updatedInstance.TransponderPlan?.StartTime;
             set => updatedInstance.TransponderPlan.StartTime = value;
         }
 
@@ -86,7 +86,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public DateTime? EndTime
         {
-            get => originalInstance.TransponderPlan?.EndTime;
+            get => updatedInstance.TransponderPlan?.EndTime;
             set => updatedInstance.TransponderPlan.EndTime = value;
         }
 
@@ -95,7 +95,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public bool? IsPermanent
         {
-            get => originalInstance.TransponderPlan?.IsPermanent;
+            get => updatedInstance.TransponderPlan?.IsPermanent;
             set => updatedInstance.TransponderPlan.IsPermanent = value;
         }
 
@@ -104,7 +104,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? DefaultSlotSize
         {
-            get => originalInstance.TransponderPlan?.DefaultSlotSize;
+            get => updatedInstance.TransponderPlan?.DefaultSlotSize;
             set => updatedInstance.TransponderPlan.DefaultSlotSize = value;
         }
 
@@ -113,7 +113,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public Guid? Transponder
         {
-            get => originalInstance.TransponderPlan?.Transponder;
+            get => updatedInstance.TransponderPlan?.Transponder;
             set => updatedInstance.TransponderPlan.Transponder = value;
         }
 

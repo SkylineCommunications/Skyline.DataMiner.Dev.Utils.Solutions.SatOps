@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam
 {
     using System;
     using System.Collections.Generic;
@@ -69,7 +69,7 @@
         /// </summary>
         public override string Name
         {
-            get => originalInstance.Beam?.BeamName;
+            get => updatedInstance.Beam?.BeamName;
             set => updatedInstance.Beam.BeamName = value;
         }
 
@@ -78,7 +78,7 @@
         /// </summary>
         public Guid? BeamSatellite
         {
-            get => originalInstance.Beam?.BeamSatellite;
+            get => updatedInstance.Beam?.BeamSatellite;
             set => updatedInstance.Beam.BeamSatellite = value;
         }
 
@@ -89,7 +89,7 @@
         {
             get
             {
-                var domLinkType = originalInstance.Beam?.LinkType;
+                var domLinkType = updatedInstance.Beam?.LinkType;
                 if (domLinkType == null)
                     return null;
 
@@ -127,7 +127,7 @@
         {
             get
             {
-                var domTransmissionType = originalInstance.Beam?.TransmissionType;
+                var domTransmissionType = updatedInstance.Beam?.TransmissionType;
                 if (domTransmissionType == null)
                     return null;
 
@@ -161,7 +161,7 @@
         /// </summary>
         public string FootprintFile
         {
-            get => originalInstance.Beam?.FootprintFile;
+            get => updatedInstance.Beam?.FootprintFile;
             set => updatedInstance.Beam.FootprintFile = value;
         }
 

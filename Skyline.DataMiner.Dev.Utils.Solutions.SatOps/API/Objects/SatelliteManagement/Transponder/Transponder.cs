@@ -68,7 +68,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public override string Name
         {
-            get => originalInstance.Transponder?.TransponderName;
+            get => updatedInstance.Transponder?.TransponderName;
             set => updatedInstance.Transponder.TransponderName = value;
         }
 
@@ -77,7 +77,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public Guid? TransponderSatellite
         {
-            get => originalInstance.Transponder?.TransponderSatellite;
+            get => updatedInstance.Transponder?.TransponderSatellite;
             set => updatedInstance.Transponder.TransponderSatellite = value;
         }
 
@@ -86,7 +86,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public Guid? Beam
         {
-            get => originalInstance.Transponder?.Beam;
+            get => updatedInstance.Transponder?.Beam;
             set => updatedInstance.Transponder.Beam = value;
         }
 
@@ -97,7 +97,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         {
             get
             {
-                var domBand = originalInstance.Transponder?.Band;
+                var domBand = updatedInstance.Transponder?.Band;
                 if (domBand == null)
                     return null;
 
@@ -137,7 +137,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? Bandwidth
         {
-            get => originalInstance.Transponder?.Bandwidth;
+            get => updatedInstance.Transponder?.Bandwidth;
             set => updatedInstance.Transponder.Bandwidth = value;
         }
 
@@ -146,7 +146,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? StartFrequency
         {
-            get => originalInstance.Transponder?.StartFrequency;
+            get => updatedInstance.Transponder?.StartFrequency;
             set => updatedInstance.Transponder.StartFrequency = value;
         }
 
@@ -155,7 +155,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? StopFrequency
         {
-            get => originalInstance.Transponder?.StopFrequency;
+            get => updatedInstance.Transponder?.StopFrequency;
             set => updatedInstance.Transponder.StopFrequency = value;
         }
 
@@ -166,7 +166,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         {
             get
             {
-                var domPolarization = originalInstance.Transponder?.Polarization;
+                var domPolarization = updatedInstance.Transponder?.Polarization;
                 if (domPolarization == null)
                     return null;
 
@@ -198,7 +198,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? DownlinkStartFreq
         {
-            get => originalInstance.Transponder?.DownlinkStartFreq;
+            get => updatedInstance.Transponder?.DownlinkStartFreq;
             set => updatedInstance.Transponder.DownlinkStartFreq = value;
         }
 
@@ -207,7 +207,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? DownlinkEndFreq
         {
-            get => originalInstance.Transponder?.DownlinkEndFreq;
+            get => updatedInstance.Transponder?.DownlinkEndFreq;
             set => updatedInstance.Transponder.DownlinkEndFreq = value;
         }
 
@@ -216,7 +216,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? RollingWindow
         {
-            get => originalInstance.Transponder?.RollingWindow;
+            get => updatedInstance.Transponder?.RollingWindow;
             set => updatedInstance.Transponder.RollingWindow = value;
         }
 
@@ -225,7 +225,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public DateTime? HardEndDate
         {
-            get => originalInstance.Transponder?.HardEndDate;
+            get => updatedInstance.Transponder?.HardEndDate;
             set => updatedInstance.Transponder.HardEndDate = value;
         }
 
@@ -234,7 +234,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public string PhoneNumber
         {
-            get => originalInstance.Transponder?.PhoneNumber;
+            get => updatedInstance.Transponder?.PhoneNumber;
             set => updatedInstance.Transponder.PhoneNumber = value;
         }
 
@@ -245,7 +245,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         {
             get
             {
-                var domUplinkPolarization = originalInstance.Transponder?.UplinkPolarization;
+                var domUplinkPolarization = updatedInstance.Transponder?.UplinkPolarization;
                 if (domUplinkPolarization == null)
                     return null;
 
@@ -283,7 +283,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         {
             get
             {
-                var domDownlinkPolarization = originalInstance.Transponder?.DownlinkPolarization;
+                var domDownlinkPolarization = updatedInstance.Transponder?.DownlinkPolarization;
                 if (domDownlinkPolarization == null)
                     return null;
 
@@ -319,7 +319,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public Guid? DOMResource
         {
-            get => originalInstance.Transponder?.DOMResource;
+            get => updatedInstance.Transponder?.DOMResource;
             set => updatedInstance.Transponder.DOMResource = value;
         }
 

@@ -46,7 +46,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public Guid? TransponderPlan
         {
-            get => originalInstance.TransponderPlanRow?.TransponderPlan;
+            get => updatedInstance.TransponderPlanRow?.TransponderPlan;
             set => updatedInstance.TransponderPlanRow.TransponderPlan = value;
         }
 
@@ -55,7 +55,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? Bandwidth
         {
-            get => originalInstance.TransponderPlanRow?.Bandwidth;
+            get => updatedInstance.TransponderPlanRow?.Bandwidth;
             set => updatedInstance.TransponderPlanRow.Bandwidth = value;
         }
 
@@ -64,7 +64,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? StepSize
         {
-            get => originalInstance.TransponderPlanRow?.StepSize;
+            get => updatedInstance.TransponderPlanRow?.StepSize;
             set => updatedInstance.TransponderPlanRow.StepSize = value;
         }
 
@@ -73,7 +73,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? Offset
         {
-            get => originalInstance.TransponderPlanRow?.Offset;
+            get => updatedInstance.TransponderPlanRow?.Offset;
             set => updatedInstance.TransponderPlanRow.Offset = value;
         }
 
@@ -82,7 +82,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// </summary>
         public double? Limit
         {
-            get => originalInstance.TransponderPlanRow?.Limit;
+            get => updatedInstance.TransponderPlanRow?.Limit;
             set => updatedInstance.TransponderPlanRow.Limit = value;
         }
 

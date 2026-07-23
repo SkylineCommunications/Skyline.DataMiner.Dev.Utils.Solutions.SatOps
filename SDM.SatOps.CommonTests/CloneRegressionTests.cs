@@ -107,5 +107,32 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.IsNotNull(result);
             Assert.IsInstanceOfType(result, apiType);
         }
+
+        [DataTestMethod]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite", "Name", "TestSat")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite", "Abbreviation", "TS")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder", "Name", "TP-1")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan", "Name", "Plan-1")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot", "Name", "Slot-1")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam", "Name", "Beam-1")]
+        public void SetterValueIsVisibleToGetter_OnFreshInstance(string apiTypeName, string factoryMethodName, string propertyName, object value)
+        {
+            var apiType = CommonAssembly.GetType(apiTypeName, throwOnError: true);
+            var factory = apiType.GetMethod(factoryMethodName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var apiObject = factory.Invoke(null, Array.Empty<object>());
+
+            var property = apiType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+            Assert.IsNotNull(property, "Property '{0}' not found on '{1}'.", propertyName, apiTypeName);
+
+            property.SetValue(apiObject, value);
+            var readBack = property.GetValue(apiObject);
+
+            Assert.AreEqual(
+                value,
+                readBack,
+                "Property '{0}' on freshly initialized '{1}' should reflect the value set via the setter.",
+                propertyName,
+                apiTypeName);
+        }
     }
 }

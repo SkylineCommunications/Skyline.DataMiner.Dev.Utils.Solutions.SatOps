@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite
 {
     using System;
     using System.Collections.Generic;
@@ -68,7 +68,7 @@
         /// </summary>
         public override string Name
         {
-            get => originalInstance.General?.SatelliteName;
+            get => updatedInstance.General?.SatelliteName;
             set => updatedInstance.General.SatelliteName = value;
         }
 
@@ -77,7 +77,7 @@
         /// </summary>
         public string Abbreviation
         {
-            get => originalInstance.General?.SatelliteAbbreviation;
+            get => updatedInstance.General?.SatelliteAbbreviation;
             set => updatedInstance.General.SatelliteAbbreviation = value;
         }
 
@@ -88,7 +88,7 @@
         {
             get
             {
-                var domOrbit = originalInstance.General?.Orbit;
+                var domOrbit = updatedInstance.General?.Orbit;
                 if (domOrbit == null)
                     return null;
 
@@ -122,7 +122,7 @@
         /// </summary>
         public double? LongitudeForGEODegrees
         {
-            get => originalInstance.General?.LongitudeForGEODegrees;
+            get => updatedInstance.General?.LongitudeForGEODegrees;
             set => updatedInstance.General.LongitudeForGEODegrees = value;
         }
 
@@ -131,7 +131,7 @@
         /// </summary>
         public double? InclinationDegrees
         {
-            get => originalInstance.General?.InclinationDegrees;
+            get => updatedInstance.General?.InclinationDegrees;
             set => updatedInstance.General.InclinationDegrees = value;
         }
 
@@ -140,7 +140,7 @@
         /// </summary>
         public string Operator
         {
-            get => originalInstance.Satellite?.Operator;
+            get => updatedInstance.Satellite?.Operator;
             set => updatedInstance.Satellite.Operator = value;
         }
 
@@ -149,7 +149,7 @@
         /// </summary>
         public string Coverage
         {
-            get => originalInstance.Satellite?.Coverage;
+            get => updatedInstance.Satellite?.Coverage;
             set => updatedInstance.Satellite.Coverage = value;
         }
 
@@ -158,7 +158,7 @@
         /// </summary>
         public string Applications
         {
-            get => originalInstance.Satellite?.Applications;
+            get => updatedInstance.Satellite?.Applications;
             set => updatedInstance.Satellite.Applications = value;
         }
 
@@ -167,7 +167,7 @@
         /// </summary>
         public string Info
         {
-            get => originalInstance.Satellite?.Info;
+            get => updatedInstance.Satellite?.Info;
             set => updatedInstance.Satellite.Info = value;
         }
 
@@ -178,7 +178,7 @@
         {
             get
             {
-                var domHemisphere = originalInstance.General?.Hemisphere;
+                var domHemisphere = updatedInstance.General?.Hemisphere;
                 if (domHemisphere == null)
                     return null;
 
@@ -210,7 +210,7 @@
         /// </summary>
         public string Manufacturer
         {
-            get => originalInstance.Origin?.Manufacturer;
+            get => updatedInstance.Origin?.Manufacturer;
             set => updatedInstance.Origin.Manufacturer = value;
         }
 
@@ -219,7 +219,7 @@
         /// </summary>
         public string Country
         {
-            get => originalInstance.Origin?.Country;
+            get => updatedInstance.Origin?.Country;
             set => updatedInstance.Origin.Country = value;
         }
 
@@ -228,7 +228,7 @@
         /// </summary>
         public string LaunchInfo
         {
-            get => originalInstance.LaunchInformation?.LaunchInfo;
+            get => updatedInstance.LaunchInformation?.LaunchInfo;
             set => updatedInstance.LaunchInformation.LaunchInfo = value;
         }
 
@@ -237,7 +237,7 @@
         /// </summary>
         public DateTime? LaunchInServiceDate
         {
-            get => originalInstance.LaunchInformation?.LaunchInServiceDate;
+            get => updatedInstance.LaunchInformation?.LaunchInServiceDate;
             set => updatedInstance.LaunchInformation.LaunchInServiceDate = value;
         }
 
