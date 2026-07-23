@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
@@ -47,7 +47,7 @@
 
         public Satellite Create(Satellite oToCreate)
         {
-            if (Read(oToCreate.Id) != null)
+            if (oToCreate.Id != Guid.Empty && Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingSatellite);
 
             return CreateInternal(oToCreate);
@@ -58,7 +58,7 @@
             var results = new List<Satellite>();
             foreach (var satellite in oToCreateOrUpdate)
             {
-                var existing = Read(satellite.Id);
+                var existing = satellite.Id != Guid.Empty ? Read(satellite.Id) : null;
                 var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite);
                 results.Add(result);
             }
@@ -144,7 +144,7 @@
 
         public Satellite Update(Satellite oToUpdate)
         {
-            if (Read(oToUpdate.Id) == null)
+            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingSatellite);
 
             return UpdateInternal(oToUpdate);

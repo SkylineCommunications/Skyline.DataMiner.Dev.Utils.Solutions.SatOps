@@ -109,7 +109,57 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite", "Name", "TestSat")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", "CreateNewTransponderPlanRow")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", "CreateNew")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam")]
+        public void Initialize_YieldsNonEmptyId(string apiTypeName, string factoryMethodName)
+        {
+            var apiType = CommonAssembly.GetType(apiTypeName, throwOnError: true);
+            var factory = apiType.GetMethod(factoryMethodName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var apiObject = factory.Invoke(null, Array.Empty<object>());
+
+            var idProperty = apiType.GetProperty("Id", BindingFlags.Instance | BindingFlags.Public);
+            Assert.IsNotNull(idProperty, "'Id' property not found on '{0}'.", apiTypeName);
+
+            var id = (Guid)idProperty.GetValue(apiObject);
+            Assert.AreNotEqual(
+                Guid.Empty,
+                id,
+                "Freshly initialized '{0}' should have a non-empty Id.",
+                apiTypeName);
+        }
+
+        [DataTestMethod]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SatellitesInstance")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
+        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.BeamsInstance")]
+        public void Instance_DefaultConstructor_AssignsNonEmptyId(string instanceTypeName)
+        {
+            var instanceType = CommonAssembly.GetType(instanceTypeName, throwOnError: true);
+            var instance = Activator.CreateInstance(instanceType, nonPublic: true);
+            var idProperty = instanceType.GetProperty("ID", BindingFlags.Instance | BindingFlags.Public);
+            Assert.IsNotNull(idProperty, "'ID' property not found on '{0}'.", instanceTypeName);
+
+            var domInstanceId = idProperty.GetValue(instance);
+            Assert.IsNotNull(domInstanceId, "'ID' should be assigned on '{0}'.", instanceTypeName);
+
+            var innerId = (Guid)domInstanceId.GetType().GetProperty("Id").GetValue(domInstanceId);
+            Assert.AreNotEqual(
+                Guid.Empty,
+                innerId,
+                "'{0}' created via default constructor should have a non-empty DomInstanceId.",
+                instanceTypeName);
+        }
+
+        [DataTestMethod]
         [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite", "Abbreviation", "TS")]
         [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder", "Name", "TP-1")]
         [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan", "Name", "Plan-1")]

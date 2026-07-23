@@ -23,7 +23,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
         {
             if (definitionId == null)
                 throw new ArgumentNullException("definitionId");
-            domInstance = new DomInstance { DomDefinitionId = definitionId };
+            domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(Guid.NewGuid())
+                { ModuleId = definitionId.ModuleId },
+                DomDefinitionId = definitionId
+            };
         }
 
         protected DomInstanceBase(DomDefinitionId definitionId, Guid id)

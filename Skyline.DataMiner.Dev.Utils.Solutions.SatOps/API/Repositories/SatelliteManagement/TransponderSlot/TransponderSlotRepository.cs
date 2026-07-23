@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
@@ -48,7 +48,7 @@
 
         public TransponderSlot Create(TransponderSlot oToCreate)
         {
-            if (Read(oToCreate.Id) != null)
+            if (oToCreate.Id != Guid.Empty && Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingTransponderSlot);
 
             return CreateInternal(oToCreate);
@@ -59,7 +59,7 @@
             var results = new List<TransponderSlot>();
             foreach (var transponderSlot in oToCreateOrUpdate)
             {
-                var existing = Read(transponderSlot.Id);
+                var existing = transponderSlot.Id != Guid.Empty ? Read(transponderSlot.Id) : null;
                 var result = existing == null ? CreateInternal(transponderSlot) : UpdateInternal(transponderSlot);
                 results.Add(result);
             }
@@ -154,7 +154,7 @@
 
         public TransponderSlot Update(TransponderSlot oToUpdate)
         {
-            if (Read(oToUpdate.Id) == null)
+            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderSlot);
 
             return UpdateInternal(oToUpdate);

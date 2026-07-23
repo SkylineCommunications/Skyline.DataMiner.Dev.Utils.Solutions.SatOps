@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
@@ -45,7 +45,7 @@
 
         public TransponderPlanRow Create(TransponderPlanRow oToCreate)
         {
-            if (Read(oToCreate.Id) != null)
+            if (oToCreate.Id != Guid.Empty && Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingTransponderPlanRow);
 
             return CreateInternal(oToCreate);
@@ -56,7 +56,7 @@
             var results = new List<TransponderPlanRow>();
             foreach (var transponderPlanRow in oToCreateOrUpdate)
             {
-                var existing = Read(transponderPlanRow.Id);
+                var existing = transponderPlanRow.Id != Guid.Empty ? Read(transponderPlanRow.Id) : null;
                 var result = existing == null ? CreateInternal(transponderPlanRow) : UpdateInternal(transponderPlanRow);
                 results.Add(result);
             }
@@ -142,7 +142,7 @@
 
         public TransponderPlanRow Update(TransponderPlanRow oToUpdate)
         {
-            if (Read(oToUpdate.Id) == null)
+            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderPlanRow);
 
             return UpdateInternal(oToUpdate);

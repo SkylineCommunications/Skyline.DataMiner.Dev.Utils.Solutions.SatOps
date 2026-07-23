@@ -18,8 +18,8 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.0.7</Version>
-		<PackageReleaseNotes>Fixed: Satellites.Initialize() (and equivalents for Transponder, TransponderSlot, TransponderPlan, TransponderPlanRow, TransponderRangeReservation, Beam) threw "'SatelliteName' is required" (and equivalent messages) due to premature required-field validation being triggered during Clone(). *Instance.Clone() and Duplicate() now clone the underlying DomInstance directly and no longer route through ToInstance()/ToSection(); required-field validation still fires on Save/Create/Update. Additionally fixed: property getters on Satellite, Beam, Transponder, TransponderSlot, TransponderPlan, and TransponderPlanRow now return the value written by their setter for freshly-initialized objects (getters previously read from the original instance while setters wrote to the updated instance, causing middleware validators to see a null Name/Abbreviation/... even after the caller set it).</PackageReleaseNotes>
+		<Version>0.0.8</Version>
+		<PackageReleaseNotes>Fixed: objects returned by *.Initialize() had Id == Guid.Empty, which caused Create to throw "ArgumentException: The value cannot be an empty GUID." from the internal pre-existence check. Freshly-initialized DOM instances now receive a client-generated Guid.NewGuid() id, and repository Create/Update/CreateOrUpdate methods skip the pre-existence lookup when the incoming id is empty. Also fixed in this release: property getters on Satellite, Beam, Transponder, TransponderSlot, TransponderPlan, and TransponderPlanRow now return the value written by their setter for freshly-initialized objects; and *Instance.Clone()/Duplicate() no longer route through ToInstance()/ToSection(), so cloning a fresh instance no longer trips required-field validation. Required-field validation still fires on Save/Create/Update.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

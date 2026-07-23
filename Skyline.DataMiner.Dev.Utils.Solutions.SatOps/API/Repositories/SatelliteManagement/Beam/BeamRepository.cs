@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam
+namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
@@ -65,7 +65,7 @@
 
         public Beam Create(Beam oToCreate)
         {
-            if (Read(oToCreate.Id) != null)
+            if (oToCreate.Id != Guid.Empty && Read(oToCreate.Id) != null)
                 throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingBeam);
 
             return CreateInternal(oToCreate);
@@ -76,7 +76,7 @@
             var results = new List<Beam>();
             foreach (var beam in oToCreateOrUpdate)
             {
-                var existing = Read(beam.Id);
+                var existing = beam.Id != Guid.Empty ? Read(beam.Id) : null;
                 var result = existing == null ? CreateInternal(beam) : UpdateInternal(beam);
                 results.Add(result);
             }
@@ -181,7 +181,7 @@
 
         public Beam Update(Beam oToUpdate)
         {
-            if (Read(oToUpdate.Id) == null)
+            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingBeam);
 
             return UpdateInternal(oToUpdate);
