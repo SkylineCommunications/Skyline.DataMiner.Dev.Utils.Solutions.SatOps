@@ -18,8 +18,8 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.0.8</Version>
-		<PackageReleaseNotes>Fixed: objects returned by *.Initialize() had Id == Guid.Empty, which caused Create to throw "ArgumentException: The value cannot be an empty GUID." from the internal pre-existence check. Freshly-initialized DOM instances now receive a client-generated Guid.NewGuid() id, and repository Create/Update/CreateOrUpdate methods skip the pre-existence lookup when the incoming id is empty. Also fixed in this release: property getters on Satellite, Beam, Transponder, TransponderSlot, TransponderPlan, and TransponderPlanRow now return the value written by their setter for freshly-initialized objects; and *Instance.Clone()/Duplicate() no longer route through ToInstance()/ToSection(), so cloning a fresh instance no longer trips required-field validation. Required-field validation still fires on Save/Create/Update.</PackageReleaseNotes>
+		<Version>0.0.9</Version>
+		<PackageReleaseNotes>Fixed: creating or updating a TransponderRangeReservation threw JobInvalidPreRollError / JobInvalidPostRollError because the underlying MediaOps.Plan Job's PreRollStart / PostRollEnd were never set. The repository now mirrors Start onto PreRollStart and End onto PostRollEnd (zero-length roll) when the reservation has no explicit roll window. TransponderRangeReservation additionally exposes nullable PreRollStart / PostRollEnd properties for callers that need to drive the roll window explicitly.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

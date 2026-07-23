@@ -19,6 +19,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         private double? relativeEndFrequency;
         private DateTime? startTimeUtc;
         private DateTime? endTimeUtc;
+        private DateTime? preRollStartUtc;
+        private DateTime? postRollEndUtc;
         private string satelliteName;
         private string nodeId;
 
@@ -85,6 +87,28 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         {
             get => endTimeUtc;
             set => endTimeUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        }
+
+        /// <summary>
+        /// Gets or sets the pre-roll start (UTC) of the underlying MediaOps.Plan job.
+        /// When <c>null</c>, the repository uses <see cref="StartTime"/> as the pre-roll start
+        /// (i.e. a zero-length pre-roll).
+        /// </summary>
+        public DateTime? PreRollStart
+        {
+            get => preRollStartUtc;
+            set => preRollStartUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        }
+
+        /// <summary>
+        /// Gets or sets the post-roll end (UTC) of the underlying MediaOps.Plan job.
+        /// When <c>null</c>, the repository uses <see cref="EndTime"/> as the post-roll end
+        /// (i.e. a zero-length post-roll).
+        /// </summary>
+        public DateTime? PostRollEnd
+        {
+            get => postRollEndUtc;
+            set => postRollEndUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
         }
 
         /// <summary>

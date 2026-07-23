@@ -518,6 +518,38 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return transponder?.DOMResource;
         }
 
+        /// <summary>
+        /// Copies <see cref="TransponderRangeReservation.StartTime"/>/<see cref="TransponderRangeReservation.EndTime"/>
+        /// onto the given job. If <see cref="TransponderRangeReservation.PreRollStart"/> or
+        /// <see cref="TransponderRangeReservation.PostRollEnd"/> are set, those values override; otherwise a
+        /// zero-length pre-/post-roll is written to satisfy MediaOps.Plan validation
+        /// (<see cref="Skyline.DataMiner.Solutions.MediaOps.Plan.Exceptions.JobInvalidPreRollError"/> /
+        /// <see cref="Skyline.DataMiner.Solutions.MediaOps.Plan.Exceptions.JobInvalidPostRollError"/>).
+        /// </summary>
+        internal static void ApplyReservationTimes(TransponderRangeReservation reservation, Job job)
+        {
+            if (reservation == null) throw new ArgumentNullException(nameof(reservation));
+            if (job == null) throw new ArgumentNullException(nameof(job));
+
+            if (reservation.StartTime.HasValue)
+            {
+                var startUtc = new DateTimeOffset(DateTime.SpecifyKind(reservation.StartTime.Value, DateTimeKind.Utc));
+                job.Start = startUtc;
+                job.PreRollStart = reservation.PreRollStart.HasValue
+                    ? new DateTimeOffset(DateTime.SpecifyKind(reservation.PreRollStart.Value, DateTimeKind.Utc))
+                    : startUtc;
+            }
+
+            if (reservation.EndTime.HasValue)
+            {
+                var endUtc = new DateTimeOffset(DateTime.SpecifyKind(reservation.EndTime.Value, DateTimeKind.Utc));
+                job.End = endUtc;
+                job.PostRollEnd = reservation.PostRollEnd.HasValue
+                    ? new DateTimeOffset(DateTime.SpecifyKind(reservation.PostRollEnd.Value, DateTimeKind.Utc))
+                    : endUtc;
+            }
+        }
+
         private Job BuildJob(TransponderRangeReservation reservation, Job existingJob)
         {
             if (!reservation.Transponder.HasValue || reservation.Transponder.Value == Guid.Empty)
@@ -531,15 +563,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             var job = existingJob ?? (reservation.Id != Guid.Empty ? new Job(reservation.Id) : new Job());
 
             job.Name = reservation.Name;
-            if (reservation.StartTime.HasValue)
-            {
-                job.Start = new DateTimeOffset(DateTime.SpecifyKind(reservation.StartTime.Value, DateTimeKind.Utc));
-            }
-
-            if (reservation.EndTime.HasValue)
-            {
-                job.End = new DateTimeOffset(DateTime.SpecifyKind(reservation.EndTime.Value, DateTimeKind.Utc));
-            }
+            ApplyReservationTimes(reservation, job);
 
             var node = job.NodeGraph.Nodes.OfType<JobResourceNode>()
                 .FirstOrDefault(n => n.ResourcePoolId == PredefinedGuids.TransponderResourcePoolGuid);
