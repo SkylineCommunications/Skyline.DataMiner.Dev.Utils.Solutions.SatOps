@@ -112,8 +112,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         }
 
         /// <summary>
-        /// Gets or sets the satellite capability value written to the reservation job node
-        /// (equivalent of the helper's <c>SatelliteCapability</c> profile parameter).
+        /// Gets or sets the satellite capability value written to the reservation job node.
+        /// This value is derived from the selected transponder's
+        /// <see cref="Objects.SatelliteManagement.Transponder.Transponder.TransponderSatellite"/>
+        /// relationship on create/update; any caller-supplied value is overwritten. The transponder
+        /// is the single source of truth for the satellite.
         /// </summary>
         public string SatelliteName
         {

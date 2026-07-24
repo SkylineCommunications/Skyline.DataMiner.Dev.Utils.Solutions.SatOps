@@ -532,18 +532,14 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
             var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
 
-            var reservation = CreateApiObject(
+            var reservation = CreateReservation(
                 reservationType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance",
-                dom =>
-                {
-                    SetNestedProperty(dom, "TransponderReservation.Transponder", null);
-                    SetNestedProperty(dom, "TransponderReservation.RelativeStartFrequency", (double?)10.0);
-                    SetNestedProperty(dom, "TransponderReservation.RelativeEndFrequency", (double?)20.0);
-                    SetNestedProperty(dom, "TransponderReservation.StartTime", (DateTime?)DateTime.UtcNow);
-                    SetNestedProperty(dom, "TransponderReservation.EndTime", (DateTime?)DateTime.UtcNow.AddHours(1));
-                    SetNestedProperty(dom, "TransponderReservation.ReservationName", "Reservation-1");
-                });
+                transponder: (Guid?)null,
+                relativeStart: 10.0,
+                relativeEnd: 20.0,
+                startTime: DateTime.UtcNow,
+                endTime: DateTime.UtcNow.AddHours(1),
+                name: "Reservation-1");
 
             var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
             var resolver = BuildNullResolverDelegate(transponderType, resolverType);
@@ -564,18 +560,14 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
             var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
 
-            var reservation = CreateApiObject(
+            var reservation = CreateReservation(
                 reservationType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance",
-                dom =>
-                {
-                    SetNestedProperty(dom, "TransponderReservation.Transponder", (Guid?)Guid.NewGuid());
-                    SetNestedProperty(dom, "TransponderReservation.RelativeStartFrequency", (double?)10.0);
-                    SetNestedProperty(dom, "TransponderReservation.RelativeEndFrequency", (double?)20.0);
-                    SetNestedProperty(dom, "TransponderReservation.StartTime", (DateTime?)DateTime.UtcNow.AddHours(1));
-                    SetNestedProperty(dom, "TransponderReservation.EndTime", (DateTime?)DateTime.UtcNow);
-                    SetNestedProperty(dom, "TransponderReservation.ReservationName", "Reservation-2");
-                });
+                transponder: (Guid?)Guid.NewGuid(),
+                relativeStart: 10.0,
+                relativeEnd: 20.0,
+                startTime: DateTime.UtcNow.AddHours(1),
+                endTime: DateTime.UtcNow,
+                name: "Reservation-2");
 
             var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
             var resolver = BuildNullResolverDelegate(transponderType, resolverType);
@@ -587,6 +579,30 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("reservation", argumentException.ParamName);
+        }
+
+        private static object CreateReservation(
+            Type reservationType,
+            Guid? transponder,
+            double? relativeStart,
+            double? relativeEnd,
+            DateTime? startTime,
+            DateTime? endTime,
+            string name)
+        {
+            // TransponderRangeReservation is a POCO (not backed by a DOM instance); construct via
+            // its internal CreateNew() factory and set the properties needed for validation.
+            var factory = reservationType.GetMethod("CreateNew", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var reservation = factory.Invoke(null, Array.Empty<object>());
+
+            reservationType.GetProperty("Name").SetValue(reservation, name);
+            reservationType.GetProperty("Transponder").SetValue(reservation, transponder);
+            reservationType.GetProperty("RelativeStartFrequency").SetValue(reservation, relativeStart);
+            reservationType.GetProperty("RelativeEndFrequency").SetValue(reservation, relativeEnd);
+            reservationType.GetProperty("StartTime").SetValue(reservation, startTime);
+            reservationType.GetProperty("EndTime").SetValue(reservation, endTime);
+
+            return reservation;
         }
 
         private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)

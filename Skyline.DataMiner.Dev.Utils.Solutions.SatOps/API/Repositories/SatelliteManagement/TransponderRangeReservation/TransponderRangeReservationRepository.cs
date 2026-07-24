@@ -557,8 +557,21 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException("Transponder is required to build a reservation job.", nameof(reservation));
             }
 
-            var resourceId = TryGetResourceId(reservation.Transponder.Value)
-                ?? throw new InvalidOperationException($"Transponder '{reservation.Transponder.Value}' has no associated MediaOps.Plan resource.");
+            var transponderId = reservation.Transponder.Value;
+            var transponder = SatOpsApi.Transponders.Read(transponderId)
+                ?? throw new ArgumentException($"Transponder '{transponderId}' could not be found.", nameof(reservation));
+
+            if (transponder.DOMResource == null || transponder.DOMResource == Guid.Empty)
+            {
+                throw new InvalidOperationException($"Transponder '{transponderId}' has no associated MediaOps.Plan resource.");
+            }
+
+            var resourceId = transponder.DOMResource.Value;
+            var satelliteName = ResolveSatelliteNameFromTransponder(transponder, id => SatOpsApi.Satellites.Read(id));
+
+            // The transponder is the single source of truth for the satellite - overwrite any
+            // caller-supplied SatelliteName so a stale or mismatched value cannot be persisted.
+            reservation.SatelliteName = satelliteName;
 
             var job = existingJob ?? (reservation.Id != Guid.Empty ? new Job(reservation.Id) : new Job());
 
@@ -582,9 +595,50 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             ApplyBandwidthRange(node, reservation.RelativeStartFrequency, reservation.RelativeEndFrequency);
             ApplyBandwidthSize(node, reservation.BandwidthSize);
-            ApplySatelliteCapability(node, reservation.SatelliteName);
+            ApplySatelliteCapability(node, satelliteName);
 
             return job;
+        }
+
+        /// <summary>
+        /// Resolves the satellite name for a reservation from the transponder's
+        /// <see cref="Objects.SatelliteManagement.Transponder.Transponder.TransponderSatellite"/> relationship.
+        /// The transponder is the single source of truth for the satellite, so callers cannot supply
+        /// a mismatched or stale <see cref="TransponderRangeReservation.SatelliteName"/>.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the transponder has no linked satellite, when the linked satellite cannot be
+        /// resolved, or when the satellite has no name.
+        /// </exception>
+        internal static string ResolveSatelliteNameFromTransponder(
+            Objects.SatelliteManagement.Transponder.Transponder transponder,
+            Func<Guid, Objects.SatelliteManagement.Satellite.Satellite> lookupSatellite)
+        {
+            if (transponder == null) throw new ArgumentNullException(nameof(transponder));
+            if (lookupSatellite == null) throw new ArgumentNullException(nameof(lookupSatellite));
+
+            var satelliteId = transponder.TransponderSatellite;
+            if (!satelliteId.HasValue || satelliteId.Value == Guid.Empty)
+            {
+                throw new ArgumentException(
+                    $"Transponder '{transponder.Id}' has no linked satellite (TransponderSatellite is missing). " +
+                    "A reservation cannot be created without a satellite relationship.",
+                    "reservation");
+            }
+
+            var satellite = lookupSatellite(satelliteId.Value)
+                ?? throw new ArgumentException(
+                    $"Satellite '{satelliteId.Value}' referenced by transponder '{transponder.Id}' could not be resolved.",
+                    "reservation");
+
+            if (string.IsNullOrWhiteSpace(satellite.Name))
+            {
+                throw new ArgumentException(
+                    $"Satellite '{satelliteId.Value}' referenced by transponder '{transponder.Id}' has no name.",
+                    "reservation");
+            }
+
+            return satellite.Name;
         }
 
         private static void ApplyBandwidthRange(JobResourceNode node, double? minValue, double? maxValue)
@@ -608,13 +662,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private static void ApplyBandwidthSize(JobResourceNode node, double? size)
         {
-            var existing = node.OrchestrationSettings.Capacities
-                .OfType<NumberCapacitySetting>()
+            // Bandwidth Size is a MediaOps NumberConfiguration (see TransponderResourceCreationMiddleware),
+            // NOT a Capacity. Adding it as a Capacity causes MediaOps to resolve PredefinedGuids.BandwidthSizeGuid
+            // as a Capacity, receive null, and throw ArgumentNullException("capacity") from CapacitySettingValidator.
+            var existing = node.OrchestrationSettings.Configurations
+                .OfType<NumberConfigurationSetting>()
                 .FirstOrDefault(c => c.Id == PredefinedGuids.BandwidthSizeGuid);
 
             if (existing != null)
             {
-                node.OrchestrationSettings.RemoveCapacity(existing);
+                node.OrchestrationSettings.RemoveConfiguration(existing);
             }
 
             if (!size.HasValue)
@@ -622,7 +679,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 return;
             }
 
-            node.OrchestrationSettings.AddCapacity(new NumberCapacitySetting(PredefinedGuids.BandwidthSizeGuid)
+            node.OrchestrationSettings.AddConfiguration(new NumberConfigurationSetting(PredefinedGuids.BandwidthSizeGuid)
             {
                 Value = (decimal)size.Value,
             });
