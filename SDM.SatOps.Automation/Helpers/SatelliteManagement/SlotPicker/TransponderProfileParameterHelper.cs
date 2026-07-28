@@ -4,13 +4,13 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using System.Collections.Generic;
 	using System.Linq;
 	
-	using SlcWorkflowIds = Skyline.DataMiner.SDM.SatOps.Automation.Helpers.LegacyWorkflowIds;
 	using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
 	using Skyline.DataMiner.Net.Jobs;
 	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 	using Skyline.DataMiner.Net.Profiles;
 	using Skyline.DataMiner.Net.Sections;
-	using Skyline.DataMiner.Utils.SatOps.Common.Constants;
+    using Skyline.DataMiner.SDM.SatOps.Automation.Helpers;
+    using Skyline.DataMiner.Utils.SatOps.Common.Constants;
 	
 	using Parameter = Skyline.DataMiner.Net.Profiles.Parameter;
 
@@ -39,31 +39,7 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 		{
 			this.workflowHelper = workflowHelper ?? throw new ArgumentNullException(nameof(workflowHelper));
 			this.profileHelper = profileHelper ?? throw new ArgumentNullException(nameof(profileHelper));
-		}
-
-		/// <summary>
-		/// Extracts a double value from a parameter section field.
-		/// </summary>
-		/// <param name="parameterSection">The parameter section.</param>
-		/// <param name="fieldDescriptorId">The field descriptor ID.</param>
-		/// <returns>The double value, or 0.0 if not found.</returns>
-		
-
-		/// <summary>
-		/// Retrieves transponder bandwidth range data from the job's node configuration.
-		/// </summary>
-		/// <param name="job">The job helper containing node sections.</param>
-		/// <param name="transponderResourcePoolId">The transponder resource pool ID.</param>
-		/// <returns>A TransponderBandwidthData object containing min, max, and size values.</returns>
-		
-
-		/// <summary>
-		/// Retrieves the node configuration instance and all profile parameter sections.
-		/// </summary>
-		/// <param name="job">The job helper containing node sections.</param>
-		/// <param name="transponderResourcePoolId">The transponder resource pool ID.</param>
-		/// <returns>A NodeConfigurationData object containing the instance and parameter sections.</returns>
-		
+		}		
 
 		/// <summary>
 		/// Retrieves the node configuration GUID from the provided transponder node section.
@@ -144,31 +120,6 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 
 				return sectionParameterId == parameterId.ToString();
 			});
-		}
-
-		/// <summary>
-		/// Retrieves the node identifier string from the provided transponder node section.
-		/// </summary>
-		/// <param name="transponderNodeSection">The node section to extract the node id from.</param>
-		/// <returns>The node identifier as a string.</returns>
-		/// <exception cref="InvalidOperationException">Thrown when the Node ID field is missing or null.</exception>
-		
-
-		/// <summary>
-		/// Determines whether the specified node section references the provided transponder resource pool id.
-		/// </summary>
-		/// <param name="node">The node section to check.</param>
-		/// <param name="transponderResourcePoolId">The transponder resource pool identifier to compare.</param>
-		/// <returns>True if the node references the transponder resource pool; otherwise false.</returns>
-		
-
-		/// <summary>
-		/// Finds the transponder node section in the specified job matching the provided transponder resource pool identifier.
-		/// </summary>
-		/// <param name="job">The job helper containing the nodes section to search.</param>
-		/// <param name="transponderResourcePoolId">The transponder resource pool identifier to find.</param>
-		/// <returns>The matching node <see cref="Section"/>, or null if not found.</returns>
-		/// <exception cref="InvalidOperationException">Thrown when the job's nodes section is null.</exception>
-		
+		}		
 	}
 }

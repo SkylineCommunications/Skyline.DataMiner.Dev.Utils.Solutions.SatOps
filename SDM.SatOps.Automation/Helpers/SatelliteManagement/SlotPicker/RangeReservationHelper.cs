@@ -7,7 +7,6 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using PropertyInstance = Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.PropertyInstance;
 	using PropertyValuesInstance = Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.PropertyValuesInstance;
 	using PropertyValueSection = Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.PropertyValueSection;
-	using SlcWorkflowIds = Skyline.DataMiner.SDM.SatOps.Automation.Helpers.LegacyWorkflowIds;
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
 	using Skyline.DataMiner.Net.Messages.SLDataGateway;
@@ -21,13 +20,14 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using OrchestrationEvent = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.OrchestrationEvent;
 	using OrchestrationSettings = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.OrchestrationSettings;
 	using ProfileParameterValue = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.ProfileParameterValue;
+    using Skyline.DataMiner.SDM.SatOps.Automation.Helpers;
 
-	/// <summary>
-	/// Provides reusable logic for reserving a frequency range on a job node via the Configuration Handler.
-	/// Extracts and encapsulates the configuration action flow originally found in the
-	/// <c>SAT-AS-Reserve Range On Booking</c> automation script.
-	/// </summary>
-	public class RangeReservationHelper
+    /// <summary>
+    /// Provides reusable logic for reserving a frequency range on a job node via the Configuration Handler.
+    /// Extracts and encapsulates the configuration action flow originally found in the
+    /// <c>SAT-AS-Reserve Range On Booking</c> automation script.
+    /// </summary>
+    public class RangeReservationHelper
 	{
 		private readonly DomHelper workflowHelper;
 		private readonly DomHelper propertiesHelper;
