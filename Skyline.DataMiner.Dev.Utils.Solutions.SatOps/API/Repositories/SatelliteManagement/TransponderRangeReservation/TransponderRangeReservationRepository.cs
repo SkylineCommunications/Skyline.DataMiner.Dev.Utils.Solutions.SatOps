@@ -569,8 +569,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             var resourceId = transponder.DOMResource.Value;
             var satelliteName = ResolveSatelliteNameFromTransponder(transponder, id => SatOpsApi.Satellites.Read(id));
 
-            // The transponder is the single source of truth for the satellite - overwrite any
-            // caller-supplied SatelliteName so a stale or mismatched value cannot be persisted.
             reservation.SatelliteName = satelliteName;
 
             var job = existingJob ?? (reservation.Id != Guid.Empty ? new Job(reservation.Id) : new Job());
@@ -662,9 +660,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private static void ApplyBandwidthSize(JobResourceNode node, double? size)
         {
-            // Bandwidth Size is a MediaOps NumberConfiguration (see TransponderResourceCreationMiddleware),
-            // NOT a Capacity. Adding it as a Capacity causes MediaOps to resolve PredefinedGuids.BandwidthSizeGuid
-            // as a Capacity, receive null, and throw ArgumentNullException("capacity") from CapacitySettingValidator.
             var existing = node.OrchestrationSettings.Configurations
                 .OfType<NumberConfigurationSetting>()
                 .FirstOrDefault(c => c.Id == PredefinedGuids.BandwidthSizeGuid);
