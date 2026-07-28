@@ -1,170 +1,138 @@
 namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation
 {
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
-    using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Skyline.DataMiner.SDM.SatOps.Common.API;
+    using DomModel = DOM.Model;
 
     /// <summary>
     /// Represents a transponder range reservation in the SatOps API.
-    /// Backed by a MediaOps.Plan <see cref="Job"/> containing a single
-    /// <see cref="JobResourceNode"/> that targets a transponder resource
-    /// and a <see cref="RangeCapacitySetting"/> that describes the reserved
-    /// frequency range.
     /// </summary>
-    public class TransponderRangeReservation : Skyline.DataMiner.SDM.SatOps.Common.API.ApiNamedObject
+    public class TransponderRangeReservation : ApiNamedObject
     {
-        private string name;
-        private Guid? transponder;
-        private double? relativeStartFrequency;
-        private double? relativeEndFrequency;
-        private DateTime? startTimeUtc;
-        private DateTime? endTimeUtc;
-        private DateTime? preRollStartUtc;
-        private DateTime? postRollEndUtc;
-        private string satelliteName;
-        private string nodeId;
+        private readonly DomModel.TransponderReservationsInstance originalInstance;
+        private readonly DomModel.TransponderReservationsInstance updatedInstance;
 
-        private TransponderRangeReservation()
+        private TransponderRangeReservation(DomModel.TransponderReservationsInstance original, DomModel.TransponderReservationsInstance updated)
+            : base(original.ID.Id)
         {
-        }
-
-        private TransponderRangeReservation(Guid id)
-            : base(id)
-        {
+            originalInstance = original;
+            updatedInstance = updated;
         }
 
         /// <summary>
-        /// Gets or sets the name of the transponder range reservation.
+        /// Creates a <see cref="TransponderRangeReservation"/> from an existing <see cref="DomModel.TransponderReservationsInstance"/>.
         /// </summary>
-        public override string Name
+        internal static TransponderRangeReservation FromInstance(DomModel.TransponderReservationsInstance instance)
         {
-            get => name;
-            set => name = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the SatOps <c>Transponder</c> DOM id that this reservation targets.
-        /// The repository resolves this to the transponder's <c>DOMResource</c> when
-        /// assigning it to the underlying <see cref="JobResourceNode"/>.
-        /// </summary>
-        public Guid? Transponder
-        {
-            get => transponder;
-            set => transponder = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the relative start frequency (min of the bandwidth range capacity).
-        /// </summary>
-        public double? RelativeStartFrequency
-        {
-            get => relativeStartFrequency;
-            set => relativeStartFrequency = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the relative end frequency (max of the bandwidth range capacity).
-        /// </summary>
-        public double? RelativeEndFrequency
-        {
-            get => relativeEndFrequency;
-            set => relativeEndFrequency = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the reservation start time (UTC).
-        /// </summary>
-        public DateTime? StartTime
-        {
-            get => startTimeUtc;
-            set => startTimeUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
-        }
-
-        /// <summary>
-        /// Gets or sets the reservation end time (UTC).
-        /// </summary>
-        public DateTime? EndTime
-        {
-            get => endTimeUtc;
-            set => endTimeUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
-        }
-
-        /// <summary>
-        /// Gets or sets the pre-roll start (UTC) of the underlying MediaOps.Plan job.
-        /// When <c>null</c>, the repository uses <see cref="StartTime"/> as the pre-roll start
-        /// (i.e. a zero-length pre-roll).
-        /// </summary>
-        public DateTime? PreRollStart
-        {
-            get => preRollStartUtc;
-            set => preRollStartUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
-        }
-
-        /// <summary>
-        /// Gets or sets the post-roll end (UTC) of the underlying MediaOps.Plan job.
-        /// When <c>null</c>, the repository uses <see cref="EndTime"/> as the post-roll end
-        /// (i.e. a zero-length post-roll).
-        /// </summary>
-        public DateTime? PostRollEnd
-        {
-            get => postRollEndUtc;
-            set => postRollEndUtc = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
-        }
-
-        /// <summary>
-        /// Gets or sets the satellite capability value written to the reservation job node.
-        /// This value is derived from the selected transponder's
-        /// <see cref="Objects.SatelliteManagement.Transponder.Transponder.TransponderSatellite"/>
-        /// relationship on create/update; any caller-supplied value is overwritten. The transponder
-        /// is the single source of truth for the satellite.
-        /// </summary>
-        public string SatelliteName
-        {
-            get => satelliteName;
-            set => satelliteName = value;
-        }
-
-        /// <summary>
-        /// Gets the id of the underlying job resource node (equivalent of the helper's node id).
-        /// Populated by the repository on read; ignored on create/update.
-        /// </summary>
-        public string NodeId
-        {
-            get => nodeId;
-            internal set => nodeId = value;
-        }
-
-        /// <summary>
-        /// Gets the derived bandwidth size (end - start) of the reservation, or <c>null</c>
-        /// when either bound is missing.
-        /// </summary>
-        public double? BandwidthSize
-        {
-            get
+            if (instance == null)
             {
-                if (!relativeStartFrequency.HasValue || !relativeEndFrequency.HasValue)
-                {
-                    return null;
-                }
-
-                return relativeEndFrequency.Value - relativeStartFrequency.Value;
+                throw new ArgumentNullException(nameof(instance));
             }
+
+            return new TransponderRangeReservation(instance, instance.Clone());
         }
 
         /// <summary>
-        /// Creates a new, empty <see cref="TransponderRangeReservation"/>.
+        /// Creates a new <see cref="TransponderRangeReservation"/> backed by a new <see cref="DomModel.TransponderReservationsInstance"/>.
         /// </summary>
         internal static TransponderRangeReservation CreateNew()
         {
-            return new TransponderRangeReservation();
+            return CreateNewTransponderRangeReservation();
+        }
+
+        internal static TransponderRangeReservation CreateNewTransponderRangeReservation()
+        {
+            var instance = new DomModel.TransponderReservationsInstance();
+            return new TransponderRangeReservation(instance, instance.Clone());
         }
 
         /// <summary>
-        /// Creates a new <see cref="TransponderRangeReservation"/> with the specified id.
+        /// Gets or sets the reservation name.
         /// </summary>
-        internal static TransponderRangeReservation CreateWithId(Guid id)
+        public override string Name
         {
-            return new TransponderRangeReservation(id);
+            get => updatedInstance.TransponderReservation?.ReservationName;
+            set => updatedInstance.TransponderReservation.ReservationName = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the referenced transponder identifier.
+        /// </summary>
+        public Guid? Transponder
+        {
+            get => updatedInstance.TransponderReservation?.Transponder;
+            set => updatedInstance.TransponderReservation.Transponder = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the relative start frequency.
+        /// </summary>
+        public double? RelativeStartFrequency
+        {
+            get => updatedInstance.TransponderReservation?.RelativeStartFrequency;
+            set => updatedInstance.TransponderReservation.RelativeStartFrequency = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the relative end frequency.
+        /// </summary>
+        public double? RelativeEndFrequency
+        {
+            get => updatedInstance.TransponderReservation?.RelativeEndFrequency;
+            set => updatedInstance.TransponderReservation.RelativeEndFrequency = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the reservation start time.
+        /// </summary>
+        public DateTime? StartTime
+        {
+            get => updatedInstance.TransponderReservation?.StartTime;
+            set => updatedInstance.TransponderReservation.StartTime = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        }
+
+        /// <summary>
+        /// Gets or sets the reservation end time.
+        /// </summary>
+        public DateTime? EndTime
+        {
+            get => updatedInstance.TransponderReservation?.EndTime;
+            set => updatedInstance.TransponderReservation.EndTime = value == null ? (DateTime?)null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        }
+
+        /// <summary>
+        /// Returns the updated instance used by the repository to persist changes.
+        /// </summary>
+        internal DomModel.TransponderReservationsInstance ToUpdatedInstance() => updatedInstance;
+
+        /// <summary>
+        /// Returns the original instance used by the repository for reference comparison.
+        /// </summary>
+        internal DomModel.TransponderReservationsInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<TransponderRangeReservation> InstantiateTransponderRangeReservations(IEnumerable<DomModel.TransponderReservationsInstance> instances)
+        {
+            if (instances == null)
+            {
+                throw new ArgumentNullException(nameof(instances));
+            }
+
+            if (!instances.Any())
+            {
+                return Enumerable.Empty<TransponderRangeReservation>();
+            }
+
+            return InstantiateTransponderRangeReservationsIterator(instances);
+        }
+
+        private static IEnumerable<TransponderRangeReservation> InstantiateTransponderRangeReservationsIterator(IEnumerable<DomModel.TransponderReservationsInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new TransponderRangeReservation(instance, instance.Clone());
+            }
         }
     }
 }

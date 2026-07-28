@@ -19,7 +19,7 @@
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
 		<Version>0.0.10</Version>
-		<PackageReleaseNotes>Fixed: creating or updating a TransponderRangeReservation threw JobInvalidPreRollError / JobInvalidPostRollError because the underlying MediaOps.Plan Job's PreRollStart / PostRollEnd were never set. The repository now mirrors Start onto PreRollStart and End onto PostRollEnd (zero-length roll) when the reservation has no explicit roll window. TransponderRangeReservation additionally exposes nullable PreRollStart / PostRollEnd properties for callers that need to drive the roll window explicitly.</PackageReleaseNotes>
+		<PackageReleaseNotes>Restored transponder range reservations to DOM-backed persistence and legacy Configuration Handler orchestration while preserving validation safeguards.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

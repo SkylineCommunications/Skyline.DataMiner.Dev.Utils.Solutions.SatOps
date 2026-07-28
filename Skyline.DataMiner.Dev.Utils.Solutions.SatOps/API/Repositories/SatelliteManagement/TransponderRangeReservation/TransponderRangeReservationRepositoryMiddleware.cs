@@ -130,26 +130,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return inner.ReadByTransponderAndTimeWindow(transponderId, startTimeUtc, endTimeUtc);
         }
 
-        public void ReserveRange(Guid reservationId, double startFrequency, double endFrequency)
-        {
-            inner.ReserveRange(reservationId, startFrequency, endFrequency);
-        }
-
-        public void ReserveRange(Guid reservationId, double startFrequency, double endFrequency, string satelliteName)
-        {
-            inner.ReserveRange(reservationId, startFrequency, endFrequency, satelliteName);
-        }
-
-        public void AddSlotNameProperty(Guid reservationId, string slotName)
-        {
-            inner.AddSlotNameProperty(reservationId, slotName);
-        }
-
-        public string GetFirstNodeId(Guid reservationId)
-        {
-            return inner.GetFirstNodeId(reservationId);
-        }
-
         public IEnumerable<TransponderRangeReservation> Read(FilterElement<TransponderRangeReservation> filter)
         {
             if (middleware is IReadableMiddleware<TransponderRangeReservation> readableMiddleware)
