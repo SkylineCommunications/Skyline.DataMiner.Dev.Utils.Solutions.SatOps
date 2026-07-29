@@ -10,7 +10,6 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using Skyline.DataMiner.Net.Profiles;
 	using Skyline.DataMiner.Net.Sections;
     using Skyline.DataMiner.SDM.SatOps.Automation.Helpers;
-    using Skyline.DataMiner.Utils.SatOps.Common.Constants;
 	
 	using Parameter = Skyline.DataMiner.Net.Profiles.Parameter;
 

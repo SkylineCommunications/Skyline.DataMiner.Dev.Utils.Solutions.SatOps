@@ -13,7 +13,6 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using Skyline.DataMiner.Net.Profiles;
 	using Skyline.DataMiner.Net.Sections;
 	using Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.Enums;
-	using Skyline.DataMiner.Utils.SatOps.Common.Constants;
 	using ConfigurationContext = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Workflows.Scripts.ConfigurationHandler.ConfigurationContext;
 	using ConfigurationTarget = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Workflows.Scripts.ConfigurationHandler.ConfigurationTarget;
 	using EditConfigurationAction = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Workflows.Scripts.ConfigurationHandler.EditConfigurationAction;
@@ -21,6 +20,7 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using OrchestrationSettings = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.OrchestrationSettings;
 	using ProfileParameterValue = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.ProfileParameterValue;
     using Skyline.DataMiner.SDM.SatOps.Automation.Helpers;
+    using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
 
     /// <summary>
     /// Provides reusable logic for reserving a frequency range on a job node via the Configuration Handler.

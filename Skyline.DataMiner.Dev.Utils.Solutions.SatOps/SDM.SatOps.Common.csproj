@@ -18,7 +18,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.0.12-alpha</Version>
+		<Version>0.0.13-alpha</Version>
 		<PackageReleaseNotes>Restored transponder range reservations to DOM-backed persistence and legacy Configuration Handler orchestration while preserving validation safeguards.</PackageReleaseNotes>
 	</PropertyGroup>
 
