@@ -108,6 +108,95 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Sche
 		}
 
 		/// <summary>
+		/// Deletes an existing transponder reservation by sending a <see cref="DeleteJobAction"/> to the Job Handler.
+		/// </summary>
+		/// <param name="jobId">The unique identifier of the job to delete.</param>
+		public void DeleteReservation(Guid jobId)
+		{
+			new DeleteJobAction { DomJobId = jobId }.SendToJobHandler(engine);
+		}
+
+		/// <summary>
+		/// Creates a job in <see cref="DesiredJobStatus.Tentative"/> containing a single unassigned transponder
+		/// resource-pool node (resource selected automatically at booking). Mirrors the legacy prerequisite for the
+		/// <c>SAT-AS-Add Transponder Resource To Job</c> flow, where the pool node is later swapped for a
+		/// resource-assigned node.
+		/// </summary>
+		/// <param name="name">The job name.</param>
+		/// <param name="startTime">The job (and node) start time.</param>
+		/// <param name="endTime">The job (and node) end time.</param>
+		/// <param name="poolId">The DOM resource pool identifier the node is bound to.</param>
+		/// <returns>A tuple with the created job's identifier and the identifier of the added pool node.</returns>
+		public (Guid JobId, string NodeId) CreatePoolNodeReservation(string name, DateTime startTime, DateTime endTime, Guid poolId)
+		{
+			var createAction = new CreateJobAction
+			{
+				Name = name,
+				Start = startTime,
+				End = endTime,
+				DesiredJobStatus = DesiredJobStatus.Tentative,
+			};
+
+			createAction.Nodes.Add(new JobNode
+			{
+				Alias = name,
+				DomResourcePoolId = poolId,
+				ResourceSelectMode = ResourceSelectMode.AutoSelectAtBooking,
+				Start = startTime,
+				End = endTime,
+				BookFullCapacity = false,
+			});
+
+			var output = createAction.SendToJobHandler(engine);
+			var createOutput = (CreateJobActionOutput)output.ActionOutput;
+
+			return (createOutput.DomJobId, createOutput.AddedNodeIds[0]);
+		}
+
+		/// <summary>
+		/// Swaps the resource assigned to an existing transponder node, preserving the node's booking window,
+		/// by sending a <see cref="SwapNodeAction"/> to the Job Handler. Mirrors the legacy
+		/// <c>SAT-AS-Add Transponder Resource To Job</c> flow.
+		/// </summary>
+		/// <param name="jobId">The unique identifier of the job that contains the node.</param>
+		/// <param name="nodeId">The identifier of the node whose resource is swapped.</param>
+		/// <param name="resourceId">The DOM resource identifier of the new transponder resource.</param>
+		/// <param name="poolId">The DOM resource pool identifier of the new transponder resource.</param>
+		/// <param name="filter">The serialized <see cref="NodeConfigFilter"/> to apply to the swapped node.</param>
+		public void SwapTransponderResource(Guid jobId, string nodeId, Guid resourceId, Guid poolId, string filter)
+		{
+			rangeReservationHelper.EnsureJobMutable(jobId);
+
+			var (start, end) = rangeReservationHelper.GetNodeTiming(jobId, nodeId);
+
+			var swapAction = new SwapNodeAction
+			{
+				DomJobId = jobId,
+				NodeId = nodeId,
+				Node = new JobNode
+				{
+					DomResourceId = resourceId,
+					DomResourcePoolId = poolId,
+					Start = start,
+					End = end,
+					BookFullCapacity = false,
+					NodeConfigFilter = NodeConfigFilter.Deserialize(filter),
+				},
+			};
+
+			swapAction.SendToJobHandler(engine);
+		}
+
+		/// <summary>
+		/// Builds the next job name placeholder from the workflow AppSettings (job ID prefix and minimum digits).
+		/// </summary>
+		/// <returns>The next job name placeholder (for example <c>JOB-XXXX</c>).</returns>
+		public string GetNextJobName()
+		{
+			return rangeReservationHelper.GetNextJobName();
+		}
+
+		/// <summary>
 		/// Reserves the requested frequency range on the node and stores the slot name property.
 		/// </summary>
 		/// <param name="jobId">The unique identifier of the job.</param>

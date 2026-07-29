@@ -21,6 +21,7 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 	using ProfileParameterValue = Skyline.DataMiner.Utils.MediaOps.Common.IOData.Scheduling.Scripts.JobHandler.ProfileParameterValue;
     using Skyline.DataMiner.SDM.SatOps.Automation.Helpers;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Net;
 
     /// <summary>
     /// Provides reusable logic for reserving a frequency range on a job node via the Configuration Handler.
@@ -44,6 +45,29 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 			workflowHelper = new DomHelper(engine.SendSLNetMessages, SlcWorkflowIds.ModuleId);
 			propertiesHelper = new DomHelper(engine.SendSLNetMessages, SlcPropertiesIds.ModuleId);
 			transponderProfileParameterHelper = new TransponderProfileParameterHelper(workflowHelper, new ProfileHelper(engine.SendSLNetMessages));
+		}
+
+		/// <summary>
+		/// Initializes a read-only instance of the range reservation helper backed by an SLNet
+		/// <see cref="IConnection"/> instead of an automation engine. Intended for callers without an
+		/// <see cref="IEngine"/> (for example GQI data sources) that only need the read methods
+		/// (<see cref="GetReservedRange"/>, <see cref="GetSlotName"/>, <see cref="GetFirstNodeId"/>).
+		/// The write methods (range reservation and slot property storage) require the
+		/// <see cref="RangeReservationHelper(IEngine)"/> constructor and are not supported on an instance
+		/// created this way.
+		/// </summary>
+		/// <param name="connection">The SLNet connection used to read the DOM and profile modules.</param>
+		/// <exception cref="ArgumentNullException">Thrown when <paramref name="connection"/> is <c>null</c>.</exception>
+		public RangeReservationHelper(IConnection connection)
+		{
+			if (connection == null)
+			{
+				throw new ArgumentNullException(nameof(connection));
+			}
+
+			workflowHelper = new DomHelper(connection.HandleMessages, SlcWorkflowIds.ModuleId);
+			propertiesHelper = new DomHelper(connection.HandleMessages, SlcPropertiesIds.ModuleId);
+			transponderProfileParameterHelper = new TransponderProfileParameterHelper(workflowHelper, new ProfileHelper(connection.HandleMessages));
 		}
 
 		/// <summary>
@@ -186,6 +210,132 @@ namespace Skyline.DataMiner.Utils.SatOps.Common.Helpers.SatelliteManagement.Slot
 			}
 
 			return nodeIdValue.ToString();
+		}
+
+		/// <summary>
+		/// Ensures the specified job is not in a Running or Completed state before it is mutated.
+		/// </summary>
+		/// <param name="jobId">The unique identifier of the job.</param>
+		/// <exception cref="InvalidOperationException">Thrown when the job is Running or Completed.</exception>
+		public void EnsureJobMutable(Guid jobId)
+		{
+			var job = RetrieveJob(jobId);
+			EnsureJobIsMutable(job);
+		}
+
+		/// <summary>
+		/// Reads the configured start and end time of the specified job node from the workflow module.
+		/// </summary>
+		/// <param name="jobId">The unique identifier of the job.</param>
+		/// <param name="nodeId">The node identifier within the job.</param>
+		/// <returns>A tuple containing the node start and end time.</returns>
+		public (DateTime Start, DateTime End) GetNodeTiming(Guid jobId, string nodeId)
+		{
+			var job = RetrieveJob(jobId);
+			var section = FindNodeSectionByNodeId(job, nodeId);
+
+			var start = ReadNodeDateTime(section, SlcWorkflowIds.Sections.Nodes.NodeStartTime, "start", nodeId);
+			var end = ReadNodeDateTime(section, SlcWorkflowIds.Sections.Nodes.NodeEndTime, "end", nodeId);
+
+			return (start, end);
+		}
+
+		/// <summary>
+		/// Builds the next job name placeholder from the workflow AppSettings, mirroring the legacy
+		/// Job Reservation dialog: the configured job ID prefix followed by a run of <c>X</c> placeholder
+		/// characters, one per configured minimum digit.
+		/// </summary>
+		/// <returns>The next job name placeholder (for example <c>JOB-XXXX</c>).</returns>
+		/// <exception cref="InvalidOperationException">Thrown when the AppSettings DOM instance is not found.</exception>
+		public string GetNextJobName()
+		{
+			var appSettingsFilter = DomInstanceExposers.DomDefinitionId.Equal(SlcWorkflowIds.Definitions.AppSettings.Id);
+			var appSettings = workflowHelper.DomInstances.Read(appSettingsFilter).FirstOrDefault()
+				?? throw new InvalidOperationException("Workflow AppSettings DOM instance was not found. Unable to generate the next job name.");
+
+			var prefix = appSettings.GetFieldValue<string>(SlcWorkflowIds.Sections.JobSettings.Id, SlcWorkflowIds.Sections.JobSettings.JobIDPrefix)?.Value ?? string.Empty;
+			var minimumDigits = appSettings.GetFieldValue<long>(SlcWorkflowIds.Sections.JobSettings.Id, SlcWorkflowIds.Sections.JobSettings.JobIDMinimumDigits)?.Value ?? 0L;
+
+			int placeholderLength;
+			if (minimumDigits <= 0)
+			{
+				placeholderLength = 0;
+			}
+			else if (minimumDigits > int.MaxValue)
+			{
+				placeholderLength = int.MaxValue;
+			}
+			else
+			{
+				placeholderLength = (int)minimumDigits;
+			}
+
+			return string.Concat(prefix, new string('X', placeholderLength));
+		}
+
+		/// <summary>
+		/// Reads the slot name property stored for the specified job and node, or <c>null</c> when none exists.
+		/// </summary>
+		/// <param name="jobId">The unique identifier of the job.</param>
+		/// <param name="nodeId">The node identifier within the job.</param>
+		/// <returns>The stored slot name, or <c>null</c> when not set.</returns>
+		public string GetSlotName(Guid jobId, string nodeId)
+		{
+			var jobIdString = Convert.ToString(jobId);
+
+			var propertyValueInstance = propertiesHelper.DomInstances
+				.Read(DomInstanceExposers.DomDefinitionId.Equal(SlcPropertiesIds.Definitions.PropertyValues.Id))
+				.Select(di => new PropertyValuesInstance(di))
+				.FirstOrDefault(pvi => pvi.PropertyValueInfo.LinkedObjectID == jobIdString
+					&& pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName));
+
+			var entry = propertyValueInstance?.PropertyValue.FirstOrDefault(pv => pv.PropertyName == NamingConstants.PropertyInfoName);
+
+			return entry?.Value;
+		}
+
+		/// <summary>
+		/// Reads the reserved relative frequency range (transponder bandwidth min/max) stored on the specified
+		/// job node's configuration, or <c>null</c> when it has not been reserved.
+		/// </summary>
+		/// <param name="jobId">The unique identifier of the job.</param>
+		/// <param name="nodeId">The node identifier within the job.</param>
+		/// <returns>A tuple with the reserved start and end frequency, or <c>null</c> when not reserved.</returns>
+		public (decimal Start, decimal End)? GetReservedRange(Guid jobId, string nodeId)
+		{
+			var job = RetrieveJob(jobId);
+			var transponderNodeSection = FindNodeSectionByNodeId(job, nodeId);
+			var nodeConfiguration = transponderProfileParameterHelper.GetNodeConfiguration(transponderNodeSection);
+			var nodeConfigInstance = transponderProfileParameterHelper.GetNodeConfigInstance(nodeConfiguration);
+
+			var profileParameterSections = nodeConfigInstance.Sections
+				.Where(x => x.SectionDefinitionID.Equals(SlcWorkflowIds.Sections.ProfileParameterValues.Id))
+				.ToList();
+
+			var transponderBandwidthParameter = transponderProfileParameterHelper.GetProfileParameter(NamingConstants.TransponderBandwidthCapacityName);
+			var parameterSection = transponderProfileParameterHelper.FindParameterSection(profileParameterSections, transponderBandwidthParameter.ID);
+			if (parameterSection == null)
+			{
+				return null;
+			}
+
+			var min = parameterSection.GetValue<double>(SlcWorkflowIds.Sections.ProfileParameterValues.DoubleMinValue)?.Value;
+			var max = parameterSection.GetValue<double>(SlcWorkflowIds.Sections.ProfileParameterValues.DoubleMaxValue)?.Value;
+
+			if (min == null || max == null)
+			{
+				return null;
+			}
+
+			return ((decimal)min.Value, (decimal)max.Value);
+		}
+
+		private static DateTime ReadNodeDateTime(Section section, FieldDescriptorID fieldId, string label, string nodeId)
+		{
+			var wrapper = section.GetValue<DateTime>(fieldId)
+				?? throw new InvalidOperationException($"Node {label} time is not configured for node '{nodeId}'. Please ensure the node has a valid {label} time.");
+
+			return wrapper.Value;
 		}
 
 		/// <summary>

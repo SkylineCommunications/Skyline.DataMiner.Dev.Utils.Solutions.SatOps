@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -18,7 +18,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.0.13-alpha</Version>
+		<Version>0.0.17-alpha</Version>
 		<PackageReleaseNotes>Restored transponder range reservations to DOM-backed persistence and legacy Configuration Handler orchestration while preserving validation safeguards.</PackageReleaseNotes>
 	</PropertyGroup>
 
@@ -34,7 +34,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Skyline.DataMiner.Dev.Utils.SDM.Abstractions" Version="1.0.1" />
-		<PackageReference Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" Version="1.7.0-alpha002" />
+		<PackageReference Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" Version="1.6.2" />
 		<PackageReference Include="Skyline.DataMiner.SDM" Version="1.0.1" />
 		<PackageReference Include="Skyline.DataMiner.SDM.Registration.Common" Version="2.0.5" />
 		<PackageReference Include="Skyline.DataMiner.SDM.SourceGenerator.Runtime" Version="1.0.1" />
