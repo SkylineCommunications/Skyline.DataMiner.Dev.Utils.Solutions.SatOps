@@ -145,6 +145,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             inner.AddSlotNameProperty(reservationId, slotName);
         }
 
+        public string GetSlotName(Guid reservationId)
+        {
+            return inner.GetSlotName(reservationId);
+        }
+
+        public void RefreshSlotNameNodeLink(Guid reservationId)
+        {
+            inner.RefreshSlotNameNodeLink(reservationId);
+        }
+
         public string GetFirstNodeId(Guid reservationId)
         {
             return inner.GetFirstNodeId(reservationId);

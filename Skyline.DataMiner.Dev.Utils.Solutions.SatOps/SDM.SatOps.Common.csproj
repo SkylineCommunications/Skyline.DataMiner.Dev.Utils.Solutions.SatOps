@@ -18,8 +18,8 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.0.10</Version>
-		<PackageReleaseNotes>Fixed: creating or updating a TransponderRangeReservation threw JobInvalidPreRollError / JobInvalidPostRollError because the underlying MediaOps.Plan Job's PreRollStart / PostRollEnd were never set. The repository now mirrors Start onto PreRollStart and End onto PostRollEnd (zero-length roll) when the reservation has no explicit roll window. TransponderRangeReservation additionally exposes nullable PreRollStart / PostRollEnd properties for callers that need to drive the roll window explicitly.</PackageReleaseNotes>
+		<Version>0.0.19-alpha</Version>
+		<PackageReleaseNotes>Fixed: the slot-name property (SlcProperties, scope "MediaOps") was orphaned after a resource swap. It is keyed by job id + node id (SubID) and read per node by MediaOps scheduling, but a swap replaces the JobResourceNode with a new id, leaving the property pointing at the removed node. AddSlotNameProperty now refreshes SubID to the current node on update, TransponderRangeReservations.Update re-anchors the property after a transponder change, and new GetSlotName / RefreshSlotNameNodeLink members let the resource-swap flow re-point the slot name to the swapped-in node. Previous fix (0.0.18-alpha): Create drives the job Draft->Tentative (Jobs.SaveAsTentative) so the transponder slot is reserved; MediaOps.Plan aligned to 1.7.0-alpha003 (Plan / Plan.Automation / Plan.GQI coherent) to avoid "job type is out of range".</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -34,7 +34,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Skyline.DataMiner.Dev.Utils.SDM.Abstractions" Version="1.0.1" />
-		<PackageReference Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" Version="1.7.0-alpha002" />
+		<PackageReference Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" Version="1.7.0-alpha003" />
 		<PackageReference Include="Skyline.DataMiner.SDM" Version="1.0.1" />
 		<PackageReference Include="Skyline.DataMiner.SDM.Registration.Common" Version="2.0.5" />
 		<PackageReference Include="Skyline.DataMiner.SDM.SourceGenerator.Runtime" Version="1.0.1" />

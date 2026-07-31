@@ -81,7 +81,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             var job = BuildJob(oToCreate, existingJob: null);
             var createdJob = Jobs.Create(job);
-            return ReadJobAsReservation(createdJob);
+
+            // Jobs.Create persists the job in the Draft state, which does not reserve any
+            // resources. Drive it to Tentative so the MediaOps.Plan scheduling engine reserves
+            // the transponder slot (mirrors the old CreateJobAction setting DesiredJobStatus = Tentative).
+            var reservedJob = Jobs.SaveAsTentative(createdJob.Id);
+            return ReadJobAsReservation(reservedJob);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> CreateOrUpdate(IEnumerable<TransponderRangeReservation> oToCreateOrUpdate)
@@ -288,6 +293,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             var updatedJob = BuildJob(oToUpdate, existing);
             var persistedJob = Jobs.Update(updatedJob);
+
+            // Editing a reservation can change the transponder, which swaps the JobResourceNode for a new
+            // one with a new id. Re-anchor the slot-name property to the current node so it is not orphaned
+            // on the removed node (no-op when the node did not change or when no slot name is stored).
+            RefreshSlotNameNodeLink(oToUpdate.Id);
+
             return ReadJobAsReservation(persistedJob);
         }
 
@@ -746,6 +757,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
 
             Jobs.Update(job);
+
+            // A Draft job does not reserve resources. If the reservation job has not been driven
+            // to Tentative yet (e.g. it was created outside the fixed Create path), transition it
+            // now so the applied range actually reserves the transponder slot.
+            if (job.State == JobState.Draft)
+            {
+                Jobs.SaveAsTentative(job.Id);
+            }
         }
 
         public string GetFirstNodeId(Guid reservationId)
@@ -786,12 +805,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 .Select(di => new PropertyInstance(di))
                 .FirstOrDefault(pi => pi.PropertyInfo.Name == NamingConstants.PropertyInfoName);
 
-            var propertyValueInstance = propertiesHelper.DomInstances
-                .Read(DomInstanceExposers.DomDefinitionId
-                    .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id))
-                .Select(di => new PropertyValuesInstance(di))
-                .FirstOrDefault(pvi => pvi.PropertyValueInfo.LinkedObjectID == reservationIdString
-                    && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName));
+            var propertyValueInstance = FindSlotNameProperty(propertiesHelper, reservationIdString);
 
             if (propertyValueInstance != null)
             {
@@ -801,6 +815,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 if (existingEntry != null)
                 {
                     existingEntry.Value = slotName;
+
+                    // Keep the property anchored to the reservation's current transponder node. A resource
+                    // swap replaces the JobResourceNode with a new node id, so a pre-existing slot-name
+                    // property still references the old, now-removed node via SubID. MediaOps scheduling
+                    // reads this property per node (LinkedObjectID + SubID), so a stale SubID detaches the
+                    // slot name from the swapped-in node. Refresh it so the name follows the node.
+                    propertyValueInstance.PropertyValueInfo.SubID = nodeId;
                     propertyValueInstance.Save(propertiesHelper);
                     return;
                 }
@@ -824,6 +845,62 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             });
 
             newInstance.Save(propertiesHelper);
+        }
+
+        public string GetSlotName(Guid reservationId)
+        {
+            if (reservationId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
+            }
+
+            var propertiesHelper = new DomHelper(
+                SatOpsApi.Connection.HandleMessages,
+                SlcPropertiesIds.ModuleId);
+
+            var propertyValueInstance = FindSlotNameProperty(propertiesHelper, reservationId.ToString());
+
+            return propertyValueInstance?.PropertyValue
+                .FirstOrDefault(pv => pv.PropertyName == NamingConstants.PropertyInfoName)?.Value;
+        }
+
+        public void RefreshSlotNameNodeLink(Guid reservationId)
+        {
+            if (reservationId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
+            }
+
+            var propertiesHelper = new DomHelper(
+                SatOpsApi.Connection.HandleMessages,
+                SlcPropertiesIds.ModuleId);
+
+            var propertyValueInstance = FindSlotNameProperty(propertiesHelper, reservationId.ToString());
+            if (propertyValueInstance == null)
+            {
+                // No slot name stored yet: nothing to re-anchor. A later AddSlotNameProperty will create
+                // the property against the current node.
+                return;
+            }
+
+            var nodeId = GetFirstNodeId(reservationId);
+            if (string.Equals(propertyValueInstance.PropertyValueInfo.SubID, nodeId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            propertyValueInstance.PropertyValueInfo.SubID = nodeId;
+            propertyValueInstance.Save(propertiesHelper);
+        }
+
+        private PropertyValuesInstance FindSlotNameProperty(DomHelper propertiesHelper, string reservationIdString)
+        {
+            return propertiesHelper.DomInstances
+                .Read(DomInstanceExposers.DomDefinitionId
+                    .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id))
+                .Select(di => new PropertyValuesInstance(di))
+                .FirstOrDefault(pvi => pvi.PropertyValueInfo.LinkedObjectID == reservationIdString
+                    && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName));
         }
     }
 }

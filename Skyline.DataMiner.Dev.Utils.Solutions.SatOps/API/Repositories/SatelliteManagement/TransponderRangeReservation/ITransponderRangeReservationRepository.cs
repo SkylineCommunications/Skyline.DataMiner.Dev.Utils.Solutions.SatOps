@@ -72,6 +72,25 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         void AddSlotNameProperty(Guid reservationId, string slotName);
 
         /// <summary>
+        /// Reads the slot-name property stored for the reservation's job, or <c>null</c> when none exists.
+        /// The lookup is node-agnostic (keyed by the reservation/job id), so it remains valid across
+        /// resource swaps that change the transponder node id.
+        /// </summary>
+        /// <param name="reservationId">The reservation (job) identifier.</param>
+        /// <returns>The stored slot name, or <c>null</c> when no slot-name property exists.</returns>
+        string GetSlotName(Guid reservationId);
+
+        /// <summary>
+        /// Re-anchors the reservation's slot-name property to its current transponder node. A resource swap
+        /// replaces the <c>JobResourceNode</c> with a new node id, leaving the slot-name property pointing at
+        /// the removed node via <c>SubID</c>; MediaOps scheduling reads the property per node, so the stale
+        /// link detaches the name from the swapped-in node. This refreshes <c>SubID</c> to the current node.
+        /// No-op when no slot name is stored or when the link is already current.
+        /// </summary>
+        /// <param name="reservationId">The reservation (job) identifier.</param>
+        void RefreshSlotNameNodeLink(Guid reservationId);
+
+        /// <summary>
         /// Retrieves the id of the transponder job node on the reservation. When the underlying job
         /// contains multiple nodes (e.g. additional non-transponder resource nodes), the id returned
         /// is the id of the single transponder <c>JobResourceNode</c>.
