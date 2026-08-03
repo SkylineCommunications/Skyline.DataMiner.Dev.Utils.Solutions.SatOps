@@ -72,6 +72,17 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         void AddSlotNameProperty(Guid reservationId, string slotName);
 
         /// <summary>
+        /// Upserts a slot-name property in the <c>SlcProperties</c> DOM, linked to the reservation's job and
+        /// anchored (via <c>SubID</c>) to the supplied node id. Prefer this overload when the caller knows the
+        /// exact node being configured (e.g. the booking flow supplies the transponder node id), so the slot
+        /// name is anchored to that node immediately instead of being derived after the fact.
+        /// </summary>
+        /// <param name="reservationId">The reservation (job) identifier.</param>
+        /// <param name="nodeId">The transponder node id to anchor the slot-name property to.</param>
+        /// <param name="slotName">The slot name value to store.</param>
+        void AddSlotNameProperty(Guid reservationId, string nodeId, string slotName);
+
+        /// <summary>
         /// Reads the slot-name property stored for the reservation's job, or <c>null</c> when none exists.
         /// The lookup is node-agnostic (keyed by the reservation/job id), so it remains valid across
         /// resource swaps that change the transponder node id.

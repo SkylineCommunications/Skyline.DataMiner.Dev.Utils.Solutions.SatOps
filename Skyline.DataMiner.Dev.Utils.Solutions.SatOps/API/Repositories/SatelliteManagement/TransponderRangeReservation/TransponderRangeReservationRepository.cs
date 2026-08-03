@@ -792,7 +792,24 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
             }
 
-            var nodeId = GetFirstNodeId(reservationId);
+            // No explicit node supplied: fall back to the reservation's single transponder node. Prefer the
+            // overload that takes the node id the caller is actually configuring, so the slot name is anchored
+            // to that node from the start (e.g. on booking, before any resource swap has run).
+            AddSlotNameProperty(reservationId, GetFirstNodeId(reservationId), slotName);
+        }
+
+        public void AddSlotNameProperty(Guid reservationId, string nodeId, string slotName)
+        {
+            if (reservationId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
+            }
+
+            if (string.IsNullOrWhiteSpace(nodeId))
+            {
+                throw new ArgumentException("Node id cannot be null or white space.", nameof(nodeId));
+            }
+
             var propertiesHelper = new DomHelper(
                 SatOpsApi.Connection.HandleMessages,
                 SlcPropertiesIds.ModuleId);
@@ -895,12 +912,30 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private PropertyValuesInstance FindSlotNameProperty(DomHelper propertiesHelper, string reservationIdString)
         {
-            return propertiesHelper.DomInstances
+            var matches = propertiesHelper.DomInstances
                 .Read(DomInstanceExposers.DomDefinitionId
                     .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id))
                 .Select(di => new PropertyValuesInstance(di))
-                .FirstOrDefault(pvi => pvi.PropertyValueInfo.LinkedObjectID == reservationIdString
-                    && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName));
+                .Where(pvi => pvi.PropertyValueInfo.LinkedObjectID == reservationIdString
+                    && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName))
+                .ToList();
+
+            if (matches.Count <= 1)
+            {
+                return matches.FirstOrDefault();
+            }
+
+            var canonical = matches.FirstOrDefault(pvi => pvi.PropertyValue
+                    .Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName
+                        && !string.IsNullOrWhiteSpace(pv.Value)))
+                ?? matches[0];
+
+            foreach (var duplicate in matches.Where(m => !ReferenceEquals(m, canonical)))
+            {
+                duplicate.Delete(propertiesHelper);
+            }
+
+            return canonical;
         }
     }
 }
