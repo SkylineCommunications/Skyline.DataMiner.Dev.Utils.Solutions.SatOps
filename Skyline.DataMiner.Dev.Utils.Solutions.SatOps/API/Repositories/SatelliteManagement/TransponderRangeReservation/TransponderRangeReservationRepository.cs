@@ -86,6 +86,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             // resources. Drive it to Tentative so the MediaOps.Plan scheduling engine reserves
             // the transponder slot (mirrors the old CreateJobAction setting DesiredJobStatus = Tentative).
             var reservedJob = Jobs.SaveAsTentative(createdJob.Id);
+            UpsertSlotNamePropertyIfPresent(oToCreate, reservedJob);
             return ReadJobAsReservation(reservedJob);
         }
 
@@ -297,6 +298,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             // Editing a reservation can change the transponder, which swaps the JobResourceNode for a new
             // one with a new id. Re-anchor the slot-name property to the current node so it is not orphaned
             // on the removed node (no-op when the node did not change or when no slot name is stored).
+            UpsertSlotNamePropertyIfPresent(oToUpdate, persistedJob);
             RefreshSlotNameNodeLink(oToUpdate.Id);
 
             return ReadJobAsReservation(persistedJob);
@@ -477,6 +479,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             reservation.StartTime = job.Start.UtcDateTime;
             reservation.EndTime = job.End.UtcDateTime;
             reservation.NodeId = node.Id;
+            reservation.SlotName = GetSlotName(job.Id);
 
             reservation.Transponder = ResolveTransponderIdFromResource(node.ResourceId);
 
@@ -721,6 +724,19 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
         }
 
+        private void UpsertSlotNamePropertyIfPresent(TransponderRangeReservation reservation, Job job)
+        {
+            if (reservation == null) throw new ArgumentNullException(nameof(reservation));
+            if (job == null) throw new ArgumentNullException(nameof(job));
+
+            if (String.IsNullOrWhiteSpace(reservation.SlotName) || !IsReservationJob(job, out var node))
+            {
+                return;
+            }
+
+            AddSlotNameProperty(job.Id, node.Id, reservation.SlotName);
+        }
+
         public void ReserveRange(Guid reservationId, double startFrequency, double endFrequency)
         {
             ReserveRangeInternal(reservationId, startFrequency, endFrequency, satelliteName: null, applySatellite: false);
@@ -785,20 +801,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return node.Id;
         }
 
-        public void AddSlotNameProperty(Guid reservationId, string slotName)
-        {
-            if (reservationId == Guid.Empty)
-            {
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(reservationId));
-            }
-
-            // No explicit node supplied: fall back to the reservation's single transponder node. Prefer the
-            // overload that takes the node id the caller is actually configuring, so the slot name is anchored
-            // to that node from the start (e.g. on booking, before any resource swap has run).
-            AddSlotNameProperty(reservationId, GetFirstNodeId(reservationId), slotName);
-        }
-
-        public void AddSlotNameProperty(Guid reservationId, string nodeId, string slotName)
+        private void AddSlotNameProperty(Guid reservationId, string nodeId, string slotName)
         {
             if (reservationId == Guid.Empty)
             {

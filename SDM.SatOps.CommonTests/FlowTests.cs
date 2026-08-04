@@ -601,6 +601,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             reservationType.GetProperty("RelativeEndFrequency").SetValue(reservation, relativeEnd);
             reservationType.GetProperty("StartTime").SetValue(reservation, startTime);
             reservationType.GetProperty("EndTime").SetValue(reservation, endTime);
+            reservationType.GetProperty("SlotName")?.SetValue(reservation, "Slot-1");
 
             return reservation;
         }

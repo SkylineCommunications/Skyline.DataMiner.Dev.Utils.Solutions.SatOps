@@ -22,6 +22,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         private DateTime? preRollStartUtc;
         private DateTime? postRollEndUtc;
         private string satelliteName;
+        private string slotName;
         private string nodeId;
 
         private TransponderRangeReservation()
@@ -122,6 +123,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         {
             get => satelliteName;
             set => satelliteName = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the slot name stored for the reservation.
+        /// This is distinct from <see cref="Name"/>, which is the reservation name.
+        /// </summary>
+        public string SlotName
+        {
+            get => slotName;
+            set => slotName = value;
         }
 
         /// <summary>

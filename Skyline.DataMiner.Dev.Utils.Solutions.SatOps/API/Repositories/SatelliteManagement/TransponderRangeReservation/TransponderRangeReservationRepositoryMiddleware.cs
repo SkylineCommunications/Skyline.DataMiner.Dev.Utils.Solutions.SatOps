@@ -140,16 +140,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             inner.ReserveRange(reservationId, startFrequency, endFrequency, satelliteName);
         }
 
-        public void AddSlotNameProperty(Guid reservationId, string slotName)
-        {
-            inner.AddSlotNameProperty(reservationId, slotName);
-        }
-
-        public void AddSlotNameProperty(Guid reservationId, string nodeId, string slotName)
-        {
-            inner.AddSlotNameProperty(reservationId, nodeId, slotName);
-        }
-
         public string GetSlotName(Guid reservationId)
         {
             return inner.GetSlotName(reservationId);
