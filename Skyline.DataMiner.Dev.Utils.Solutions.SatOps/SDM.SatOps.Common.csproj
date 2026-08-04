@@ -18,8 +18,8 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.0.24-alpha</Version>
-		<PackageReleaseNotes>Fixed (0.0.24-alpha): finished hiding the slot-name helper — AddSlotNameProperty is no longer on ITransponderRangeReservationRepository (or its middleware); SlotName is persisted automatically on Create/Update. ReserveRange overloads remain available on the public interface. Transponder reservations expose a dedicated SlotName field separate from the reservation Name, and reads hydrate SlotName back onto the reservation.</PackageReleaseNotes>
+		<Version>0.1.0</Version>
+		<PackageReleaseNotes>0.1.0: SlotName is persisted automatically on TransponderRangeReservation Create/Update; the AddSlotNameProperty helper is no longer exposed on ITransponderRangeReservationRepository or its middleware. ReserveRange overloads remain public. Reads hydrate SlotName back onto the reservation.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
