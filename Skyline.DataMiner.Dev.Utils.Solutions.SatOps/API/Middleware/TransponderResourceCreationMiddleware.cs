@@ -68,11 +68,17 @@
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
+            // Capture the associated artifacts before the transponder is removed.
+            var transponders = new[] { oToDelete };
+            var resourceIds = CollectResourceIds(transponders);
+            var satelliteNames = CollectSatelliteNames(transponders);
+
             // Delete the transponder first so that a resource-cleanup failure cannot strand the
             // transponder, and so there is no window where the transponder points at a deleted resource.
             next(oToDelete);
 
-            DeleteResources(CollectResourceIds(new[] { oToDelete }));
+            DeleteResources(resourceIds);
+            RemoveSatelliteDiscretes(satelliteNames);
         }
 
         public void OnDelete(IEnumerable<Transponder> oToDelete, Action<IEnumerable<Transponder>> next)
@@ -85,12 +91,14 @@
 
             var transponders = oToDelete.ToList();
 
-            // Capture the associated resource ids before the transponders are removed.
+            // Capture the associated artifacts before the transponders are removed.
             var resourceIds = CollectResourceIds(transponders);
+            var satelliteNames = CollectSatelliteNames(transponders);
 
             next(transponders);
 
             DeleteResources(resourceIds);
+            RemoveSatelliteDiscretes(satelliteNames);
         }
 
         private static List<Guid> CollectResourceIds(IEnumerable<Transponder> transponders)
@@ -100,6 +108,30 @@
                 .Select(t => t.DOMResource.Value)
                 .Distinct()
                 .ToList();
+        }
+
+        private List<string> CollectSatelliteNames(IEnumerable<Transponder> transponders)
+        {
+            var names = new List<string>();
+
+            foreach (var transponder in transponders)
+            {
+                if (transponder?.TransponderSatellite == null || transponder.TransponderSatellite.Value == Guid.Empty)
+                    continue;
+
+                try
+                {
+                    var satellite = _satelliteResolver(transponder.TransponderSatellite.Value);
+                    if (satellite != null && !string.IsNullOrWhiteSpace(satellite.Name))
+                        names.Add(satellite.Name);
+                }
+                catch (Exception e)
+                {
+                    _logger?.Error($"Failed to resolve satellite '{transponder.TransponderSatellite.Value}' for transponder '{transponder.Name}' during delete cleanup.", e);
+                }
+            }
+
+            return names.Distinct().ToList();
         }
 
         private void DeleteResources(IReadOnlyCollection<Guid> resourceIds)
@@ -128,6 +160,71 @@
             catch (Exception e)
             {
                 _logger?.Error($"Transponder resource(s) '{string.Join(", ", ids)}' were deprecated but could not be deleted (likely still referenced by active bookings); left deprecated.", e);
+            }
+        }
+
+        private void RemoveSatelliteDiscretes(IReadOnlyCollection<string> satelliteNames)
+        {
+            if (satelliteNames == null || satelliteNames.Count == 0)
+                return;
+
+            foreach (var satelliteName in satelliteNames)
+            {
+                if (string.IsNullOrWhiteSpace(satelliteName))
+                    continue;
+
+                try
+                {
+                    // Only remove the discrete when no remaining resource still references it. The
+                    // "Satellite" capability is shared across every transponder resource, so a satellite
+                    // used by another (still existing) transponder must keep its discrete.
+                    var stillUsed = _mediaOpsPlanApi.Resources
+                        .Read()
+                        .Any(r => r.Capabilities?.Any(c => c.Discretes?.Any(d => d == satelliteName) ?? false) ?? false);
+
+                    if (stillUsed)
+                        continue;
+
+                    var capability = _mediaOpsPlanApi.Capabilities
+                        .Read()
+                        .FirstOrDefault(c => c.Name == NamingConstants.SatelliteCapabilityName);
+
+                    if (capability == null || !(capability.Discretes?.Any(d => d == satelliteName) ?? false))
+                        continue;
+
+                    try
+                    {
+                        capability = capability.RemoveDiscrete(satelliteName);
+                        _mediaOpsPlanApi.Capabilities.Update(capability);
+                    }
+                    catch (Exception)
+                    {
+                        // The Plan API caches capability state internally; fall back to a DB-level
+                        // ProfileHelper update, mirroring the create path (AddCapabilityViaProfileHelper).
+                        RemoveSatelliteDiscreteViaProfileHelper(capability.Id, satelliteName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger?.Error($"Failed to remove satellite discrete '{satelliteName}' from capability '{NamingConstants.SatelliteCapabilityName}'.", e);
+                }
+            }
+        }
+
+        private void RemoveSatelliteDiscreteViaProfileHelper(Guid capabilityId, string satelliteName)
+        {
+            var parameter = _profileHelper.ProfileParameters
+                .Read(ParameterExposers.ID.Equal(capabilityId))
+                .FirstOrDefault();
+
+            if (parameter == null)
+                return;
+
+            var discretes = parameter.Discretes ?? new List<string>();
+            if (discretes.Remove(satelliteName))
+            {
+                parameter.Discretes = discretes;
+                _profileHelper.ProfileParameters.Update(parameter);
             }
         }
 
