@@ -18,8 +18,8 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.1.0</Version>
-		<PackageReleaseNotes>0.1.0: SlotName is persisted automatically on TransponderRangeReservation Create/Update; the AddSlotNameProperty helper is no longer exposed on ITransponderRangeReservationRepository or its middleware. ReserveRange overloads remain public. Reads hydrate SlotName back onto the reservation.</PackageReleaseNotes>
+		<Version>0.1.1</Version>
+		<PackageReleaseNotes>0.1.1: Deleting a Transponder now also cleans up the MediaOps Plan resource that was auto-provisioned for it (previously orphaned). The resource is deprecated and then deleted; if the delete is blocked by active bookings it is left deprecated and logged. Cleanup runs for every delete overload, including delete-by-id. 0.1.0: SlotName is persisted automatically on TransponderRangeReservation Create/Update; the AddSlotNameProperty helper is no longer exposed on ITransponderRangeReservationRepository or its middleware. ReserveRange overloads remain public. Reads hydrate SlotName back onto the reservation.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

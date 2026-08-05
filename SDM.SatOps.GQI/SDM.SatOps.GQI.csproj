@@ -18,7 +18,8 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.1.0</Version>
+		<Version>0.1.1</Version>
+		<PackageReleaseNotes>0.1.1: Rebuilt against SatOps.Common 0.1.1 (Transponder delete now cascades to the auto-provisioned MediaOps Plan resource).</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

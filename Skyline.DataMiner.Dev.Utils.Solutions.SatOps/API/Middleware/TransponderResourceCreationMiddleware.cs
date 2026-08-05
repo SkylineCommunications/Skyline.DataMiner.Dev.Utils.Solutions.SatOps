@@ -15,7 +15,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    internal sealed class TransponderResourceCreationMiddleware : IBulkCreatableMiddleware<Transponder>, IBulkUpdatableMiddleware<Transponder>
+    internal sealed class TransponderResourceCreationMiddleware : IBulkCreatableMiddleware<Transponder>, IBulkUpdatableMiddleware<Transponder>, IBulkDeletableMiddleware<Transponder>
     {
         private readonly IConnection _connection;
         private readonly IMediaOpsPlanApi _mediaOpsPlanApi;
@@ -58,6 +58,77 @@
             foreach (var transponder in transponders)
                 UpdateResource(transponder);
             return next(transponders);
+        }
+
+        public void OnDelete(Transponder oToDelete, Action<Transponder> next)
+        {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            // Delete the transponder first so that a resource-cleanup failure cannot strand the
+            // transponder, and so there is no window where the transponder points at a deleted resource.
+            next(oToDelete);
+
+            DeleteResources(CollectResourceIds(new[] { oToDelete }));
+        }
+
+        public void OnDelete(IEnumerable<Transponder> oToDelete, Action<IEnumerable<Transponder>> next)
+        {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            var transponders = oToDelete.ToList();
+
+            // Capture the associated resource ids before the transponders are removed.
+            var resourceIds = CollectResourceIds(transponders);
+
+            next(transponders);
+
+            DeleteResources(resourceIds);
+        }
+
+        private static List<Guid> CollectResourceIds(IEnumerable<Transponder> transponders)
+        {
+            return transponders
+                .Where(t => t?.DOMResource != null && t.DOMResource.Value != Guid.Empty)
+                .Select(t => t.DOMResource.Value)
+                .Distinct()
+                .ToList();
+        }
+
+        private void DeleteResources(IReadOnlyCollection<Guid> resourceIds)
+        {
+            if (resourceIds == null || resourceIds.Count == 0)
+                return;
+
+            var ids = resourceIds.ToArray();
+
+            // Deprecate first so the resource is immediately removed from active use, then attempt a hard
+            // delete. If the delete is blocked (e.g. the resource is still referenced by active bookings),
+            // leave the resource deprecated and log instead of failing the transponder delete.
+            try
+            {
+                _mediaOpsPlanApi.Resources.Deprecate(ids);
+            }
+            catch (Exception e)
+            {
+                _logger?.Error($"Failed to deprecate transponder resource(s) '{string.Join(", ", ids)}'.", e);
+            }
+
+            try
+            {
+                _mediaOpsPlanApi.Resources.Delete(ids);
+            }
+            catch (Exception e)
+            {
+                _logger?.Error($"Transponder resource(s) '{string.Join(", ", ids)}' were deprecated but could not be deleted (likely still referenced by active bookings); left deprecated.", e);
+            }
         }
 
         private void CreateResource(Transponder transponder)

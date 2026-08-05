@@ -6,6 +6,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     internal sealed class TransponderRepositoryMiddleware : ITransponderRepository
     {
@@ -80,11 +81,31 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         public void Delete(Guid apiObjectId)
         {
+            if (middleware is IDeletableMiddleware<Transponder> deletableMiddleware)
+            {
+                var transponder = inner.Read(apiObjectId);
+                if (transponder != null)
+                {
+                    deletableMiddleware.OnDelete(transponder, inner.Delete);
+                    return;
+                }
+            }
+
             inner.Delete(apiObjectId);
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
         {
+            if (middleware is IBulkDeletableMiddleware<Transponder> bulkDeletableMiddleware)
+            {
+                var transponders = inner.Read(apiObjectIds).ToList();
+                if (transponders.Count > 0)
+                {
+                    bulkDeletableMiddleware.OnDelete(transponders, inner.Delete);
+                    return;
+                }
+            }
+
             inner.Delete(apiObjectIds);
         }
 
