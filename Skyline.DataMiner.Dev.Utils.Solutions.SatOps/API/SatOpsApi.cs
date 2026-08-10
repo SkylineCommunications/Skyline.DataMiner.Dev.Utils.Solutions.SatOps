@@ -61,9 +61,14 @@
                 );
             lazyTransponderRepository = new Lazy<ITransponderRepository>
                 (
-                    () => new TransponderRepository(this)
-                              .WithMiddleware(new TransponderValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
-                              .WithMiddleware(new TransponderResourceCreationMiddleware(connection, satelliteId => Satellites.Read(satelliteId), Logger))
+                    () =>
+                    {
+                        var repository = new TransponderRepository(this);
+                        return repository
+                            .WithMiddleware(new TransponderValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
+                            .WithMiddleware(new TransponderResourceCreationMiddleware(connection, satelliteId => Satellites.Read(satelliteId), Logger))
+                            .WithMiddleware(new TransponderNameUniquenessMiddleware(() => repository.Read()));
+                    }
                 );
             lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>
                 (

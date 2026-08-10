@@ -17,6 +17,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
         public const string CannotCreateExistingTransponder = "Cannot create an existing transponder.";
         public const string CannotUpdateNonExistingTransponder = "Cannot update a transponder that does not exist.";
         public const string TransponderWithIdWasNotFound = "Transponder with id '{0}' was not found.";
+        public const string TransponderNameAlreadyExists = "A transponder with name '{0}' already exists.";
+        public const string DuplicateTransponderNameDetected = "Duplicate transponder name '{0}' detected within the same batch.";
+        public const string TransponderResourceNameAlreadyExists = "A resource with name '{0}' already exists. Transponder resource names must be unique.";
 
         public const string CannotCreateExistingTransponderPlan = "Cannot create an existing transponder plan.";
         public const string CannotUpdateNonExistingTransponderPlan = "Cannot update a transponder plan that does not exist.";

@@ -128,6 +128,82 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [TestMethod]
+        public void TransponderValidationFlow_WhenNameAlreadyExists_ThrowsArgumentException()
+        {
+            var existing = CreateValidTransponder("TP-1", Guid.NewGuid());
+            var transponder = CreateValidTransponder("TP-1", Guid.NewGuid());
+
+            var exception = InvokeTransponderOnCreate(transponder, existing);
+
+            var argumentException = exception as ArgumentException;
+            Assert.IsNotNull(argumentException);
+            Assert.AreEqual("transponders", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message, "TP-1");
+        }
+
+        [TestMethod]
+        public void TransponderValidationFlow_WhenNameAlreadyExistsWithDifferentCasing_ThrowsArgumentException()
+        {
+            var existing = CreateValidTransponder("TP-1", Guid.NewGuid());
+            var transponder = CreateValidTransponder("tp-1", Guid.NewGuid());
+
+            var exception = InvokeTransponderOnCreate(transponder, existing);
+
+            Assert.IsInstanceOfType(exception, typeof(ArgumentException));
+        }
+
+        [TestMethod]
+        public void TransponderValidationFlow_WhenNameIsUnique_DoesNotThrow()
+        {
+            var existing = CreateValidTransponder("TP-1", Guid.NewGuid());
+            var transponder = CreateValidTransponder("TP-2", Guid.NewGuid());
+
+            var result = InvokeTransponderOnCreateExpectingSuccess(transponder, existing);
+
+            Assert.AreSame(transponder, result);
+        }
+
+        [TestMethod]
+        public void TransponderValidationFlow_WhenUpdatingTransponderWithItsOwnName_DoesNotThrow()
+        {
+            var id = Guid.NewGuid();
+            var existing = CreateValidTransponder("TP-1", id);
+            var transponder = CreateValidTransponder("TP-1", id);
+
+            var result = InvokeTransponderOnCreateExpectingSuccess(transponder, existing);
+
+            Assert.AreSame(transponder, result);
+        }
+
+        [TestMethod]
+        public void TransponderValidationFlow_WhenBatchContainsDuplicateNames_ThrowsArgumentException()
+        {
+            var first = CreateValidTransponder("TP-1", Guid.NewGuid());
+            var second = CreateValidTransponder("TP-1", Guid.NewGuid());
+
+            var transponderType = TransponderType;
+            var middleware = CreateTransponderValidationMiddleware();
+            var batch = Array.CreateInstance(transponderType, 2);
+            batch.SetValue(first, 0);
+            batch.SetValue(second, 1);
+
+            var onCreate = middleware.GetType().GetMethod(
+                "OnCreate",
+                new[]
+                {
+                    typeof(IEnumerable<>).MakeGenericType(transponderType),
+                    typeof(Func<,>).MakeGenericType(
+                        typeof(IEnumerable<>).MakeGenericType(transponderType),
+                        typeof(IReadOnlyCollection<>).MakeGenericType(transponderType)),
+                });
+
+            var exception = InvokeAndUnwrap(onCreate, middleware, batch, BuildBulkIdentityDelegate(transponderType));
+
+            Assert.IsInstanceOfType(exception, typeof(ArgumentException));
+            StringAssert.Contains(exception.Message, "TP-1");
+        }
+
+        [TestMethod]
         public void TransponderPlanValidationFlow_WhenNameMissing_ThrowsArgumentException()
         {
             var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
@@ -720,6 +796,112 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 Assert.IsNotNull(invocationException.InnerException);
                 return invocationException.InnerException;
             }
+        }
+
+        private static Type TransponderType =>
+            CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+
+        private static Type SatelliteType =>
+            CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+
+        /// <summary>
+        /// Creates a transponder API object that satisfies every required-field rule, so that only name uniqueness can fail validation.
+        /// </summary>
+        private static object CreateValidTransponder(string name, Guid id)
+        {
+            var transponder = CreateApiObject(
+                TransponderType,
+                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance",
+                dom => ConfigureValidTransponderDom(dom, name));
+
+            // The API getters read the updated instance, so it has to carry the same values.
+            ConfigureValidTransponderDom(GetPrivateField(transponder, "updatedInstance"), name);
+            SetApiObjectId(transponder, id);
+
+            return transponder;
+        }
+
+        private static void ConfigureValidTransponderDom(object dom, string name)
+        {
+            SetNestedProperty(dom, "Transponder.TransponderName", name);
+            SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
+            SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
+            SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
+            SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
+            SetNestedProperty(dom, "Transponder.DownlinkStartFreq", (double?)4.0);
+            SetNestedProperty(dom, "Transponder.DownlinkEndFreq", (double?)5.0);
+            SetNestedProperty(dom, "Transponder.HardEndDate", (DateTime?)DateTime.UtcNow.AddDays(1));
+            SetNestedProperty(dom, "Transponder.DOMResource", (Guid?)Guid.NewGuid());
+        }
+
+        private static object CreateTransponderValidationMiddleware(params object[] existingTransponders)
+        {
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderNameUniquenessMiddleware", throwOnError: true);
+            var transpondersResolver = BuildParameterlessEnumerableResolverDelegate(TransponderType, existingTransponders);
+
+            return Activator.CreateInstance(
+                middlewareType,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                new object[] { transpondersResolver },
+                null);
+        }
+
+        private static Exception InvokeTransponderOnCreate(object transponder, params object[] existingTransponders)
+        {
+            var middleware = CreateTransponderValidationMiddleware(existingTransponders);
+            var onCreate = middleware.GetType().GetMethod("OnCreate", new[] { TransponderType, typeof(Func<,>).MakeGenericType(TransponderType, TransponderType) });
+
+            return InvokeAndUnwrap(onCreate, middleware, transponder, BuildIdentityDelegate(TransponderType));
+        }
+
+        private static object InvokeTransponderOnCreateExpectingSuccess(object transponder, params object[] existingTransponders)
+        {
+            var middleware = CreateTransponderValidationMiddleware(existingTransponders);
+            var onCreate = middleware.GetType().GetMethod("OnCreate", new[] { TransponderType, typeof(Func<,>).MakeGenericType(TransponderType, TransponderType) });
+
+            try
+            {
+                return onCreate.Invoke(middleware, new object[] { transponder, BuildIdentityDelegate(TransponderType) });
+            }
+            catch (TargetInvocationException invocationException)
+            {
+                Assert.Fail("Expected no exception, but got: {0}", invocationException.InnerException);
+                return null;
+            }
+        }
+
+        private static object GetPrivateField(object target, string fieldName)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            return field.GetValue(target);
+        }
+
+        private static Delegate BuildParameterlessEnumerableResolverDelegate(Type itemType, params object[] items)
+        {
+            var typedArray = Array.CreateInstance(itemType, items.Length);
+            for (int i = 0; i < items.Length; i++)
+            {
+                typedArray.SetValue(items[i], i);
+            }
+
+            var enumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
+            var delegateType = typeof(Func<>).MakeGenericType(enumerableType);
+            var body = Expression.Constant(typedArray, enumerableType);
+
+            return Expression.Lambda(delegateType, body).Compile();
+        }
+
+        private static Delegate BuildBulkIdentityDelegate(Type apiType)
+        {
+            var enumerableType = typeof(IEnumerable<>).MakeGenericType(apiType);
+            var readOnlyCollectionType = typeof(IReadOnlyCollection<>).MakeGenericType(apiType);
+            var parameter = Expression.Parameter(enumerableType, "values");
+            var toListMethod = typeof(System.Linq.Enumerable).GetMethod("ToList").MakeGenericMethod(apiType);
+            var body = Expression.Convert(Expression.Call(toListMethod, parameter), readOnlyCollectionType);
+            var delegateType = typeof(Func<,>).MakeGenericType(enumerableType, readOnlyCollectionType);
+
+            return Expression.Lambda(delegateType, body, parameter).Compile();
         }
     }
 }

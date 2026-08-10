@@ -14,6 +14,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using ExceptionMessages = Skyline.DataMiner.SDM.SatOps.Common.Logging.ExceptionMessages;
 
     internal sealed class TransponderResourceCreationMiddleware : IBulkCreatableMiddleware<Transponder>, IBulkUpdatableMiddleware<Transponder>, IBulkDeletableMiddleware<Transponder>
     {
@@ -34,16 +35,39 @@
 
         public Transponder OnCreate(Transponder oToCreate, Func<Transponder, Transponder> next)
         {
-            CreateResource(oToCreate);
-            return next(oToCreate);
+            CreateResource(oToCreate, ReadExistingResourceNames());
+
+            try
+            {
+                return next(oToCreate);
+            }
+            catch
+            {
+                RollbackCreatedResources(new[] { oToCreate });
+                throw;
+            }
         }
 
         public IReadOnlyCollection<Transponder> OnCreate(IEnumerable<Transponder> oToCreate, Func<IEnumerable<Transponder>, IReadOnlyCollection<Transponder>> next)
         {
             var transponders = oToCreate.ToList();
-            foreach (var transponder in transponders)
-                CreateResource(transponder);
-            return next(transponders);
+
+            // Read the taken names once for the whole batch; CreateResource also adds each new name to the
+            // set so that duplicates inside the batch itself are rejected.
+            var takenResourceNames = ReadExistingResourceNames();
+
+            try
+            {
+                foreach (var transponder in transponders)
+                    CreateResource(transponder, takenResourceNames);
+
+                return next(transponders);
+            }
+            catch
+            {
+                RollbackCreatedResources(transponders);
+                throw;
+            }
         }
 
         public Transponder OnUpdate(Transponder oToUpdate, Func<Transponder, Transponder> next)
@@ -228,13 +252,56 @@
             }
         }
 
-        private void CreateResource(Transponder transponder)
+        private HashSet<string> ReadExistingResourceNames()
+        {
+            return new HashSet<string>(
+                _mediaOpsPlanApi.Resources.Read()
+                    .Where(r => r != null && !string.IsNullOrWhiteSpace(r.Name))
+                    .Select(r => r.Name.Trim()),
+                StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Removes the resources that were provisioned for the supplied transponders.
+        /// </summary>
+        /// <remarks>
+        /// Called when persisting the transponders fails after their resources were already created.
+        /// Without this the resource would linger and permanently block that name from being reused.
+        /// </remarks>
+        private void RollbackCreatedResources(IEnumerable<Transponder> transponders)
+        {
+            var created = transponders?.Where(t => t?.DOMResource != null && t.DOMResource.Value != Guid.Empty).ToList();
+            if (created == null || created.Count == 0)
+                return;
+
+            var resourceIds = created.Select(t => t.DOMResource.Value).Distinct().ToArray();
+
+            try
+            {
+                _mediaOpsPlanApi.Resources.Delete(resourceIds);
+            }
+            catch (Exception e)
+            {
+                _logger?.Error($"Failed to roll back transponder resource(s) '{string.Join(", ", resourceIds)}' after the transponder could not be persisted.", e);
+                return;
+            }
+
+            foreach (var transponder in created)
+                transponder.DOMResource = null;
+        }
+
+        private void CreateResource(Transponder transponder, HashSet<string> takenResourceNames)
         {
             if (transponder == null)
                 throw new ArgumentNullException(nameof(transponder));
 
             if (string.IsNullOrWhiteSpace(transponder.Name))
                 throw new ArgumentException("Transponder name is required.", nameof(transponder));
+
+            // Resource names must be unique in DataMiner. Reject the collision before anything is provisioned,
+            // otherwise Resources.Create fails halfway through and leaves capability/pool changes behind.
+            if (takenResourceNames != null && !takenResourceNames.Add(transponder.Name.Trim()))
+                throw new ArgumentException(string.Format(ExceptionMessages.TransponderResourceNameAlreadyExists, transponder.Name), nameof(transponder));
 
             if (!transponder.Bandwidth.HasValue)
                 throw new ArgumentException("Bandwidth is required.", nameof(transponder));
@@ -305,6 +372,7 @@
 
                 if (resource.Name != transponder.Name)
                 {
+                    EnsureResourceNameIsAvailable(transponder.Name, resource.Id);
                     resource.Name = transponder.Name;
                     changed = true;
                 }
@@ -358,10 +426,30 @@
                 if (changed)
                     _mediaOpsPlanApi.Resources.Update(resource);
             }
+            catch (ArgumentException)
+            {
+                // A resource name conflict is user-correctable; surface it instead of silently skipping the rename.
+                throw;
+            }
             catch (Exception e)
             {
                 _logger?.Error($"Failed to update resource for transponder '{transponder.Name}' (Resource ID: {transponder.DOMResource.Value}).", e);
             }
+        }
+
+        private void EnsureResourceNameIsAvailable(string name, Guid resourceIdToIgnore)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            var conflicts = _mediaOpsPlanApi.Resources
+                .Read()
+                .Any(r => r != null
+                    && r.Id != resourceIdToIgnore
+                    && string.Equals(r.Name?.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (conflicts)
+                throw new ArgumentException(string.Format(ExceptionMessages.TransponderResourceNameAlreadyExists, name), nameof(name));
         }
 
         private Guid CreateOrGetTransponderCapability(string satelliteName, IMediaOpsPlanApi api = null)
