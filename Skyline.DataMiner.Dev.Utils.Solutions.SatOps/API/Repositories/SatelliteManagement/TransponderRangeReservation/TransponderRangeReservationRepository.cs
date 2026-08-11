@@ -759,7 +759,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             if (!IsReservationJob(job, out var node))
             {
-                throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
+                throw new InvalidOperationException(ExceptionMessages.ReservationIsNotValidTransponderRangeReservation);
             }
 
             EnsureJobIsMutable(job);
