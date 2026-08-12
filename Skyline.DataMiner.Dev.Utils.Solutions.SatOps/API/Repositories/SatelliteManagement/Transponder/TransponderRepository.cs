@@ -102,13 +102,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             oToDelete.ToOriginalInstance().Delete(DomHelper);
         }
 
-        public IEnumerable<Transponder> Read()
-        {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
-                .Where(IsTransponderInstance)
-                .Select(di => Transponder.FromInstance(new TranspondersInstance(di)));
-        }
-
         public IEnumerable<Transponder> ReadBySatellite(Guid satelliteId)
         {
             if (satelliteId == Guid.Empty)
@@ -146,6 +139,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
                 .Where(di => IsTransponderInstance(di) && idSet.Contains(di.ID.Id))
+                .Select(di => Transponder.FromInstance(new TranspondersInstance(di)));
+        }
+
+        public IEnumerable<Transponder> Read()
+        {
+            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+                .Where(IsTransponderInstance)
                 .Select(di => Transponder.FromInstance(new TranspondersInstance(di)));
         }
 

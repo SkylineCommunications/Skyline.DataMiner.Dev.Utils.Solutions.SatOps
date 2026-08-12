@@ -142,14 +142,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 .Select(di => Satellite.FromInstance(new SatellitesInstance(di)));
         }
 
-        public Satellite Update(Satellite oToUpdate)
-        {
-            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
-                throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingSatellite);
-
-            return UpdateInternal(oToUpdate);
-        }
-
         public Satellite Activate(Guid id)
         {
             if (id == Guid.Empty)
@@ -308,6 +300,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         public IReadOnlyCollection<Satellite> Update(IEnumerable<Satellite> oToUpdate)
         {
             return oToUpdate.Select(Update).ToList();
+        }
+
+        public Satellite Update(Satellite oToUpdate)
+        {
+            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
+                throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingSatellite);
+
+            return UpdateInternal(oToUpdate);
         }
 
         public long Count(FilterElement<Satellite> filter)

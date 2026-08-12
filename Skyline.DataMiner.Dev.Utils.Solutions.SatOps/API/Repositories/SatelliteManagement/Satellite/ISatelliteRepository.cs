@@ -5,6 +5,9 @@
     using System;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// Represents a repository for managing <see cref="Satellite"/> entities.
+    /// </summary>
     public interface ISatelliteRepository : IRepository<Satellite>
     {
         /// <summary>

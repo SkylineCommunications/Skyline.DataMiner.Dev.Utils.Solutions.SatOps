@@ -278,22 +278,20 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlanId == Guid.Empty)
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
 
-            var plan = SatOpsApi.TransponderPlans.Read(transponderPlanId);
-            if (plan == null)
+            var plan = SatOpsApi.TransponderPlans.Read(transponderPlanId) ?? 
                 throw new ArgumentException(string.Format(ExceptionMessages.TransponderPlanWithIdWasNotFound, transponderPlanId), nameof(transponderPlanId));
 
             if (!plan.Transponder.HasValue || plan.Transponder.Value == Guid.Empty)
                 throw new InvalidOperationException(string.Format(ExceptionMessages.TransponderPlanHasNoAssociatedTransponder, transponderPlanId));
 
-            var transponder = SatOpsApi.Transponders.Read(plan.Transponder.Value);
-            if (transponder == null)
-                throw new InvalidOperationException(string.Format(ExceptionMessages.TransponderForPlanWasNotFound, plan.Transponder.Value, transponderPlanId));
+            var transponder = SatOpsApi.Transponders.Read(plan.Transponder.Value) 
+                ?? throw new InvalidOperationException(string.Format(ExceptionMessages.TransponderForPlanWasNotFound, plan.Transponder.Value, transponderPlanId));
 
             var planRows = SatOpsApi.TransponderPlanRows
                 .Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId))
                 .ToList();
 
-            DeleteByTransponderPlan(transponderPlanId);
+            DeleteSlotsByTransponderPlan(transponderPlanId);
 
             double transponderBandwidth = transponder.Bandwidth.GetValueOrDefault();
             double transponderStartFrequency = transponder.StartFrequency.GetValueOrDefault();
@@ -340,7 +338,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return Read(TransponderSlotExposers.TransponderPlan.Equal(transponderPlanId));
         }
 
-        public void DeleteByTransponderPlan(Guid transponderPlanId)
+        public void DeleteSlotsByTransponderPlan(Guid transponderPlanId)
         {
             if (transponderPlanId == Guid.Empty)
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));

@@ -231,9 +231,9 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return inner.ReadByTransponderPlan(transponderPlanId);
         }
 
-        public void DeleteByTransponderPlan(Guid transponderPlanId)
+        public void DeleteSlotsByTransponderPlan(Guid transponderPlanId)
         {
-            inner.DeleteByTransponderPlan(transponderPlanId);
+            inner.DeleteSlotsByTransponderPlan(transponderPlanId);
         }
     }
 

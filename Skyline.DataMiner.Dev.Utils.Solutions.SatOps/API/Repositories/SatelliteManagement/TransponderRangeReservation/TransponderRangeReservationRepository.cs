@@ -913,7 +913,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             propertyValueInstance.Save(propertiesHelper);
         }
 
-        private PropertyValuesInstance FindSlotNameProperty(DomHelper propertiesHelper, string reservationIdString)
+        private static PropertyValuesInstance FindSlotNameProperty(DomHelper propertiesHelper, string reservationIdString)
         {
             var matches = propertiesHelper.DomInstances
                 .Read(DomInstanceExposers.DomDefinitionId

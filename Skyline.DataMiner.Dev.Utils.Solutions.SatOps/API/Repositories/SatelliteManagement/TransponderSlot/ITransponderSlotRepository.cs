@@ -44,6 +44,6 @@
         /// Deletes all slots that belong to the specified transponder plan.
         /// </summary>
         /// <param name="transponderPlanId">The unique identifier of the transponder plan.</param>
-        void DeleteByTransponderPlan(Guid transponderPlanId);
+        void DeleteSlotsByTransponderPlan(Guid transponderPlanId);
     }
 }

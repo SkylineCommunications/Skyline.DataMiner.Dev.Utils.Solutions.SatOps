@@ -71,8 +71,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(apiObjectId));
 
             var transponderPlan = Read(apiObjectId);
-            if (transponderPlan != null)
-                transponderPlan.ToOriginalInstance().Delete(DomHelper);
+
+            transponderPlan?.ToOriginalInstance().Delete(DomHelper);
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
@@ -100,13 +100,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         public void Delete(TransponderPlan oToDelete)
         {
             oToDelete.ToOriginalInstance().Delete(DomHelper);
-        }
-
-        public IEnumerable<TransponderPlan> Read()
-        {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
-                .Where(IsTransponderPlanInstance)
-                .Select(di => TransponderPlan.FromInstance(new TransponderPlansInstance(di)));
         }
 
         public IEnumerable<TransponderPlan> ReadByTransponder(Guid transponderId)
@@ -146,6 +139,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
                 .Where(di => IsTransponderPlanInstance(di) && idSet.Contains(di.ID.Id))
+                .Select(di => TransponderPlan.FromInstance(new TransponderPlansInstance(di)));
+        }
+
+        public IEnumerable<TransponderPlan> Read()
+        {
+            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+                .Where(IsTransponderPlanInstance)
                 .Select(di => TransponderPlan.FromInstance(new TransponderPlansInstance(di)));
         }
 
@@ -390,9 +390,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private TransponderPlan DoTransition(Guid id, string transitionId)
         {
-            var transponderPlan = Read(id);
-            if (transponderPlan == null)
-                throw new ArgumentException(string.Format(ExceptionMessages.TransponderPlanWithIdWasNotFound, id), nameof(id));
+            var transponderPlan = Read(id) ?? throw new ArgumentException(string.Format(ExceptionMessages.TransponderPlanWithIdWasNotFound, id), nameof(id));
 
             var domInstanceId = transponderPlan.ToOriginalInstance().ID;
             var transitionedDomInstance = DomHelper.DomInstances.DoStatusTransition(domInstanceId, transitionId);

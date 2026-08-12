@@ -213,7 +213,7 @@
         /// <param name="connection">The connection to validate.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="connection"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the connection is shutting down.</exception>
-        private void ValidateConnection(IConnection connection)
+        private static void ValidateConnection(IConnection connection)
         {
             if (connection is null)
             {

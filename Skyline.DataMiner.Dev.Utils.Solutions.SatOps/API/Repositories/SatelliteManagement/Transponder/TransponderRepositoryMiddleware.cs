@@ -131,11 +131,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             inner.Delete(oToDelete);
         }
 
-        public IEnumerable<Transponder> Read()
-        {
-            return inner.Read();
-        }
-
         public IEnumerable<Transponder> ReadBySatellite(Guid satelliteId)
         {
             return inner.ReadBySatellite(satelliteId);
@@ -219,6 +214,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         public IEnumerable<Transponder> Read(IEnumerable<Guid> ids)
         {
             return inner.Read(ids);
+        }
+
+        public IEnumerable<Transponder> Read()
+        {
+            return inner.Read();
         }
 
         public IReadOnlyCollection<Transponder> Update(IEnumerable<Transponder> oToUpdate)

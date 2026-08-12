@@ -110,11 +110,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             inner.Delete(oToDelete);
         }
 
-        public IEnumerable<Beam> Read()
-        {
-            return inner.Read();
-        }
-
         public IEnumerable<Beam> Read(FilterElement<Beam> filter)
         {
             if (middleware is IReadableMiddleware<Beam> readableMiddleware)
@@ -193,6 +188,11 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         public IEnumerable<Beam> Read(IEnumerable<Guid> ids)
         {
             return inner.Read(ids);
+        }
+
+        public IEnumerable<Beam> Read()
+        {
+            return inner.Read();
         }
 
         public IReadOnlyCollection<Beam> Update(IEnumerable<Beam> oToUpdate)

@@ -70,8 +70,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(apiObjectId));
 
             var transponderPlanRow = Read(apiObjectId);
-            if (transponderPlanRow != null)
-                transponderPlanRow.ToOriginalInstance().Delete(DomHelper);
+            
+            transponderPlanRow?.ToOriginalInstance().Delete(DomHelper);
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)

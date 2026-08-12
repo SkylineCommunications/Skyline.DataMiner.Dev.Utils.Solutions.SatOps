@@ -1,6 +1,5 @@
 namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation
 {
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using System;
 
