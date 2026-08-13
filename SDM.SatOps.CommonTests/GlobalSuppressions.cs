@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Naming", "VSSpell001:Spell Check", Justification = "<false positives", Scope = "module")]
+[assembly: SuppressMessage("Naming", "VSSpell001:Spell Check", Justification = "false positives", Scope = "module")]
