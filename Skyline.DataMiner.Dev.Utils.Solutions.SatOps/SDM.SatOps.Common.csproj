@@ -43,4 +43,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.CommonTests" />
+	</ItemGroup>
 </Project>
