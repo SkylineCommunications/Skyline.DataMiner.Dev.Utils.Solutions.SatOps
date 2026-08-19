@@ -1,10 +1,10 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite
 {
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
     using DomModel = DOM.Model;
 
     /// <summary>

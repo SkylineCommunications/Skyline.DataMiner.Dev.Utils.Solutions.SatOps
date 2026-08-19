@@ -1,13 +1,14 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Transponder
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -183,11 +184,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponders == null)
                 throw new ArgumentNullException(nameof(transponders));
 
-            foreach (var transponder in transponders)
-            {
-                if (transponder == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponders));
-            }
+            if (transponders.Any(transponder => transponder == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponders));
 
             return transponders.Select(Activate).ToList();
         }
@@ -227,11 +225,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponders == null)
                 throw new ArgumentNullException(nameof(transponders));
 
-            foreach (var transponder in transponders)
-            {
-                if (transponder == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponders));
-            }
+            if(transponders.Any(transponder => transponder == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponders));
 
             return transponders.Select(Deprecate).ToList();
         }
@@ -271,11 +266,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponders == null)
                 throw new ArgumentNullException(nameof(transponders));
 
-            foreach (var transponder in transponders)
-            {
-                if (transponder == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponders));
-            }
+            if(transponders.Any(transponder => transponder == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponders));
 
             return transponders.Select(Reactivate).ToList();
         }
@@ -390,9 +382,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private Transponder DoTransition(Guid id, string transitionId)
         {
-            var transponder = Read(id);
-            if (transponder == null)
-                throw new ArgumentException(string.Format(ExceptionMessages.TransponderWithIdWasNotFound, id), nameof(id));
+            var transponder = Read(id) ?? throw new ArgumentException(string.Format(ExceptionMessages.TransponderWithIdWasNotFound, id), nameof(id));
 
             var domInstanceId = transponder.ToOriginalInstance().ID;
             var transitionedDomInstance = DomHelper.DomInstances.DoStatusTransition(domInstanceId, transitionId);

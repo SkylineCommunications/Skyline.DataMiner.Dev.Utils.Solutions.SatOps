@@ -1,9 +1,9 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow
 {
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
     using DomModel = DOM.Model;
 
     /// <summary>

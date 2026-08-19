@@ -4,7 +4,7 @@
 //     Changes to this file will be lost if the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
+namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
 {
     using System;
     using System.Linq;
@@ -279,7 +279,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
 //     Changes to this file will be lost if the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
+namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
 {
     using System;
     using System.Linq;

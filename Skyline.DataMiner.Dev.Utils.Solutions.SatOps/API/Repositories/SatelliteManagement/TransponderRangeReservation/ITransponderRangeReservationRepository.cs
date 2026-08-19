@@ -1,9 +1,9 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation
 {
     using System;
     using System.Collections.Generic;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
 
     /// <summary>
     /// Represents a repository for managing <see cref="TransponderRangeReservation"/> entities.

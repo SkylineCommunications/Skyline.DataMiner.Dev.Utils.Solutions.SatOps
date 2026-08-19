@@ -5,10 +5,11 @@
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
-    using TransponderPlanObject = Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan;
+    using TransponderPlanObject = Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan;
 
     [TestClass]
     public class TransponderPlanRepositoryMiddlewareTests

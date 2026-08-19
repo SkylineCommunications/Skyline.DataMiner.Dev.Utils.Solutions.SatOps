@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder
 {
     /// <summary>
     /// Represents transponder band types.

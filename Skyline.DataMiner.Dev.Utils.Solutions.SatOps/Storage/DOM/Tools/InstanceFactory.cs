@@ -1,18 +1,16 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Tools
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.Storage.DOM.Tools
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Linq;
-
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Helper;
     using Skyline.DataMiner.Net.ManagerStore;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Utils.DOM.Extensions;
-
     using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
 
     internal static class InstanceFactory
     {

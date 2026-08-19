@@ -1,20 +1,23 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReservation;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     internal class TransponderRangeReservationRepository : Repository, ITransponderRangeReservationRepository
     {
@@ -222,52 +225,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
-        public TransponderRangeReservation Read(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(id));
-            }
-
-            Job job;
-            try
-            {
-                job = Jobs.Read(id);
-            }
-            catch
-            {
-                return null;
-            }
-
-            if (job == null || !IsReservationJob(job, out var node))
-            {
-                return null;
-            }
-
-            return ToReservation(job, node);
-        }
-
-        public IEnumerable<TransponderRangeReservation> Read(IEnumerable<Guid> ids)
-        {
-            if (ids == null)
-            {
-                throw new ArgumentNullException(nameof(ids));
-            }
-
-            foreach (var id in ids)
-            {
-                if (id == Guid.Empty)
-                {
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(ids));
-                }
-            }
-
-            var idSet = new HashSet<Guid>(ids);
-            return ReadAllReservationJobs()
-                .Where(pair => idSet.Contains(pair.Job.Id))
-                .Select(pair => ToReservation(pair.Job, pair.Node));
-        }
-
         public TransponderRangeReservation Update(TransponderRangeReservation oToUpdate)
         {
             if (oToUpdate == null)
@@ -345,6 +302,52 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return Read(query.Filter);
         }
 
+        public TransponderRangeReservation Read(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(id));
+            }
+
+            Job job;
+            try
+            {
+                job = Jobs.Read(id);
+            }
+            catch
+            {
+                return null;
+            }
+
+            if (job == null || !IsReservationJob(job, out var node))
+            {
+                return null;
+            }
+
+            return ToReservation(job, node);
+        }
+
+        public IEnumerable<TransponderRangeReservation> Read(IEnumerable<Guid> ids)
+        {
+            if (ids == null)
+            {
+                throw new ArgumentNullException(nameof(ids));
+            }
+
+            foreach (var id in ids)
+            {
+                if (id == Guid.Empty)
+                {
+                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(ids));
+                }
+            }
+
+            var idSet = new HashSet<Guid>(ids);
+            return ReadAllReservationJobs()
+                .Where(pair => idSet.Contains(pair.Job.Id))
+                .Select(pair => ToReservation(pair.Job, pair.Node));
+        }
+
         public IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPaged()
         {
             return ReadPaged(new TRUEFilterElement<TransponderRangeReservation>());
@@ -403,7 +406,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             {
                 var slice = results.Skip(offset).Take(pageSize).ToList();
                 var hasNext = offset + pageSize < results.Count;
-                yield return new Skyline.DataMiner.SDM.PagedResult<TransponderRangeReservation>(slice, pageNumber++, pageSize, hasNext);
+                yield return new SDM.PagedResult<TransponderRangeReservation>(slice, pageNumber++, pageSize, hasNext);
             }
         }
 
@@ -537,8 +540,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         /// onto the given job. If <see cref="TransponderRangeReservation.PreRollStart"/> or
         /// <see cref="TransponderRangeReservation.PostRollEnd"/> are set, those values override; otherwise a
         /// zero-length pre-/post-roll is written to satisfy MediaOps.Plan validation
-        /// (<see cref="Skyline.DataMiner.Solutions.MediaOps.Plan.Exceptions.JobInvalidPreRollError"/> /
-        /// <see cref="Skyline.DataMiner.Solutions.MediaOps.Plan.Exceptions.JobInvalidPostRollError"/>).
+        /// (<see cref="MediaOps.Plan.Exceptions.JobInvalidPreRollError"/> /
+        /// <see cref="MediaOps.Plan.Exceptions.JobInvalidPostRollError"/>).
         /// </summary>
         internal static void ApplyReservationTimes(TransponderRangeReservation reservation, Job job)
         {
@@ -614,7 +617,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         /// <summary>
         /// Resolves the satellite name for a reservation from the transponder's
-        /// <see cref="Objects.SatelliteManagement.Transponder.Transponder.TransponderSatellite"/> relationship.
+        /// <see cref="Transponder.TransponderSatellite"/> relationship.
         /// The transponder is the single source of truth for the satellite, so callers cannot supply
         /// a mismatched or stale <see cref="TransponderRangeReservation.SatelliteName"/>.
         /// </summary>
@@ -623,8 +626,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         /// resolved, or when the satellite has no name.
         /// </exception>
         internal static string ResolveSatelliteNameFromTransponder(
-            Objects.SatelliteManagement.Transponder.Transponder transponder,
-            Func<Guid, Objects.SatelliteManagement.Satellite.Satellite> lookupSatellite)
+            Transponder transponder,
+            Func<Guid, Satellite> lookupSatellite)
         {
             if (transponder == null) throw new ArgumentNullException(nameof(transponder));
             if (lookupSatellite == null) throw new ArgumentNullException(nameof(lookupSatellite));
@@ -635,19 +638,19 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(
                     $"Transponder '{transponder.Id}' has no linked satellite (TransponderSatellite is missing). " +
                     "A reservation cannot be created without a satellite relationship.",
-                    "reservation");
+                    nameof(transponder));
             }
 
             var satellite = lookupSatellite(satelliteId.Value)
                 ?? throw new ArgumentException(
                     $"Satellite '{satelliteId.Value}' referenced by transponder '{transponder.Id}' could not be resolved.",
-                    "reservation");
+                    nameof(transponder));
 
             if (string.IsNullOrWhiteSpace(satellite.Name))
             {
                 throw new ArgumentException(
                     $"Satellite '{satelliteId.Value}' referenced by transponder '{transponder.Id}' has no name.",
-                    "reservation");
+                    nameof(transponder));
             }
 
             return satellite.Name;

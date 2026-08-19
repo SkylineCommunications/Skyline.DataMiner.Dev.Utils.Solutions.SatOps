@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
+namespace Skyline.DataMiner.Solutions.SatOps.Common.Logging
 {
     internal static class ExceptionMessages
     {

@@ -1,17 +1,17 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Helpers
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.Storage.DOM.Helpers
 {
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Tools;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Storage.DOM.Tools;
     using Skyline.DataMiner.Utils.DOM.Extensions;
     using System;
     using System.Collections.Generic;

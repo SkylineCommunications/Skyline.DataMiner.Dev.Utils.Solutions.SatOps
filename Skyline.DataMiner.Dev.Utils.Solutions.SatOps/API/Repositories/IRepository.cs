@@ -1,7 +1,8 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories
 {
     using System;
     using System.Collections.Generic;
+    using Skyline.DataMiner.SDM;
 
     /// <summary>
     /// Represents a repository for managing API objects of type <typeparamref name="T"/>.

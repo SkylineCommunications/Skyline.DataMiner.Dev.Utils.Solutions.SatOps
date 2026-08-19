@@ -4,7 +4,7 @@
 //     Changes to this file will be lost if the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
+namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Sections;
@@ -127,12 +127,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
 //     Changes to this file will be lost if the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
+namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
 {
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -403,13 +403,13 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
 //     Changes to this file will be lost if the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-namespace Skyline.DataMiner.SDM.SatOps.Common.DOM.Model
+namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Apps.Sections.Sections;
     using Skyline.DataMiner.Net.Messages;
     using Skyline.DataMiner.Net.Sections;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;

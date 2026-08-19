@@ -1,7 +1,7 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Automation.Extensions
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Automation.Extensions
 {
     using Skyline.DataMiner.Automation;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Extensions;
     using System;
 

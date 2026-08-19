@@ -6,8 +6,8 @@
 
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite;
 
     [TestClass]
     public class SatelliteFilterTranslatorTests

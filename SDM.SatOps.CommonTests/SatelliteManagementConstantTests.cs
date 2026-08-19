@@ -2,7 +2,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
 
     [TestClass]
     public class SatelliteManagementConstantTests

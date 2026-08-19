@@ -9,9 +9,9 @@
 
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
-
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -700,7 +700,7 @@
         [TestMethod]
         public void GenerateSlots_ByPlan_DelegatesToInner()
         {
-            var plan = Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan.CreateNewTransponderPlan();
+            var plan = TransponderPlan.CreateNewTransponderPlan();
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.GenerateSlots(plan)).Returns(expected);

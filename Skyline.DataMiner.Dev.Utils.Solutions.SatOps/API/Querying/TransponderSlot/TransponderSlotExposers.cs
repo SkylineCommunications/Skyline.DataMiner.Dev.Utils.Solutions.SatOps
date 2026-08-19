@@ -1,7 +1,7 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderSlot
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
     using System;
 
     /// <summary>

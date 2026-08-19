@@ -9,6 +9,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
     using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
 
     /// <summary>
     /// Regression tests for SatOps Common 0.0.9:
@@ -25,7 +27,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     public class TransponderRangeReservationBandwidthSizeTests
     {
         private static readonly Assembly CommonAssembly =
-            typeof(Skyline.DataMiner.SDM.SatOps.Common.API.SatOpsApi).Assembly;
+            typeof(SatOpsApi).Assembly;
 
         private static readonly Type RepositoryType = CommonAssembly.GetType(
             "Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservationRepository",

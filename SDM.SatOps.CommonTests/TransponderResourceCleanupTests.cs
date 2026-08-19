@@ -7,6 +7,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using System.Runtime.Serialization;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
 
     /// <summary>
     /// Tests for the transponder resource cleanup selection logic used by
@@ -19,7 +20,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     public class TransponderResourceCleanupTests
     {
         private static readonly Assembly CommonAssembly =
-            typeof(Skyline.DataMiner.SDM.SatOps.Common.API.SatOpsApi).Assembly;
+            typeof(SatOpsApi).Assembly;
 
         private static readonly Type MiddlewareType = CommonAssembly.GetType(
             "Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderResourceCreationMiddleware",

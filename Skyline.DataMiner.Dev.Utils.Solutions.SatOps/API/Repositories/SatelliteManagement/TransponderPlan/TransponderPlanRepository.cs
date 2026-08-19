@@ -1,13 +1,14 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderPlan;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -183,11 +184,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlans == null)
                 throw new ArgumentNullException(nameof(transponderPlans));
 
-            foreach (var transponderPlan in transponderPlans)
-            {
-                if (transponderPlan == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlans));
-            }
+            if (transponderPlans.Any(transponderPlan => transponderPlan == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlans));
 
             return transponderPlans.Select(Activate).ToList();
         }
@@ -197,11 +195,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlanIds == null)
                 throw new ArgumentNullException(nameof(transponderPlanIds));
 
-            foreach (var transponderPlanId in transponderPlanIds)
-            {
-                if (transponderPlanId == Guid.Empty)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(transponderPlanIds));
-            }
+            if (transponderPlanIds.Any(transponderPlanId => transponderPlanId == Guid.Empty))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(transponderPlanIds));
 
             return transponderPlanIds.Select(Activate).ToList();
         }
@@ -227,11 +222,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlans == null)
                 throw new ArgumentNullException(nameof(transponderPlans));
 
-            foreach (var transponderPlan in transponderPlans)
-            {
-                if (transponderPlan == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlans));
-            }
+            if (transponderPlans.Any(transponderPlan => transponderPlan == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlans));
 
             return transponderPlans.Select(Deprecate).ToList();
         }
@@ -241,11 +233,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlanIds == null)
                 throw new ArgumentNullException(nameof(transponderPlanIds));
 
-            foreach (var transponderPlanId in transponderPlanIds)
-            {
-                if (transponderPlanId == Guid.Empty)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(transponderPlanIds));
-            }
+            if (transponderPlanIds.Any(transponderPlanId => transponderPlanId == Guid.Empty))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(transponderPlanIds));
 
             return transponderPlanIds.Select(Deprecate).ToList();
         }
@@ -271,11 +260,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlans == null)
                 throw new ArgumentNullException(nameof(transponderPlans));
 
-            foreach (var transponderPlan in transponderPlans)
-            {
-                if (transponderPlan == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlans));
-            }
+            if (transponderPlans.Any(transponderPlan => transponderPlan == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlans));
 
             return transponderPlans.Select(Reactivate).ToList();
         }
@@ -285,11 +271,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (transponderPlanIds == null)
                 throw new ArgumentNullException(nameof(transponderPlanIds));
 
-            foreach (var transponderPlanId in transponderPlanIds)
-            {
-                if (transponderPlanId == Guid.Empty)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(transponderPlanIds));
-            }
+            if (transponderPlanIds.Any(transponderPlanId => transponderPlanId == Guid.Empty))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(transponderPlanIds));
 
             return transponderPlanIds.Select(Reactivate).ToList();
         }

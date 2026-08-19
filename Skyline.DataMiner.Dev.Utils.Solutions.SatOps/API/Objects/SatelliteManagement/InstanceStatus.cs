@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement
 {
     /// <summary>
     /// Represents the lifecycle status of a satellite.

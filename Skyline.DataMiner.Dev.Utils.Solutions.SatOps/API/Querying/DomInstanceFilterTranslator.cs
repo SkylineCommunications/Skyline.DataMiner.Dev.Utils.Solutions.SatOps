@@ -1,9 +1,10 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying
 {
     using System;
 
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
 
     internal abstract class DomInstanceFilterTranslator<T> : FilterTranslator<T, DomInstance> where T : ApiObject
     {

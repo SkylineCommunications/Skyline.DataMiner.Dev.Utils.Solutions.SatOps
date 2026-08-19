@@ -1,5 +1,6 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories
 {
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using System;
 
     internal abstract class Repository

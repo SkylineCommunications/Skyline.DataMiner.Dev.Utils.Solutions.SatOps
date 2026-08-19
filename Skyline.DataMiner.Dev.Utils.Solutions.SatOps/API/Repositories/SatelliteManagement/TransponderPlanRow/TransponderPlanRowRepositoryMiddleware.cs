@@ -1,8 +1,8 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -135,6 +135,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return inner.Read(query);
         }
 
+        public TransponderPlanRow Read(Guid id)
+        {
+            return inner.Read(id);
+        }
+
+        public IEnumerable<TransponderPlanRow> Read(IEnumerable<Guid> ids)
+        {
+            return inner.Read(ids);
+        }
+
         public IEnumerable<IPagedResult<TransponderPlanRow>> ReadPaged()
         {
             return inner.ReadPaged();
@@ -183,16 +193,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
 
             return inner.ReadPaged(query, pageSize);
-        }
-
-        public TransponderPlanRow Read(Guid id)
-        {
-            return inner.Read(id);
-        }
-
-        public IEnumerable<TransponderPlanRow> Read(IEnumerable<Guid> ids)
-        {
-            return inner.Read(ids);
         }
 
         public IReadOnlyCollection<TransponderPlanRow> Update(IEnumerable<TransponderPlanRow> oToUpdate)

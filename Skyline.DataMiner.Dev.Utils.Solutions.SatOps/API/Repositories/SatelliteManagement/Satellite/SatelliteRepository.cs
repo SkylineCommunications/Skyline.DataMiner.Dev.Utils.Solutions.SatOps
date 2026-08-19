@@ -1,13 +1,14 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -72,8 +73,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(apiObjectId));
 
             var satellite = Read(apiObjectId);
-            if (satellite != null)
-                satellite.ToOriginalInstance().Delete(DomHelper);
+
+            satellite?.ToOriginalInstance().Delete(DomHelper);
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
@@ -162,11 +163,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (satellites == null)
                 throw new ArgumentNullException(nameof(satellites));
 
-            foreach (var satellite in satellites)
-            {
-                if (satellite == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(satellites));
-            }
+            if(satellites.Any(satellite => satellite == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(satellites));
 
             return satellites.Select(s => Activate(s)).ToList();
         }
@@ -205,11 +203,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (satellites == null)
                 throw new ArgumentNullException(nameof(satellites));
 
-            foreach (var satellite in satellites)
-            {
-                if (satellite == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(satellites));
-            }
+            if (satellites.Any(satellite => satellite == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(satellites));
 
             return satellites.Select(s => Deprecate(s)).ToList();
         }
@@ -249,11 +244,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (satellites == null)
                 throw new ArgumentNullException(nameof(satellites));
 
-            foreach (var satellite in satellites)
-            {
-                if (satellite == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(satellites));
-            }
+            if (satellites.Any(satellite => satellite == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(satellites));
 
             return satellites.Select(s => Reactivate(s)).ToList();
         }
@@ -274,9 +266,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private Satellite DoTransition(Guid id, string transitionId)
         {
-            var satellite = Read(id);
-            if (satellite == null)
-                throw new ArgumentException(string.Format(ExceptionMessages.SatelliteWithIdWasNotFound, id), nameof(id));
+            var satellite = Read(id) ?? throw new ArgumentException(string.Format(ExceptionMessages.SatelliteWithIdWasNotFound, id), nameof(id));
 
             var domInstanceId = satellite.ToOriginalInstance().ID;
             var transitionedDomInstance = DomHelper.DomInstances.DoStatusTransition(domInstanceId, transitionId);

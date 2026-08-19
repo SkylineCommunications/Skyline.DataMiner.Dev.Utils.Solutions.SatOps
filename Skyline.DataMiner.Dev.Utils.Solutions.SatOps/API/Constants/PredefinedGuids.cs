@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Constants
 {
     using System;
 

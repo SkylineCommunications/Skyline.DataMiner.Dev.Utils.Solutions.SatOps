@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using System;
     using System.Reflection;
 
@@ -14,7 +15,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     [TestClass]
     public class TransponderRangeReservationTimeMappingTests
     {
-        private static readonly Assembly CommonAssembly = typeof(Skyline.DataMiner.SDM.SatOps.Common.API.SatOpsApi).Assembly;
+        private static readonly Assembly CommonAssembly = typeof(SatOpsApi).Assembly;
 
         [TestMethod]
         public void ApplyReservationTimes_WithoutExplicitRoll_MirrorsStartOntoPreRollAndEndOntoPostRoll()

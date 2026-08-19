@@ -1,11 +1,11 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation
 {
-    using System;
-    using System.Collections.Generic;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
     using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Generic;
 
     internal sealed class TransponderRangeReservationRepositoryMiddleware : ITransponderRangeReservationRepository
     {
@@ -115,6 +115,36 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return inner.Read();
         }
 
+        public TransponderRangeReservation Read(Guid id)
+        {
+            return inner.Read(id);
+        }
+
+        public IEnumerable<TransponderRangeReservation> Read(IEnumerable<Guid> ids)
+        {
+            return inner.Read(ids);
+        }
+
+        public IEnumerable<TransponderRangeReservation> Read(FilterElement<TransponderRangeReservation> filter)
+        {
+            if (middleware is IReadableMiddleware<TransponderRangeReservation> readableMiddleware)
+            {
+                return readableMiddleware.OnRead(filter, inner.Read);
+            }
+
+            return inner.Read(filter);
+        }
+
+        public IEnumerable<TransponderRangeReservation> Read(IQuery<TransponderRangeReservation> query)
+        {
+            if (middleware is IReadableMiddleware<TransponderRangeReservation> readableMiddleware)
+            {
+                return readableMiddleware.OnRead(query, inner.Read);
+            }
+
+            return inner.Read(query);
+        }
+
         public IEnumerable<TransponderRangeReservation> ReadByTransponder(Guid transponderId)
         {
             return inner.ReadByTransponder(transponderId);
@@ -153,26 +183,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
         public string GetFirstNodeId(Guid reservationId)
         {
             return inner.GetFirstNodeId(reservationId);
-        }
-
-        public IEnumerable<TransponderRangeReservation> Read(FilterElement<TransponderRangeReservation> filter)
-        {
-            if (middleware is IReadableMiddleware<TransponderRangeReservation> readableMiddleware)
-            {
-                return readableMiddleware.OnRead(filter, inner.Read);
-            }
-
-            return inner.Read(filter);
-        }
-
-        public IEnumerable<TransponderRangeReservation> Read(IQuery<TransponderRangeReservation> query)
-        {
-            if (middleware is IReadableMiddleware<TransponderRangeReservation> readableMiddleware)
-            {
-                return readableMiddleware.OnRead(query, inner.Read);
-            }
-
-            return inner.Read(query);
         }
 
         public IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPaged()
@@ -223,16 +233,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
 
             return inner.ReadPaged(query, pageSize);
-        }
-
-        public TransponderRangeReservation Read(Guid id)
-        {
-            return inner.Read(id);
-        }
-
-        public IEnumerable<TransponderRangeReservation> Read(IEnumerable<Guid> ids)
-        {
-            return inner.Read(ids);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> Update(IEnumerable<TransponderRangeReservation> oToUpdate)

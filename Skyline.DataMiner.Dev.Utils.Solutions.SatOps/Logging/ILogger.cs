@@ -1,7 +1,7 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.Logging
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.Logging
 {
-    using Skyline.DataMiner.Net.IManager.Helper;
     using System;
+    using Skyline.DataMiner.Automation;
 
     /// <summary>
     /// Defines a logger interface for logging messages with different severity levels.

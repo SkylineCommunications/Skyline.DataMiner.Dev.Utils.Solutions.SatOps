@@ -1,10 +1,11 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Satellite
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
 {
-    using System;
-    using System.Collections.Generic;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
+    using System;
+    using System.Collections.Generic;
     using DomModel = DOM.Model;
 
     internal class SatelliteFilterTranslator : DomInstanceFilterTranslator<Satellite>

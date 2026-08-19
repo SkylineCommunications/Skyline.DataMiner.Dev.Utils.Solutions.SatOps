@@ -1,10 +1,11 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Transponder
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
 {
-    using System;
-    using System.Collections.Generic;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
+    using System;
+    using System.Collections.Generic;
     using DomModel = DOM.Model;
 
     internal class TransponderFilterTranslator : DomInstanceFilterTranslator<Transponder>

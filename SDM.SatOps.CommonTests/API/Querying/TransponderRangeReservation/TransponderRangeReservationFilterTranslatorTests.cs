@@ -8,9 +8,9 @@
 
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderRangeReservation;
 
     [TestClass]
     public class TransponderRangeReservationFilterTranslatorTests

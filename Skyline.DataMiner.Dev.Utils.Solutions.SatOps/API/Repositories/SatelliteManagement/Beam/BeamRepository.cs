@@ -1,13 +1,14 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.Beam
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Beam
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Beam;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -90,8 +91,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(apiObjectId));
 
             var beam = Read(apiObjectId);
-            if (beam != null)
-                beam.ToOriginalInstance().Delete(DomHelper);
+
+            beam?.ToOriginalInstance().Delete(DomHelper);
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
@@ -213,11 +214,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (beams == null)
                 throw new ArgumentNullException(nameof(beams));
 
-            foreach (var beam in beams)
-            {
-                if (beam == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beams));
-            }
+            if(beams.Any(beam => beam == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beams));
 
             return beams.Select(Activate).ToList();
         }
@@ -257,11 +255,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (beams == null)
                 throw new ArgumentNullException(nameof(beams));
 
-            foreach (var beam in beams)
-            {
-                if (beam == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beams));
-            }
+            if (beams.Any(beam => beam == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beams));
 
             return beams.Select(Deprecate).ToList();
         }
@@ -301,11 +296,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             if (beams == null)
                 throw new ArgumentNullException(nameof(beams));
 
-            foreach (var beam in beams)
-            {
-                if (beam == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beams));
-            }
+            if (beams.Any(beam => beam == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beams));
 
             return beams.Select(Reactivate).ToList();
         }
@@ -365,9 +357,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
 
         private Beam DoTransition(Guid id, string transitionId)
         {
-            var beam = Read(id);
-            if (beam == null)
-                throw new ArgumentException(string.Format(ExceptionMessages.BeamWithIdWasNotFound, id), nameof(id));
+            var beam = Read(id) ?? throw new ArgumentException(string.Format(ExceptionMessages.BeamWithIdWasNotFound, id), nameof(id));
 
             var domInstanceId = beam.ToOriginalInstance().ID;
             var transitionedDomInstance = DomHelper.DomInstances.DoStatusTransition(domInstanceId, transitionId);

@@ -1,11 +1,11 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam
 {
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
     using DomModel = DOM.Model;
 
     /// <summary>
@@ -177,12 +177,12 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Be
 
         internal static IEnumerable<Beam> InstantiateBeams(IEnumerable<BeamsInstance> instances)
         {
-            if(instances == null)
+            if (instances == null)
                 throw new ArgumentNullException(nameof(instances));
-            if(!instances.Any())
+            if (!instances.Any())
                 return Enumerable.Empty<Beam>();
 
-           return InstantiateBeamsIterator(instances);
+            return InstantiateBeamsIterator(instances);
         }
 
         private static IEnumerable<Beam> InstantiateBeamsIterator(IEnumerable<BeamsInstance> instances)

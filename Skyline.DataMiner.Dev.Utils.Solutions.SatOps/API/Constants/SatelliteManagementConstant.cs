@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Constants
 {
     using System;
 
@@ -13,7 +13,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
         /// </summary>
         public static string SatelliteManagementModuleId
         {
-            get { return Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SlcSatellite_ManagementIds.ModuleId; }
+            get { return Common.DOM.Model.SlcSatellite_ManagementIds.ModuleId; }
         }
 
         /// <summary>
@@ -103,6 +103,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Constants
         {
             get { return PredefinedGuids.TransponderResourcePoolGuid; }
         }
-#endregion
+        #endregion
     }
 }

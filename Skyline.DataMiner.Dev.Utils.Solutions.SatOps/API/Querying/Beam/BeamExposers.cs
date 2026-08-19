@@ -1,7 +1,7 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.Beam
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using System;
 
     /// <summary>

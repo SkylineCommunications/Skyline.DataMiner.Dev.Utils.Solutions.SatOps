@@ -1,20 +1,21 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
+﻿
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Net.Profiles;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Constants;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.DOM.Model;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using ExceptionMessages = Skyline.DataMiner.SDM.SatOps.Common.Logging.ExceptionMessages;
+    using ExceptionMessages = Logging.ExceptionMessages;
 
     internal sealed class TransponderResourceCreationMiddleware : IBulkCreatableMiddleware<Transponder>, IBulkUpdatableMiddleware<Transponder>, IBulkDeletableMiddleware<Transponder>
     {

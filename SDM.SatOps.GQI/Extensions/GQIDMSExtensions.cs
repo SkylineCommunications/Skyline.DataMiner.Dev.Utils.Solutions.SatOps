@@ -1,7 +1,7 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.GQI.Extensions
+﻿namespace Skyline.DataMiner.Solutions.SatOps.GQI.Extensions
 {
     using Skyline.DataMiner.Analytics.GenericInterface;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Extensions;
     using System;
 

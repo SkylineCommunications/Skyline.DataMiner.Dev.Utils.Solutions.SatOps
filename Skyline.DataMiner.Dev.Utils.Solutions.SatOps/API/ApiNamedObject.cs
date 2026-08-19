@@ -1,4 +1,5 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.API
+﻿
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API
 {
     using System;
 

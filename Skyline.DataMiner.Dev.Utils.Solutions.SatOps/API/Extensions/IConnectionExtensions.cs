@@ -1,8 +1,7 @@
-﻿using Skyline.DataMiner.SDM.SatOps.Common.API;
-
-namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Extensions
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Extensions
 {
     using Skyline.DataMiner.Net;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using System;
 
     /// <summary>

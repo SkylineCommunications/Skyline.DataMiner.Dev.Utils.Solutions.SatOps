@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation
 {
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using System;
@@ -10,7 +10,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
     /// and a <see cref="RangeCapacitySetting"/> that describes the reserved
     /// frequency range.
     /// </summary>
-    public class TransponderRangeReservation : Skyline.DataMiner.SDM.SatOps.Common.API.ApiNamedObject
+    public class TransponderRangeReservation : API.ApiNamedObject
     {
         private string name;
         private Guid? transponder;
@@ -114,7 +114,7 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Tr
         /// <summary>
         /// Gets or sets the satellite capability value written to the reservation job node.
         /// This value is derived from the selected transponder's
-        /// <see cref="Objects.SatelliteManagement.Transponder.Transponder.TransponderSatellite"/>
+        /// <see cref="SatelliteManagement.Transponder.Transponder.TransponderSatellite"/>
         /// relationship on create/update; any caller-supplied value is overwritten. The transponder
         /// is the single source of truth for the satellite.
         /// </summary>

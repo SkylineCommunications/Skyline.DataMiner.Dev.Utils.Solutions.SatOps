@@ -1,13 +1,13 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.SDM;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
+    using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
-    using SLDataGateway.API.Types.Querying;
 
     /// <summary>
     /// Middleware that validates there are no overlapping frequency ranges or duplicate slot names
@@ -167,16 +167,15 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                     && s.SlotStartFrequency.HasValue
                     && s.SlotEndFrequency.HasValue);
 
-            foreach (var existingSlot in existing)
+            var overlappingSlot = existing.FirstOrDefault(existingSlot => SlotsOverlap(
+                slot.SlotStartFrequency.Value, slot.SlotEndFrequency.Value,
+                existingSlot.SlotStartFrequency.Value, existingSlot.SlotEndFrequency.Value));
+
+            if (overlappingSlot != null)
             {
-                if (SlotsOverlap(
-                    slot.SlotStartFrequency.Value, slot.SlotEndFrequency.Value,
-                    existingSlot.SlotStartFrequency.Value, existingSlot.SlotEndFrequency.Value))
-                {
-                    throw new ArgumentException(
-                        string.Format(ExceptionMessages.SlotOverlapDetected, slot.Name, existingSlot.Name),
-                        nameof(slot));
-                }
+                throw new ArgumentException(
+                    string.Format(ExceptionMessages.SlotOverlapDetected, slot.Name, overlappingSlot.Name),
+                    nameof(slot));
             }
         }
 

@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying
 {
     using System;
     using System.Collections.Generic;

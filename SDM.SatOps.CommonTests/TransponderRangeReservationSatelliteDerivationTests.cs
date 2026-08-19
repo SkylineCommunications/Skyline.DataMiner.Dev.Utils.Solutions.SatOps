@@ -5,6 +5,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using System.Runtime.Serialization;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
 
     /// <summary>
     /// Regression tests for SatOps Common 0.0.9:
@@ -18,7 +19,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     public class TransponderRangeReservationSatelliteDerivationTests
     {
         private static readonly Assembly CommonAssembly =
-            typeof(Skyline.DataMiner.SDM.SatOps.Common.API.SatOpsApi).Assembly;
+            typeof(SatOpsApi).Assembly;
 
         private static readonly Type RepositoryType = CommonAssembly.GetType(
             "Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservationRepository",

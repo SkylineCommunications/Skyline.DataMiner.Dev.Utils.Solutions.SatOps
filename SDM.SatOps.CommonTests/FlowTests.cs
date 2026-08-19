@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
@@ -10,7 +11,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     [TestClass]
     public class FlowTests
     {
-        private static readonly Assembly CommonAssembly = typeof(Skyline.DataMiner.SDM.SatOps.Common.API.SatOpsApi).Assembly;
+        private static readonly Assembly CommonAssembly = typeof(SatOpsApi).Assembly;
 
         [TestMethod]
         public void SatelliteValidationFlow_WhenNameMissing_ThrowsArgumentException()

@@ -1,9 +1,9 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -116,6 +116,16 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             return inner.Read();
         }
 
+        public TransponderSlot Read(Guid id)
+        {
+            return inner.Read(id);
+        }
+
+        public IEnumerable<TransponderSlot> Read(IEnumerable<Guid> ids)
+        {
+            return inner.Read(ids);
+        }
+
         public IEnumerable<TransponderSlot> Read(FilterElement<TransponderSlot> filter)
         {
             if (middleware is IReadableMiddleware<TransponderSlot> readableMiddleware)
@@ -184,16 +194,6 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManageme
             }
 
             return inner.ReadPaged(query, pageSize);
-        }
-
-        public TransponderSlot Read(Guid id)
-        {
-            return inner.Read(id);
-        }
-
-        public IEnumerable<TransponderSlot> Read(IEnumerable<Guid> ids)
-        {
-            return inner.Read(ids);
         }
 
         public IReadOnlyCollection<TransponderSlot> Update(IEnumerable<TransponderSlot> oToUpdate)

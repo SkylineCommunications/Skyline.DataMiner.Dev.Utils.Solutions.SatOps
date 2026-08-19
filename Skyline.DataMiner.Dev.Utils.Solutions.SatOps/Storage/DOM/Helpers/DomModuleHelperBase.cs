@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.Common.Storage.DOM.Helpers
+﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.Storage.DOM.Helpers
 {
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;

@@ -1,8 +1,8 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Querying.TransponderRangeReservation
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderRangeReservation
 {
     using System;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
 
     /// <summary>
     /// Provides exposers for querying <see cref="TransponderRangeReservation"/> objects.

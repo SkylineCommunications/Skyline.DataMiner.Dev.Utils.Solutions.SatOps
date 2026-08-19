@@ -7,8 +7,8 @@
     using Moq;
 
     using Skyline.DataMiner.Net;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
 
     [TestClass]
     public class SatOpsApiTests

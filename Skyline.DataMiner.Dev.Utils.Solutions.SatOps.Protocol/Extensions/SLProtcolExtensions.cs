@@ -2,13 +2,13 @@
 {
     using System;
     using Skyline.DataMiner.Scripting;
-    using Skyline.DataMiner.SDM.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Extensions;
 
     /// <summary>
-    /// Defines extension methods on the <see cref="SLProtcolExtensions"/> class.
+    /// Defines extension methods on the <see cref="SLProtocolExtensions"/> class.
     /// </summary>
-    public static class SLProtcolExtensions
+    public static class SLProtocolExtensions
     {
         /// <summary>
         ///  Retrieves an instance of the <see cref="ISatOpsApi"/> interface.

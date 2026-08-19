@@ -1,13 +1,14 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
-    using System;
-    using System.Collections.Generic;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     internal sealed class TransponderValidationMiddleware : IBulkRepositoryMiddleware<Transponder>
     {
@@ -108,11 +109,8 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponder in oToDelete)
-            {
-                if (transponder == null)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
-            }
+            if(oToDelete.Any(transponder  => transponder == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
 
             next(oToDelete);
         }

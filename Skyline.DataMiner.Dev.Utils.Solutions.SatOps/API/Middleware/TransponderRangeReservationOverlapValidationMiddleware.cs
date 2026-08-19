@@ -1,13 +1,13 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.SDM;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
+    using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Skyline.DataMiner.Net.Messages.SLDataGateway;
-    using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
-    using Skyline.DataMiner.SDM.SatOps.Common.Logging;
-    using SLDataGateway.API.Types.Querying;
 
     /// <summary>
     /// Middleware that validates there are no overlapping reservations on the same transponder.
@@ -145,14 +145,14 @@ namespace Skyline.DataMiner.SDM.SatOps.Common.API.Middleware
                     && existing.Id != excludeId
                     && HasRequiredRanges(existing));
 
-            foreach (var existingReservation in existingReservations)
+            var overlappingReservation = existingReservations
+                .FirstOrDefault(existingReservation => ReservationsOverlap(reservation, existingReservation));
+
+            if (overlappingReservation != null)
             {
-                if (ReservationsOverlap(reservation, existingReservation))
-                {
-                    throw new ArgumentException(
-                        string.Format(ExceptionMessages.ReservationOverlapDetected, reservation.Name, existingReservation.Name),
-                        nameof(reservation));
-                }
+                throw new ArgumentException(
+                    string.Format(ExceptionMessages.ReservationOverlapDetected, reservation.Name, overlappingReservation.Name),
+                    nameof(reservation));
             }
         }
 

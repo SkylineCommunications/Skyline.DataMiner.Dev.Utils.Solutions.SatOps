@@ -1,4 +1,4 @@
-namespace Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam
 {
     /// <summary>
     /// Represents the beam transmission type.
