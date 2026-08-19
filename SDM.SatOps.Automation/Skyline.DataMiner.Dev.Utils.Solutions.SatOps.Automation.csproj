@@ -4,8 +4,11 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
+
+		<PackageId>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Automation</PackageId>
 		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Automation</AssemblyName>
 		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Automation</RootNamespace>
+		
 		<Copyright>Copyright © 2026</Copyright>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>

@@ -5,6 +5,7 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		
+		<PackageId>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol</PackageId>
 		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol</AssemblyName>
 		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Protocol</RootNamespace>
 		

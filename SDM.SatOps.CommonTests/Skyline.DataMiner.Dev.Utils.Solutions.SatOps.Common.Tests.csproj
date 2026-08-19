@@ -6,8 +6,9 @@
 		<Nullable>disable</Nullable>
 		<IsPackable>false</IsPackable>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.CommonTests</AssemblyName>
-		<RootNamespace>Skyline.DataMiner.SDM.SatOps.CommonTests</RootNamespace>
+
+		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests</AssemblyName>
+		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Common.Tests</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

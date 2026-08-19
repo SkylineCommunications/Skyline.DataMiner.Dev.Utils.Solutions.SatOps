@@ -4,8 +4,11 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
+
+		<PackageId>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common</PackageId>
 		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common</AssemblyName>
 		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Common</RootNamespace>
+
 		<Copyright>Copyright © 2026</Copyright>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
@@ -45,6 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.CommonTests" />
+		<InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.CommonTests" />
 	</ItemGroup>
 </Project>
