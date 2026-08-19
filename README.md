@@ -26,13 +26,14 @@ At Skyline Communications, we deal in world-class solutions that are deployed by
 | [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps/README.md) (`SDM.SatOps.Common`) | Core API library, entry point `SatOpsApi` |
 | [`SDM.SatOps.GQI`](SDM.SatOps.GQI/README.md) | GQI data source DevPack, built on top of the core library |
 | [`SDM.SatOps.Automation`](SDM.SatOps.Automation/README.md) | Automation script DevPack, built on top of the core library |
+| [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol/README.md) | Connector (QAction) DevPack, built on top of the core library |
 | `SDM.SatOps.CommonTests` | MSTest unit tests for the core library |
 
 ## Architecture
 
 `SatOpsApi` is the single entry point of the core library. Given a DataMiner `IConnection`, it exposes one repository per satellite-operations entity (`Satellites`, `Beams`, `Transponders`, `TransponderPlans`, `TransponderPlanRows`, `TransponderSlots`), each created lazily on first use.
 
-The `SDM.SatOps.GQI` and `SDM.SatOps.Automation` packages are thin DevPacks that build on top of the core library rather than talking to DOM directly: automation scripts consume `SDM.SatOps.Automation`, while low-code apps/dashboards consume `SDM.SatOps.GQI` as a data source. `SDM.SatOps.CommonTests` provides MSTest coverage for the core library.
+The `SDM.SatOps.GQI`, `SDM.SatOps.Automation` and `SatOps.Protocol` packages are thin DevPacks that build on top of the core library rather than talking to DOM directly: automation scripts consume `SDM.SatOps.Automation`, low-code apps/dashboards consume `SDM.SatOps.GQI` as a data source, and connectors consume `SatOps.Protocol`. `SDM.SatOps.CommonTests` provides MSTest coverage for the core library.
 
 ![SatOps package layout](docs/architecture.svg)
 
