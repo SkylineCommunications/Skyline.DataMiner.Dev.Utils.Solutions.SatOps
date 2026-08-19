@@ -4,7 +4,7 @@
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
 
     [TestClass]
     public class UniversalComparerTests

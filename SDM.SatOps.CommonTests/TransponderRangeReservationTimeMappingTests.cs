@@ -23,7 +23,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
             var end = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
-            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
+            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
             var reservation = CreateReservation(reservationType, start, end, preRoll: null, postRoll: null);
 
             var job = CreateEmptyJob();
@@ -48,7 +48,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var preRoll = start.AddMinutes(-5);
             var postRoll = end.AddMinutes(5);
 
-            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
+            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
             var reservation = CreateReservation(reservationType, start, end, preRoll, postRoll);
 
             var job = CreateEmptyJob();
@@ -90,7 +90,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static void InvokeApplyReservationTimes(object reservation, object job)
         {
-            var repoType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservationRepository", throwOnError: true);
+            var repoType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservationRepository", throwOnError: true);
             var method = repoType.GetMethod("ApplyReservationTimes", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             Assert.IsNotNull(method, "TransponderRangeReservationRepository.ApplyReservationTimes helper is missing.");
             method.Invoke(null, new[] { reservation, job });

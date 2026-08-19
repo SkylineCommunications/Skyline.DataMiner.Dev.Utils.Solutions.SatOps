@@ -23,11 +23,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             typeof(SatOpsApi).Assembly;
 
         private static readonly Type MiddlewareType = CommonAssembly.GetType(
-            "Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderResourceCreationMiddleware",
+            "Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderResourceCreationMiddleware",
             throwOnError: true);
 
         private static readonly Type TransponderType = CommonAssembly.GetType(
-            "Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder",
+            "Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder",
             throwOnError: true);
 
         [TestMethod]
@@ -91,7 +91,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static object BuildTransponder(Guid? domResource)
         {
-            var domInstanceType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance", throwOnError: true);
+            var domInstanceType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance", throwOnError: true);
             var original = Activator.CreateInstance(domInstanceType);
             var updated = Activator.CreateInstance(domInstanceType);
 

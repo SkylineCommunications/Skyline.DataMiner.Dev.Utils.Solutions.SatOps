@@ -9,7 +9,7 @@
 
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Exceptions;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Middleware;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
 

@@ -8,7 +8,7 @@
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Net.Sections;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Querying;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
 
     [TestClass]
     public class DomInstanceFilterHelperTests

@@ -48,6 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.CommonTests" />
+		<InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests" />
 	</ItemGroup>
 </Project>

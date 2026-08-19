@@ -16,13 +16,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         private static readonly Assembly CommonAssembly = typeof(SatOpsApi).Assembly;
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SatellitesInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.BeamsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.SatellitesInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance")]
         public void Clone_OnFreshInstance_DoesNotThrow(string instanceTypeName)
         {
             var instanceType = CommonAssembly.GetType(instanceTypeName, throwOnError: true);
@@ -47,13 +47,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SatellitesInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.BeamsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.SatellitesInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance")]
         public void Duplicate_OnFreshInstance_DoesNotThrow(string instanceTypeName)
         {
             var instanceType = CommonAssembly.GetType(instanceTypeName, throwOnError: true);
@@ -78,13 +78,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", "CreateNewTransponderPlanRow")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", "CreateNew")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", "CreateNewTransponderPlanRow")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", "CreateNew")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam")]
         public void Initialize_ForApiObject_DoesNotThrow(string apiTypeName, string factoryMethodName)
         {
             var apiType = CommonAssembly.GetType(apiTypeName, throwOnError: true);
@@ -110,13 +110,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", "CreateNewTransponderPlanRow")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", "CreateNew")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", "CreateNewTransponderPlanRow")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", "CreateNew")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam")]
         public void Initialize_YieldsNonEmptyId(string apiTypeName, string factoryMethodName)
         {
             var apiType = CommonAssembly.GetType(apiTypeName, throwOnError: true);
@@ -135,13 +135,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SatellitesInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.BeamsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.SatellitesInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderSlotsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderReservationsInstance")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance")]
         public void Instance_DefaultConstructor_AssignsNonEmptyId(string instanceTypeName)
         {
             var instanceType = CommonAssembly.GetType(instanceTypeName, throwOnError: true);
@@ -161,11 +161,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite", "Abbreviation", "TS")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder", "Name", "TP-1")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan", "Name", "Plan-1")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot", "Name", "Slot-1")]
-        [DataRow("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam", "Name", "Beam-1")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", "CreateNewSatellite", "Abbreviation", "TS")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", "CreateNewTransponder", "Name", "TP-1")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", "CreateNewTransponderPlan", "Name", "Plan-1")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", "CreateNewTransponderSlot", "Name", "Slot-1")]
+        [DataRow("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", "CreateNewBeam", "Name", "Beam-1")]
         public void SetterValueIsVisibleToGetter_OnFreshInstance(string apiTypeName, string factoryMethodName, string propertyName, object value)
         {
             var apiType = CommonAssembly.GetType(apiTypeName, throwOnError: true);

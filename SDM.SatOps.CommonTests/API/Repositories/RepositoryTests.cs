@@ -7,7 +7,7 @@
     using Moq;
 
     using Skyline.DataMiner.Net;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Repositories;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
 
     [TestClass]

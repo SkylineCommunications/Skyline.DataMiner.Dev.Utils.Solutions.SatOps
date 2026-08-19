@@ -16,12 +16,12 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void SatelliteValidationFlow_WhenNameMissing_ThrowsArgumentException()
         {
-            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.SatelliteValidationMiddleware", throwOnError: true);
+            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.SatelliteValidationMiddleware", throwOnError: true);
 
             var satellite = CreateApiObject(
                 satelliteType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SatellitesInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.SatellitesInstance",
                 null);
 
             var middleware = Activator.CreateInstance(middlewareType, nonPublic: true);
@@ -37,13 +37,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void BeamValidationFlow_WhenSatelliteDoesNotExist_ThrowsArgumentException()
         {
-            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
-            var beamType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.BeamValidationMiddleware", throwOnError: true);
+            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            var beamType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.BeamValidationMiddleware", throwOnError: true);
 
             var beam = CreateApiObject(
                 beamType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.BeamsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance",
                 dom => SetNestedProperty(dom, "Beam.BeamSatellite", (Guid?)Guid.NewGuid()));
 
             var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), satelliteType);
@@ -61,13 +61,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderValidationFlow_WhenNameMissing_ThrowsArgumentException()
         {
-            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderValidationMiddleware", throwOnError: true);
+            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderValidationMiddleware", throwOnError: true);
 
             var transponder = CreateApiObject(
                 transponderType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "Transponder.TransponderName", null);
@@ -96,13 +96,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderValidationFlow_WhenSatelliteDoesNotExist_ThrowsArgumentException()
         {
-            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderValidationMiddleware", throwOnError: true);
+            var satelliteType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderValidationMiddleware", throwOnError: true);
 
             var transponder = CreateApiObject(
                 transponderType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "Transponder.TransponderName", "TP-1");
@@ -207,13 +207,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanValidationFlow_WhenNameMissing_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
 
             var transponderPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", null);
@@ -235,13 +235,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanValidationFlow_WhenTransponderDoesNotExist_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
 
             var transponderPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
@@ -263,13 +263,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanValidationFlow_WhenDefaultSlotSizeIsNotPositive_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
 
             var transponderPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
@@ -294,16 +294,16 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanValidationFlow_WhenPermanentPlanAlreadyExists_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
 
             var transponderId = Guid.NewGuid();
             var planId = Guid.NewGuid();
             var existingPlanId = Guid.NewGuid();
             var transponderPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
@@ -315,7 +315,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var existingPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-Existing");
@@ -344,16 +344,16 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanValidationFlow_WhenTimeRangeOverlaps_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanValidationMiddleware", throwOnError: true);
 
             var transponderId = Guid.NewGuid();
             var planId = Guid.NewGuid();
             var existingPlanId = Guid.NewGuid();
             var transponderPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
@@ -367,7 +367,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var existingPlan = CreateApiObject(
                 transponderPlanType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlansInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-Existing");
@@ -398,13 +398,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanRowValidationFlow_WhenTransponderPlanMissing_ThrowsArgumentException()
         {
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
 
             var transponderPlanRow = CreateApiObject(
                 transponderPlanRowType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", null);
@@ -428,13 +428,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanRowValidationFlow_WhenTransponderPlanDoesNotExist_ThrowsArgumentException()
         {
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
 
             var transponderPlanRow = CreateApiObject(
                 transponderPlanRowType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", (Guid?)Guid.NewGuid());
@@ -458,13 +458,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanRowValidationFlow_WhenStepSizeLessThanBandwidth_ThrowsArgumentException()
         {
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
 
             var transponderPlanRow = CreateApiObject(
                 transponderPlanRowType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", (Guid?)Guid.NewGuid());
@@ -488,16 +488,16 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderPlanRowValidationFlow_WhenBandwidthIsDuplicate_ThrowsArgumentException()
         {
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderPlanRowType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow.TransponderPlanRow", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderPlanRowValidationMiddleware", throwOnError: true);
 
             var transponderPlanId = Guid.NewGuid();
             var rowId = Guid.NewGuid();
             var existingRowId = Guid.NewGuid();
             var transponderPlanRow = CreateApiObject(
                 transponderPlanRowType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", (Guid?)transponderPlanId);
@@ -509,7 +509,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var existingRow = CreateApiObject(
                 transponderPlanRowType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlanRowsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderPlanRow.TransponderPlan", (Guid?)transponderPlanId);
@@ -539,13 +539,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderSlotValidationFlow_WhenSlotNameMissing_ThrowsArgumentException()
         {
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var transponderSlotType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderSlotValidationMiddleware", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderSlotType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderSlotValidationMiddleware", throwOnError: true);
 
             var transponderSlot = CreateApiObject(
                 transponderSlotType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderSlotsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
@@ -572,13 +572,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderSlotValidationFlow_WhenTransponderPlanDoesNotExist_ThrowsArgumentException()
         {
-            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
-            var transponderSlotType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderSlotValidationMiddleware", throwOnError: true);
+            var transponderPlanType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan.TransponderPlan", throwOnError: true);
+            var transponderSlotType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot.TransponderSlot", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderSlotValidationMiddleware", throwOnError: true);
 
             var transponderSlot = CreateApiObject(
                 transponderSlotType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TransponderSlotsInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderSlotsInstance",
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
@@ -605,9 +605,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderRangeReservationValidationFlow_WhenTransponderMissing_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
 
             var reservation = CreateReservation(
                 reservationType,
@@ -633,9 +633,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [TestMethod]
         public void TransponderRangeReservationValidationFlow_WhenTimeWindowInvalid_ThrowsArgumentException()
         {
-            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
-            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
+            var transponderType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            var reservationType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderRangeReservationValidationMiddleware", throwOnError: true);
 
             var reservation = CreateReservation(
                 reservationType,
@@ -800,10 +800,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         private static Type TransponderType =>
-            CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
+            CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder", throwOnError: true);
 
         private static Type SatelliteType =>
-            CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
+            CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite", throwOnError: true);
 
         /// <summary>
         /// Creates a transponder API object that satisfies every required-field rule, so that only name uniqueness can fail validation.
@@ -812,7 +812,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         {
             var transponder = CreateApiObject(
                 TransponderType,
-                "Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance",
+                "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom => ConfigureValidTransponderDom(dom, name));
 
             // The API getters read the updated instance, so it has to carry the same values.
@@ -837,7 +837,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static object CreateTransponderValidationMiddleware(params object[] existingTransponders)
         {
-            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.API.Middleware.TransponderNameUniquenessMiddleware", throwOnError: true);
+            var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderNameUniquenessMiddleware", throwOnError: true);
             var transpondersResolver = BuildParameterlessEnumerableResolverDelegate(TransponderType, existingTransponders);
 
             return Activator.CreateInstance(

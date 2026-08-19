@@ -22,15 +22,15 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             typeof(SatOpsApi).Assembly;
 
         private static readonly Type RepositoryType = CommonAssembly.GetType(
-            "Skyline.DataMiner.SDM.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservationRepository",
+            "Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservationRepository",
             throwOnError: true);
 
         private static readonly Type TransponderType = CommonAssembly.GetType(
-            "Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder",
+            "Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder.Transponder",
             throwOnError: true);
 
         private static readonly Type SatelliteType = CommonAssembly.GetType(
-            "Skyline.DataMiner.SDM.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite",
+            "Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite.Satellite",
             throwOnError: true);
 
         [TestMethod]
@@ -62,7 +62,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException, "A missing TransponderSatellite must produce an ArgumentException.");
-            Assert.AreEqual("reservation", argumentException.ParamName);
+            Assert.AreEqual("transponder", argumentException.ParamName);
             StringAssert.Contains(argumentException.Message, "no linked satellite");
         }
 
@@ -75,7 +75,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
-            Assert.AreEqual("reservation", argumentException.ParamName);
+            Assert.AreEqual("transponder", argumentException.ParamName);
         }
 
         [TestMethod]
@@ -88,7 +88,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
-            Assert.AreEqual("reservation", argumentException.ParamName);
+            Assert.AreEqual("transponder", argumentException.ParamName);
             StringAssert.Contains(argumentException.Message, "could not be resolved");
         }
 
@@ -103,7 +103,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
-            Assert.AreEqual("reservation", argumentException.ParamName);
+            Assert.AreEqual("transponder", argumentException.ParamName);
             StringAssert.Contains(argumentException.Message, "has no name");
         }
 
@@ -152,7 +152,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static object BuildTransponder(Guid? satelliteId)
         {
-            var domInstanceType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.TranspondersInstance", throwOnError: true);
+            var domInstanceType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance", throwOnError: true);
             var original = Activator.CreateInstance(domInstanceType);
             var updated = Activator.CreateInstance(domInstanceType);
 
@@ -174,7 +174,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static object BuildSatellite(Guid id, string name)
         {
-            var domInstanceType = CommonAssembly.GetType("Skyline.DataMiner.SDM.SatOps.Common.DOM.Model.SatellitesInstance", throwOnError: true);
+            var domInstanceType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.SatellitesInstance", throwOnError: true);
             var original = Activator.CreateInstance(domInstanceType);
             var updated = Activator.CreateInstance(domInstanceType);
 
