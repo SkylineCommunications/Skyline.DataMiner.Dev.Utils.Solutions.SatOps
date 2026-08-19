@@ -131,6 +131,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return inner.ReadBySatellite(satelliteId);
         }
 
+        public IEnumerable<Transponder> ReadByNames(IEnumerable<string> names)
+        {
+            return inner.ReadByNames(names);
+        }
+
         public IEnumerable<Transponder> Read(FilterElement<Transponder> filter)
         {
             if (middleware is IReadableMiddleware<Transponder> readableMiddleware)

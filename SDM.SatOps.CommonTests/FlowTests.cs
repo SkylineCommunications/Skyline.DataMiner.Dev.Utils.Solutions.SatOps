@@ -837,7 +837,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         private static object CreateTransponderValidationMiddleware(params object[] existingTransponders)
         {
             var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderNameUniquenessMiddleware", throwOnError: true);
-            var transpondersResolver = BuildParameterlessEnumerableResolverDelegate(TransponderType, existingTransponders);
+            var transpondersResolver = BuildTranspondersByNameResolverDelegate(TransponderType, existingTransponders);
 
             return Activator.CreateInstance(
                 middlewareType,
@@ -877,7 +877,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             return field.GetValue(target);
         }
 
-        private static Delegate BuildParameterlessEnumerableResolverDelegate(Type itemType, params object[] items)
+        /// <summary>
+        /// Builds a <c>Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;T&gt;&gt;</c> that returns the supplied items regardless of the requested names.
+        /// The middleware narrows the result down by name itself, so the requested names can be ignored here.
+        /// </summary>
+        private static Delegate BuildTranspondersByNameResolverDelegate(Type itemType, params object[] items)
         {
             var typedArray = Array.CreateInstance(itemType, items.Length);
             for (int i = 0; i < items.Length; i++)
@@ -886,10 +890,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             }
 
             var enumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
-            var delegateType = typeof(Func<>).MakeGenericType(enumerableType);
+            var delegateType = typeof(Func<,>).MakeGenericType(typeof(IEnumerable<string>), enumerableType);
+            var parameter = Expression.Parameter(typeof(IEnumerable<string>), "names");
             var body = Expression.Constant(typedArray, enumerableType);
 
-            return Expression.Lambda(delegateType, body).Compile();
+            return Expression.Lambda(delegateType, body, parameter).Compile();
         }
 
         private static Delegate BuildBulkIdentityDelegate(Type apiType)

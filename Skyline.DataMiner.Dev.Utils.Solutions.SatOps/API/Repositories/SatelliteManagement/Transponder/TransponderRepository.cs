@@ -106,6 +106,28 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return Read(TransponderExposers.TransponderSatellite.Equal(satelliteId));
         }
 
+        public IEnumerable<Transponder> ReadByNames(IEnumerable<string> names)
+        {
+            if (names == null)
+                throw new ArgumentNullException(nameof(names));
+
+            var wantedNames = new HashSet<string>(
+                names.Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            if (wantedNames.Count == 0)
+                return Enumerable.Empty<Transponder>();
+
+            var nameFilters = wantedNames
+                .Select(name => (FilterElement<Transponder>)TransponderExposers.TransponderName.Equal(name))
+                .ToArray();
+
+            var filter = nameFilters.Length == 1 ? nameFilters[0] : new ORFilterElement<Transponder>(nameFilters);
+
+            // Depending on the storage back end, name comparison can be case sensitive, so the result is narrowed down here as well.
+            return Read(filter).Where(transponder => transponder?.Name != null && wantedNames.Contains(transponder.Name.Trim()));
+        }
+
         public Transponder Read(Guid id)
         {
             if (id == Guid.Empty)

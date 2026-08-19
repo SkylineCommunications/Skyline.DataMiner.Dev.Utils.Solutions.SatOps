@@ -36,7 +36,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         public Transponder OnCreate(Transponder oToCreate, Func<Transponder, Transponder> next)
         {
-            CreateResource(oToCreate, ReadExistingResourceNames());
+            CreateResource(oToCreate, ReadTakenResourceNames(new[] { oToCreate }));
 
             try
             {
@@ -55,7 +55,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
             // Read the taken names once for the whole batch; CreateResource also adds each new name to the
             // set so that duplicates inside the batch itself are rejected.
-            var takenResourceNames = ReadExistingResourceNames();
+            var takenResourceNames = ReadTakenResourceNames(transponders);
 
             try
             {
@@ -253,13 +253,45 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             }
         }
 
-        private HashSet<string> ReadExistingResourceNames()
+        private HashSet<string> ReadTakenResourceNames(IEnumerable<Transponder> transponders)
         {
-            return new HashSet<string>(
-                _mediaOpsPlanApi.Resources.Read()
-                    .Where(r => r != null && !string.IsNullOrWhiteSpace(r.Name))
-                    .Select(r => r.Name.Trim()),
-                StringComparer.OrdinalIgnoreCase);
+            var wantedNames = transponders
+                .Where(transponder => transponder != null && !string.IsNullOrWhiteSpace(transponder.Name))
+                .Select(transponder => transponder.Name.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var takenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (wantedNames.Count == 0)
+                return takenNames;
+
+            // Only the names that are about to be used are read; reading every resource in the system is far too expensive.
+            foreach (var resource in ReadResourcesByNames(wantedNames))
+                takenNames.Add(resource.Name.Trim());
+
+            return takenNames;
+        }
+
+        /// <summary>
+        /// Reads the resources that carry one of the supplied names.
+        /// </summary>
+        /// <remarks>
+        /// Depending on the back end, the name comparison can be case sensitive, so the result is narrowed down in memory as well.
+        /// </remarks>
+        private IEnumerable<Resource> ReadResourcesByNames(IReadOnlyCollection<string> names)
+        {
+            var nameFilters = names
+                .Select(name => (FilterElement<Resource>)ResourceExposers.Name.Equal(name))
+                .ToArray();
+
+            var filter = nameFilters.Length == 1 ? nameFilters[0] : new ORFilterElement<Resource>(nameFilters);
+            var wantedNames = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+
+            return _mediaOpsPlanApi.Resources
+                .Read(filter)
+                .Where(resource => resource != null
+                    && !string.IsNullOrWhiteSpace(resource.Name)
+                    && wantedNames.Contains(resource.Name.Trim()));
         }
 
         /// <summary>
@@ -443,11 +475,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (string.IsNullOrWhiteSpace(name))
                 return;
 
-            var conflicts = _mediaOpsPlanApi.Resources
-                .Read()
-                .Any(r => r != null
-                    && r.Id != resourceIdToIgnore
-                    && string.Equals(r.Name?.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase));
+            var conflicts = ReadResourcesByNames(new[] { name.Trim() })
+                .Any(resource => resource.Id != resourceIdToIgnore);
 
             if (conflicts)
                 throw new ArgumentException(string.Format(ExceptionMessages.TransponderResourceNameAlreadyExists, name), nameof(name));

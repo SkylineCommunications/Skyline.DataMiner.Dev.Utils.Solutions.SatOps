@@ -19,11 +19,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     /// </remarks>
     internal sealed class TransponderNameUniquenessMiddleware : IBulkRepositoryMiddleware<Transponder>
     {
-        private readonly Func<IEnumerable<Transponder>> existingTranspondersResolver;
+        private readonly Func<IEnumerable<string>, IEnumerable<Transponder>> existingTranspondersByNameResolver;
 
-        public TransponderNameUniquenessMiddleware(Func<IEnumerable<Transponder>> existingTranspondersResolver)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransponderNameUniquenessMiddleware"/> class.
+        /// </summary>
+        /// <param name="existingTranspondersByNameResolver">
+        /// A delegate that returns the already persisted transponders that carry one of the supplied names.
+        /// Only the names of the batch being validated are requested, so the whole transponder set never has to be read.
+        /// </param>
+        public TransponderNameUniquenessMiddleware(Func<IEnumerable<string>, IEnumerable<Transponder>> existingTranspondersByNameResolver)
         {
-            this.existingTranspondersResolver = existingTranspondersResolver ?? throw new ArgumentNullException(nameof(existingTranspondersResolver));
+            this.existingTranspondersByNameResolver = existingTranspondersByNameResolver ?? throw new ArgumentNullException(nameof(existingTranspondersByNameResolver));
         }
 
         public Transponder OnCreate(Transponder oToCreate, Func<Transponder, Transponder> next)
@@ -160,7 +167,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (duplicateInBatch != null)
                 throw new ArgumentException(string.Format(ExceptionMessages.DuplicateTransponderNameDetected, duplicateInBatch.Key));
 
-            var existingTransponders = existingTranspondersResolver()?.ToList();
+            var namesInBatch = namedTransponders
+                .Select(transponder => transponder.Name.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var existingTransponders = existingTranspondersByNameResolver(namesInBatch)?.ToList();
             if (existingTransponders == null || existingTransponders.Count == 0)
                 return;
 

@@ -223,11 +223,41 @@
         [TestMethod]
         public void OnCreateOrUpdate_ResolverReturnsNull_CallsNext()
         {
-            var sut = new TransponderNameUniquenessMiddleware(() => null);
+            var sut = new TransponderNameUniquenessMiddleware(names => null);
 
             var result = sut.OnCreateOrUpdate(new[] { CreateTransponder("A") }, t => t.ToList());
 
             Assert.AreEqual(1, result.Count);
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_OnlyRequestsTheNamesOfTheBatch()
+        {
+            IEnumerable<string> requestedNames = null;
+            var sut = new TransponderNameUniquenessMiddleware(names =>
+            {
+                requestedNames = names.ToList();
+                return Enumerable.Empty<Transponder>();
+            });
+
+            sut.OnCreateOrUpdate(new[] { CreateTransponder(" A "), CreateTransponder("B"), CreateTransponder(null) }, t => t.ToList());
+
+            CollectionAssert.AreEquivalent(new[] { "A", "B" }, requestedNames.ToList());
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_NoNamedTransponders_DoesNotQueryExistingTransponders()
+        {
+            var resolverCalled = false;
+            var sut = new TransponderNameUniquenessMiddleware(names =>
+            {
+                resolverCalled = true;
+                return Enumerable.Empty<Transponder>();
+            });
+
+            sut.OnCreateOrUpdate(new[] { CreateTransponder(" "), null }, t => t.ToList());
+
+            Assert.IsFalse(resolverCalled);
         }
 
         [TestMethod]
@@ -405,7 +435,19 @@
         private static TransponderNameUniquenessMiddleware CreateSut(params Transponder[] existing)
         {
             var list = existing ?? new Transponder[0];
-            return new TransponderNameUniquenessMiddleware(() => list);
+            return new TransponderNameUniquenessMiddleware(names => ResolveByName(list, names));
+        }
+
+        /// <summary>
+        /// Mimics the repository lookup: only the transponders that carry one of the requested names are returned.
+        /// </summary>
+        private static IEnumerable<Transponder> ResolveByName(IEnumerable<Transponder> existing, IEnumerable<string> names)
+        {
+            var wantedNames = new HashSet<string>(
+                names.Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            return existing.Where(transponder => transponder?.Name != null && wantedNames.Contains(transponder.Name.Trim())).ToList();
         }
 
         private static Transponder CreateTransponder(string name)

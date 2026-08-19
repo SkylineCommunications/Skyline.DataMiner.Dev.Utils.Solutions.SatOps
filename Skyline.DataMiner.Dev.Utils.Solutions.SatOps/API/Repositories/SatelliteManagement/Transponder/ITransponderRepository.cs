@@ -18,6 +18,18 @@
         IEnumerable<Transponder> ReadBySatellite(Guid satelliteId);
 
         /// <summary>
+        /// Reads the transponders that carry one of the specified names.
+        /// </summary>
+        /// <remarks>
+        /// The names are matched by the storage layer and the result is narrowed down again in memory,
+        /// ignoring casing and surrounding whitespace.
+        /// </remarks>
+        /// <param name="names">The transponder names to look for.</param>
+        /// <returns>An enumerable of the matching <see cref="Transponder"/> instances. Empty when no usable name is supplied.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="names"/> is <c>null</c>.</exception>
+        IEnumerable<Transponder> ReadByNames(IEnumerable<string> names);
+
+        /// <summary>
         /// Activates a transponder by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the transponder to activate.</param>

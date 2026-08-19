@@ -489,6 +489,24 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         }
 
         [TestMethod]
+        public void ReadByNames_Always_DelegatesToInner()
+        {
+            // Arrange
+            var names = new[] { "TP-1" };
+            var expected = new List<Transponder> { new Transponder() };
+            var inner = new Mock<ITransponderRepository>();
+            inner.Setup(x => x.ReadByNames(names)).Returns(expected);
+            var sut = new TransponderRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<Transponder>>().Object);
+
+            // Act
+            var result = sut.ReadByNames(names);
+
+            // Assert
+            Assert.AreSame(expected, result);
+            inner.Verify(x => x.ReadByNames(names), Times.Once);
+        }
+
+        [TestMethod]
         public void ReadWithFilter_WithNonReadableMiddleware_DelegatesToInner()
         {
             // Arrange

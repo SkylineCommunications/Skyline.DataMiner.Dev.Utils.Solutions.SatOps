@@ -68,7 +68,7 @@
                         return repository
                             .WithMiddleware(new TransponderValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
                             .WithMiddleware(new TransponderResourceCreationMiddleware(connection, satelliteId => Satellites.Read(satelliteId), Logger))
-                            .WithMiddleware(new TransponderNameUniquenessMiddleware(() => repository.Read()));
+                            .WithMiddleware(new TransponderNameUniquenessMiddleware(names => repository.ReadByNames(names)));
                     }
                 );
             lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>
