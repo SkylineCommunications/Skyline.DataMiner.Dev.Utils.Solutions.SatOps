@@ -15,6 +15,20 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         private readonly DomModel.SatellitesInstance originalInstance;
         private readonly DomModel.SatellitesInstance updatedInstance;
 
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="Satellite"/>.
+        /// The satellite is not persisted until it is passed to the create method of the satellite repository.
+        /// </summary>
+        public Satellite()
+            : this(new DomModel.SatellitesInstance())
+        {
+        }
+
+        private Satellite(DomModel.SatellitesInstance instance)
+            : this(instance, instance.Clone())
+        {
+        }
+
         private Satellite(DomModel.SatellitesInstance original, DomModel.SatellitesInstance updated)
             : base(original.ID.Id)
         {
@@ -30,15 +44,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
-            return new Satellite(instance, instance.Clone());
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Satellite"/> backed by a new <see cref="DomModel.SatellitesInstance"/>.
-        /// </summary>
-        internal static Satellite CreateNewSatellite()
-        {
-            var instance = new DomModel.SatellitesInstance();
             return new Satellite(instance, instance.Clone());
         }
 

@@ -11,12 +11,6 @@
     public interface IBeamRepository : IRepository<Beam>
     {
         /// <summary>
-        /// Initializes a new <see cref="Beam"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="Beam"/> instance.</returns>
-        Beam Initialize();
-
-        /// <summary>
         /// Activates a beam by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the beam to activate.</param>

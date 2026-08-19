@@ -39,20 +39,6 @@
         }
 
         [TestMethod]
-        public void Initialize_DelegatesToInner()
-        {
-            var expected = TransponderSlot.CreateNewTransponderSlot();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Initialize()).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
-
-            var result = sut.Initialize();
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Initialize(), Times.Once);
-        }
-
-        [TestMethod]
         public void Count_NoArguments_DelegatesToInner()
         {
             var inner = new Mock<ITransponderSlotRepository>();
@@ -143,7 +129,7 @@
         [TestMethod]
         public void Create_BulkWithNonCreatableMiddleware_DelegatesToInner()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
@@ -158,7 +144,7 @@
         [TestMethod]
         public void Create_BulkWithBulkCreatableMiddleware_InvokesMiddleware()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
@@ -176,8 +162,8 @@
         [TestMethod]
         public void Create_SingleWithNonCreatableMiddleware_DelegatesToInner()
         {
-            var input = TransponderSlot.CreateNewTransponderSlot();
-            var expected = TransponderSlot.CreateNewTransponderSlot();
+            var input = new TransponderSlot();
+            var expected = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
@@ -191,8 +177,8 @@
         [TestMethod]
         public void Create_SingleWithCreatableMiddleware_InvokesMiddleware()
         {
-            var input = TransponderSlot.CreateNewTransponderSlot();
-            var expected = TransponderSlot.CreateNewTransponderSlot();
+            var input = new TransponderSlot();
+            var expected = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
             var creatable = new Mock<ICreatableMiddleware<TransponderSlot>>();
@@ -209,7 +195,7 @@
         [TestMethod]
         public void CreateOrUpdate_NonBulkRepositoryMiddleware_DelegatesToInner()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
@@ -224,7 +210,7 @@
         [TestMethod]
         public void CreateOrUpdate_BulkRepositoryMiddleware_InvokesMiddleware()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
@@ -266,7 +252,7 @@
         [TestMethod]
         public void Delete_BulkWithNonDeletableMiddleware_DelegatesToInner()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var inner = new Mock<ITransponderSlotRepository>();
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
 
@@ -278,7 +264,7 @@
         [TestMethod]
         public void Delete_BulkWithBulkDeletableMiddleware_InvokesMiddlewareAndSkipsDirectInnerCall()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var inner = new Mock<ITransponderSlotRepository>();
             var bulk = new Mock<IBulkDeletableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnDelete(input, It.IsAny<Action<IEnumerable<TransponderSlot>>>()))
@@ -294,7 +280,7 @@
         [TestMethod]
         public void Delete_BulkWithBulkDeletableMiddlewareNotCallingNext_DoesNotCallInner()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var inner = new Mock<ITransponderSlotRepository>();
             var bulk = new Mock<IBulkDeletableMiddleware<TransponderSlot>>();
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
@@ -307,7 +293,7 @@
         [TestMethod]
         public void Delete_SingleWithNullMiddleware_DelegatesToInner()
         {
-            var input = TransponderSlot.CreateNewTransponderSlot();
+            var input = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
 
@@ -319,7 +305,7 @@
         [TestMethod]
         public void Delete_SingleWithDeletableMiddleware_InvokesMiddleware()
         {
-            var input = TransponderSlot.CreateNewTransponderSlot();
+            var input = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             var deletable = new Mock<IDeletableMiddleware<TransponderSlot>>();
             deletable.Setup(x => x.OnDelete(input, It.IsAny<Action<TransponderSlot>>()))
@@ -590,7 +576,7 @@
         public void Read_ById_DelegatesToInner()
         {
             var id = Guid.NewGuid();
-            var expected = TransponderSlot.CreateNewTransponderSlot();
+            var expected = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Read(id)).Returns(expected);
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
@@ -619,7 +605,7 @@
         [TestMethod]
         public void Update_BulkWithNonUpdatableMiddleware_DelegatesToInner()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
@@ -634,7 +620,7 @@
         [TestMethod]
         public void Update_BulkWithBulkUpdatableMiddleware_InvokesMiddleware()
         {
-            var input = new[] { TransponderSlot.CreateNewTransponderSlot() };
+            var input = new[] { new TransponderSlot() };
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
@@ -652,8 +638,8 @@
         [TestMethod]
         public void Update_SingleWithNullMiddleware_DelegatesToInner()
         {
-            var input = TransponderSlot.CreateNewTransponderSlot();
-            var expected = TransponderSlot.CreateNewTransponderSlot();
+            var input = new TransponderSlot();
+            var expected = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
@@ -667,8 +653,8 @@
         [TestMethod]
         public void Update_SingleWithUpdatableMiddleware_InvokesMiddleware()
         {
-            var input = TransponderSlot.CreateNewTransponderSlot();
-            var expected = TransponderSlot.CreateNewTransponderSlot();
+            var input = new TransponderSlot();
+            var expected = new TransponderSlot();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
             var updatable = new Mock<IUpdatableMiddleware<TransponderSlot>>();
@@ -700,7 +686,7 @@
         [TestMethod]
         public void GenerateSlots_ByPlan_DelegatesToInner()
         {
-            var plan = TransponderPlan.CreateNewTransponderPlan();
+            var plan = new TransponderPlan();
             var expected = new List<TransponderSlot>();
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.GenerateSlots(plan)).Returns(expected);
@@ -743,15 +729,14 @@
         public void WithMiddleware_ValidArguments_ReturnsWrappingMiddleware()
         {
             var inner = new Mock<ITransponderSlotRepository>();
-            var expected = TransponderSlot.CreateNewTransponderSlot();
-            inner.Setup(x => x.Initialize()).Returns(expected);
+            inner.Setup(x => x.Count()).Returns(42L);
             var marker = new Mock<IMiddlewareMarker<TransponderSlot>>().Object;
 
             var result = inner.Object.WithMiddleware(marker);
 
             Assert.IsNotNull(result);
             Assert.AreNotSame(inner.Object, result);
-            Assert.AreSame(expected, result.Initialize());
+            Assert.AreEqual(42L, result.Count());
         }
 
         [TestMethod]

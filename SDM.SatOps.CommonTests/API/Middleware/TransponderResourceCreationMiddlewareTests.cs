@@ -23,7 +23,7 @@
         public void Constructor_NullConnection_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => new TransponderResourceCreationMiddleware(null, id => Satellite.CreateNewSatellite()));
+            Assert.ThrowsException<ArgumentNullException>(() => new TransponderResourceCreationMiddleware(null, id => new Satellite()));
         }
 
         [TestMethod]
@@ -43,7 +43,7 @@
             var connection = new Mock<IConnection>();
 
             // Act
-            var sut = new TransponderResourceCreationMiddleware(connection.Object, id => Satellite.CreateNewSatellite());
+            var sut = new TransponderResourceCreationMiddleware(connection.Object, id => new Satellite());
 
             // Assert
             Assert.IsNotNull(sut);
@@ -56,7 +56,7 @@
             // Arrange
             var sut = CreateSut();
             var called = false;
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
             transponder.Name = "TP1";
 
             // Act & Assert
@@ -70,7 +70,7 @@
             // Arrange
             var sut = CreateSut();
             var called = false;
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
             transponder.Name = "TP1";
             var transponders = new List<Transponder> { transponder };
 
@@ -84,7 +84,7 @@
         {
             // Arrange
             var sut = CreateSut();
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
             transponder.Name = "TP1";
             Transponder passed = null;
 
@@ -101,9 +101,9 @@
         {
             // Arrange
             var sut = CreateSut();
-            var first = Transponder.CreateNewTransponder();
+            var first = new Transponder();
             first.Name = "TP1";
-            var second = Transponder.CreateNewTransponder();
+            var second = new Transponder();
             second.Name = "TP2";
             List<Transponder> passed = null;
 
@@ -156,7 +156,7 @@
         {
             // Arrange
             var sut = CreateSut();
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
 
             // Act & Assert
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnDelete(transponder, (Action<Transponder>)null));
@@ -167,7 +167,7 @@
         {
             // Arrange
             var sut = CreateSut();
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
             transponder.Name = "TP1";
             Transponder passed = null;
 
@@ -193,7 +193,7 @@
         {
             // Arrange
             var sut = CreateSut();
-            var transponders = new List<Transponder> { Transponder.CreateNewTransponder() };
+            var transponders = new List<Transponder> { new Transponder() };
 
             // Act & Assert
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnDelete(transponders, (Action<IEnumerable<Transponder>>)null));
@@ -204,9 +204,9 @@
         {
             // Arrange
             var sut = CreateSut();
-            var first = Transponder.CreateNewTransponder();
+            var first = new Transponder();
             first.Name = "TP1";
-            var second = Transponder.CreateNewTransponder();
+            var second = new Transponder();
             second.Name = "TP2";
             List<Transponder> passed = null;
 
@@ -238,7 +238,7 @@
         private static TransponderResourceCreationMiddleware CreateSut()
         {
             var connection = new Mock<IConnection>();
-            return new TransponderResourceCreationMiddleware(connection.Object, id => Satellite.CreateNewSatellite());
+            return new TransponderResourceCreationMiddleware(connection.Object, id => new Satellite());
         }
     }
 }

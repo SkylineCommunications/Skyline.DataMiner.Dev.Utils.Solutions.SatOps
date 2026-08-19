@@ -14,6 +14,20 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         private readonly DomModel.TransponderSlotsInstance originalInstance;
         private readonly DomModel.TransponderSlotsInstance updatedInstance;
 
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="TransponderSlot"/>.
+        /// The slot is not persisted until it is passed to the create method of the transponder slot repository.
+        /// </summary>
+        public TransponderSlot()
+            : this(new DomModel.TransponderSlotsInstance())
+        {
+        }
+
+        private TransponderSlot(DomModel.TransponderSlotsInstance instance)
+            : this(instance, instance.Clone())
+        {
+        }
+
         private TransponderSlot(DomModel.TransponderSlotsInstance original, DomModel.TransponderSlotsInstance updated)
             : base(original.ID.Id)
         {
@@ -29,15 +43,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
-            return new TransponderSlot(instance, instance.Clone());
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="TransponderSlot"/> backed by a new <see cref="DomModel.TransponderSlotsInstance"/>.
-        /// </summary>
-        internal static TransponderSlot CreateNewTransponderSlot()
-        {
-            var instance = new DomModel.TransponderSlotsInstance();
             return new TransponderSlot(instance, instance.Clone());
         }
 

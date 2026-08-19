@@ -606,7 +606,7 @@
 
         private static TransponderSlot CreateSlot(string name, double? start, double? end, Guid? planId)
         {
-            var slot = TransponderSlot.CreateNewTransponderSlot();
+            var slot = new TransponderSlot();
             slot.Name = name;
             slot.SlotStartFrequency = start;
             slot.SlotEndFrequency = end;

@@ -94,10 +94,5 @@
         /// <returns>A collection of updated <see cref="Satellite"/> instances after the transition.</returns>
         IReadOnlyCollection<Satellite> Reactivate(IEnumerable<Guid> satelliteIds);
 
-        /// <summary>
-        /// Initializes a new instance of a <see cref="Satellite"/> object.
-        /// </summary>
-        /// <returns>A new <see cref="Satellite"/> instance.</returns>
-        Satellite Initialize();
     }
 }

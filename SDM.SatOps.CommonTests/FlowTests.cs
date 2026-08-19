@@ -667,10 +667,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             DateTime? endTime,
             string name)
         {
-            // TransponderRangeReservation is a POCO (not backed by a DOM instance); construct via
-            // its internal CreateNew() factory and set the properties needed for validation.
-            var factory = reservationType.GetMethod("CreateNew", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            var reservation = factory.Invoke(null, Array.Empty<object>());
+            // TransponderRangeReservation is a POCO (not backed by a DOM instance); construct it
+            // directly and set the properties needed for validation.
+            var reservation = Activator.CreateInstance(reservationType);
 
             reservationType.GetProperty("Name").SetValue(reservation, name);
             reservationType.GetProperty("Transponder").SetValue(reservation, transponder);

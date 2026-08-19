@@ -31,7 +31,7 @@
         [TestMethod]
         public void Constructor_NullRowsResolver_ThrowsArgumentNullException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new TransponderPlanRowValidationMiddleware(_ => TransponderPlan.CreateNewTransponderPlan(), null));
+            Assert.ThrowsException<ArgumentNullException>(() => new TransponderPlanRowValidationMiddleware(_ => new TransponderPlan(), null));
         }
 
         [TestMethod]
@@ -456,12 +456,12 @@
 
         private static TransponderPlanRowValidationMiddleware CreateSut()
         {
-            return new TransponderPlanRowValidationMiddleware(_ => TransponderPlan.CreateNewTransponderPlan());
+            return new TransponderPlanRowValidationMiddleware(_ => new TransponderPlan());
         }
 
         private static TransponderPlanRow CreateValidRow(double bandwidth = 1d)
         {
-            var row = TransponderPlanRow.CreateNewTransponderPlanRow();
+            var row = new TransponderPlanRow();
             row.TransponderPlan = PlanId;
             row.Bandwidth = bandwidth;
             row.StepSize = bandwidth + 10d;

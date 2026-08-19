@@ -439,12 +439,12 @@
 
         private static BeamValidationMiddleware CreateSut(bool satelliteExists)
         {
-            return new BeamValidationMiddleware(id => satelliteExists ? Satellite.CreateNewSatellite() : null);
+            return new BeamValidationMiddleware(id => satelliteExists ? new Satellite() : null);
         }
 
         private static Beam CreateBeam(Guid? satelliteId)
         {
-            var beam = Beam.CreateNewBeam();
+            var beam = new Beam();
             beam.BeamSatellite = satelliteId;
             return beam;
         }

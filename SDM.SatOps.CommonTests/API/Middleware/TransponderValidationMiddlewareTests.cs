@@ -522,12 +522,12 @@
 
         private static TransponderValidationMiddleware CreateSut()
         {
-            return new TransponderValidationMiddleware(id => Satellite.CreateNewSatellite());
+            return new TransponderValidationMiddleware(id => new Satellite());
         }
 
         private static Transponder CreateValidTransponder()
         {
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
             transponder.Name = "TP1";
             transponder.TransponderSatellite = Guid.NewGuid();
             transponder.Bandwidth = 10;

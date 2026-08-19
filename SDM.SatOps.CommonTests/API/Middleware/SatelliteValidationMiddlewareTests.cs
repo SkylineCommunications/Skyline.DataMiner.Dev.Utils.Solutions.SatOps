@@ -429,7 +429,7 @@
 
         private static Satellite CreateSatellite(string name, string abbreviation)
         {
-            var satellite = Satellite.CreateNewSatellite();
+            var satellite = new Satellite();
             satellite.Name = name;
             satellite.Abbreviation = abbreviation;
             return satellite;

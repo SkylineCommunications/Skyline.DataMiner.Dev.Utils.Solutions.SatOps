@@ -18,11 +18,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             this.middleware = middleware;
         }
 
-        public Beam Initialize()
-        {
-            return inner.Initialize();
-        }
-
         public long Count()
         {
             return inner.Count();

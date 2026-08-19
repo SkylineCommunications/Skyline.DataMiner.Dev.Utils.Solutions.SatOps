@@ -30,11 +30,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return instance.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.TransponderPlanRows);
         }
 
-        public TransponderPlanRow Initialize()
-        {
-            return TransponderPlanRow.CreateNewTransponderPlanRow();
-        }
-
         public long Count()
         {
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())

@@ -41,23 +41,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         }
 
         [TestMethod]
-        public void Initialize_Always_DelegatesToInner()
-        {
-            // Arrange
-            var expected = Satellite.CreateNewSatellite();
-            var inner = new Mock<ISatelliteRepository>();
-            inner.Setup(x => x.Initialize()).Returns(expected);
-            var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
-
-            // Act
-            var result = repository.Initialize();
-
-            // Assert
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Initialize(), Times.Once);
-        }
-
-        [TestMethod]
         public void Count_WithoutArguments_DelegatesToInner()
         {
             // Arrange
@@ -161,7 +144,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateBulk_WithNonBulkCreatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var expected = new List<Satellite>();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
@@ -180,7 +163,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateBulk_WithBulkCreatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var expected = new List<Satellite>();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
@@ -205,8 +188,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Create_WithNonCreatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var input = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -223,8 +206,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Create_WithCreatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var input = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
 
@@ -248,7 +231,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateOrUpdate_WithNonBulkRepositoryMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var expected = new List<Satellite>();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
@@ -267,7 +250,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateOrUpdate_WithBulkRepositoryMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var expected = new List<Satellite>();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
@@ -322,7 +305,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void DeleteBulk_WithNonBulkDeletableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             var middleware = new Mock<IMiddlewareMarker<Satellite>>();
             var repository = new SatelliteRepositoryMiddleware(inner.Object, middleware.Object);
@@ -338,7 +321,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void DeleteBulk_WithBulkDeletableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
 
             var middleware = new Mock<IMiddlewareMarker<Satellite>>();
@@ -361,7 +344,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Delete_WithNonDeletableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
+            var input = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
 
@@ -376,7 +359,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Delete_WithDeletableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
+            var input = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
 
             var middleware = new Mock<IMiddlewareMarker<Satellite>>();
@@ -400,7 +383,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Satellite.CreateNewSatellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Read(id)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -750,7 +733,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void UpdateBulk_WithNonBulkUpdatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var expected = new List<Satellite>();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
@@ -769,7 +752,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void UpdateBulk_WithBulkUpdatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
             var expected = new List<Satellite>();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
@@ -794,8 +777,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Update_WithNonUpdatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var input = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -812,8 +795,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Update_WithUpdatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var input = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
 
@@ -838,7 +821,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Satellite.CreateNewSatellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Activate(id)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -855,8 +838,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Activate_WithSatellite_DelegatesToInner()
         {
             // Arrange
-            var input = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var input = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -873,8 +856,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Activate_WithSatelliteCollection_DelegatesToInner()
         {
             // Arrange
-            var input = new List<Satellite> { Satellite.CreateNewSatellite() };
-            var expected = new List<Satellite> { Satellite.CreateNewSatellite() };
+            var input = new List<Satellite> { new Satellite() };
+            var expected = new List<Satellite> { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -892,7 +875,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var input = new List<Guid> { Guid.NewGuid() };
-            var expected = new List<Satellite> { Satellite.CreateNewSatellite() };
+            var expected = new List<Satellite> { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -910,7 +893,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Satellite.CreateNewSatellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Deprecate(id)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -927,8 +910,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Deprecate_WithSingleSatellite_DelegatesToInner()
         {
             // Arrange
-            var satellite = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var satellite = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Deprecate(satellite)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -945,8 +928,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Deprecate_WithSatelliteCollection_DelegatesToInner()
         {
             // Arrange
-            var satellites = new List<Satellite> { Satellite.CreateNewSatellite() };
-            IReadOnlyCollection<Satellite> expected = new List<Satellite> { Satellite.CreateNewSatellite() };
+            var satellites = new List<Satellite> { new Satellite() };
+            IReadOnlyCollection<Satellite> expected = new List<Satellite> { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Deprecate(satellites)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -964,7 +947,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var ids = new List<Guid> { Guid.NewGuid() };
-            IReadOnlyCollection<Satellite> expected = new List<Satellite> { Satellite.CreateNewSatellite() };
+            IReadOnlyCollection<Satellite> expected = new List<Satellite> { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Deprecate(ids)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -982,7 +965,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Satellite.CreateNewSatellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Reactivate(id)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -999,8 +982,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Reactivate_WithSatellite_DelegatesToInner()
         {
             // Arrange
-            var satellite = Satellite.CreateNewSatellite();
-            var expected = Satellite.CreateNewSatellite();
+            var satellite = new Satellite();
+            var expected = new Satellite();
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Reactivate(satellite)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -1017,8 +1000,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Reactivate_WithSatelliteCollection_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { Satellite.CreateNewSatellite() };
-            var expected = new[] { Satellite.CreateNewSatellite() };
+            var input = new[] { new Satellite() };
+            var expected = new[] { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -1036,7 +1019,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var ids = new[] { Guid.NewGuid(), Guid.NewGuid() };
-            var expected = new[] { Satellite.CreateNewSatellite() };
+            var expected = new[] { new Satellite() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(x => x.Reactivate(ids)).Returns(expected);
             var repository = new SatelliteRepositoryMiddleware(inner.Object, null);
@@ -1053,9 +1036,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void WithMiddleware_WithValidRepository_ReturnsWrappingMiddleware()
         {
             // Arrange
-            var expected = Satellite.CreateNewSatellite();
             var inner = new Mock<ISatelliteRepository>();
-            inner.Setup(x => x.Initialize()).Returns(expected);
+            inner.Setup(x => x.Count()).Returns(42L);
             var middleware = new Mock<IMiddlewareMarker<Satellite>>();
 
             // Act
@@ -1063,8 +1045,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(SatelliteRepositoryMiddleware));
-            Assert.AreSame(expected, result.Initialize());
-            inner.Verify(x => x.Initialize(), Times.Once);
+            Assert.AreEqual(42L, result.Count());
+            inner.Verify(x => x.Count(), Times.Once);
         }
 
         [TestMethod]

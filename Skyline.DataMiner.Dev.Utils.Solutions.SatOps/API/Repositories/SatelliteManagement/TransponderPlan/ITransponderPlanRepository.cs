@@ -11,12 +11,6 @@
     public interface ITransponderPlanRepository : IRepository<TransponderPlan>
     {
         /// <summary>
-        /// Initializes a new <see cref="TransponderPlan"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="TransponderPlan"/> instance.</returns>
-        TransponderPlan Initialize();
-
-        /// <summary>
         /// Reads all transponder plans that belong to the specified transponder.
         /// </summary>
         /// <param name="transponderId">The unique identifier of the transponder.</param>

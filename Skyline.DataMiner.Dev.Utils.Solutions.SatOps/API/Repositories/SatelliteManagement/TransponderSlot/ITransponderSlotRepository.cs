@@ -12,12 +12,6 @@
     public interface ITransponderSlotRepository : IRepository<TransponderSlot>
     {
         /// <summary>
-        /// Initializes a new <see cref="TransponderSlot"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="TransponderSlot"/> instance.</returns>
-        TransponderSlot Initialize();
-
-        /// <summary>
         /// Generates slots for the specified transponder plan.
         /// Deletes any existing slots linked to the plan before creating the new ones.
         /// </summary>

@@ -32,11 +32,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return instance.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.TransponderSlots);
         }
 
-        public TransponderSlot Initialize()
-        {
-            return TransponderSlot.CreateNewTransponderSlot();
-        }
-
         public long Count()
         {
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
@@ -309,7 +304,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
                 foreach (var calc in CalculateSlots(transponderBandwidth, transponderStartFrequency, transponderDownlinkStartFrequency, offset, step, bandwidth, limit))
                 {
-                    var slot = Initialize();
+                    var slot = new TransponderSlot();
                     slot.TransponderPlan = transponderPlanId;
                     slot.Name = calc.SlotName;
                     slot.SlotStartFrequency = calc.StartFrequency;

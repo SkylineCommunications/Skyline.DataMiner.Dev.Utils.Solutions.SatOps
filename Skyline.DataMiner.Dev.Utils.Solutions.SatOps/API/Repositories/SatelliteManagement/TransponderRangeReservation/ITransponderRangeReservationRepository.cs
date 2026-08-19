@@ -11,12 +11,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     public interface ITransponderRangeReservationRepository : IRepository<TransponderRangeReservation>
     {
         /// <summary>
-        /// Initializes a new <see cref="TransponderRangeReservation"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="TransponderRangeReservation"/> instance.</returns>
-        TransponderRangeReservation Initialize();
-
-        /// <summary>
         /// Reads all reservations for a transponder.
         /// </summary>
         /// <param name="transponderId">The transponder identifier.</param>

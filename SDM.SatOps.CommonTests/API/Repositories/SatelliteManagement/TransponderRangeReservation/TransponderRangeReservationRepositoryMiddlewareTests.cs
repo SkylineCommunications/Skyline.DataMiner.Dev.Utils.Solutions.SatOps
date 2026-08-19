@@ -39,22 +39,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         }
 
         [TestMethod]
-        public void Initialize_Always_DelegatesToInner()
-        {
-            // Arrange
-            var inner = new Mock<ITransponderRangeReservationRepository>();
-            inner.Setup(x => x.Initialize()).Returns((Reservation)null);
-            var sut = new TransponderRangeReservationRepositoryMiddleware(inner.Object, null);
-
-            // Act
-            var result = sut.Initialize();
-
-            // Assert
-            Assert.IsNull(result);
-            inner.Verify(x => x.Initialize(), Times.Once);
-        }
-
-        [TestMethod]
         public void Count_WithoutArguments_DelegatesToInner()
         {
             // Arrange

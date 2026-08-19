@@ -30,11 +30,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return instance.DomDefinitionId.Equals(SlcSatellite_ManagementIds.Definitions.Satellites);
         }
 
-        public Satellite Initialize()
-        {
-            return Satellite.CreateNewSatellite();
-        }
-
         public long Count()
         {
             return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())

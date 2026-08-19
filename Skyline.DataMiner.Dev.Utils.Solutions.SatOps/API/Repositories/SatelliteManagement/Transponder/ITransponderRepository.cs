@@ -11,12 +11,6 @@
     public interface ITransponderRepository : IRepository<Transponder>
     {
         /// <summary>
-        /// Initializes a new <see cref="Transponder"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="Transponder"/> instance.</returns>
-        Transponder Initialize();
-
-        /// <summary>
         /// Reads all transponders that belong to the specified satellite.
         /// </summary>
         /// <param name="satelliteId">The unique identifier of the satellite.</param>

@@ -502,12 +502,12 @@
 
         private static TransponderRangeReservationValidationMiddleware CreateSut()
         {
-            return new TransponderRangeReservationValidationMiddleware(id => Transponder.CreateNewTransponder());
+            return new TransponderRangeReservationValidationMiddleware(id => new Transponder());
         }
 
         private static TransponderRangeReservation CreateReservation(int startHour, int endHour, double startFrequency, double endFrequency)
         {
-            var reservation = TransponderRangeReservation.CreateNew();
+            var reservation = new TransponderRangeReservation();
 
             reservation.Transponder = TransponderId;
             reservation.StartTime = BaseTime.AddHours(startHour);

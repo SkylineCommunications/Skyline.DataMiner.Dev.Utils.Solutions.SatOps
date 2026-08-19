@@ -8,10 +8,5 @@
     /// </summary>
     public interface ITransponderPlanRowRepository : IRepository<TransponderPlanRow>
     {
-        /// <summary>
-        /// Initializes a new <see cref="TransponderPlanRow"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="TransponderPlanRow"/> instance.</returns>
-        TransponderPlanRow Initialize();
     }
 }

@@ -15,6 +15,20 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         private readonly DomModel.TransponderPlansInstance originalInstance;
         private readonly DomModel.TransponderPlansInstance updatedInstance;
 
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="TransponderPlan"/>.
+        /// The plan is not persisted until it is passed to the create method of the transponder plan repository.
+        /// </summary>
+        public TransponderPlan()
+            : this(new DomModel.TransponderPlansInstance())
+        {
+        }
+
+        private TransponderPlan(DomModel.TransponderPlansInstance instance)
+            : this(instance, instance.Clone())
+        {
+        }
+
         private TransponderPlan(DomModel.TransponderPlansInstance original, DomModel.TransponderPlansInstance updated)
             : base(original.ID.Id)
         {
@@ -30,15 +44,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
-            return new TransponderPlan(instance, instance.Clone());
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="TransponderPlan"/> backed by a new <see cref="DomModel.TransponderPlansInstance"/>.
-        /// </summary>
-        internal static TransponderPlan CreateNewTransponderPlan()
-        {
-            var instance = new DomModel.TransponderPlansInstance();
             return new TransponderPlan(instance, instance.Clone());
         }
 

@@ -410,7 +410,7 @@
 
         private static Transponder CreateTransponder(string name)
         {
-            var transponder = Transponder.CreateNewTransponder();
+            var transponder = new Transponder();
             transponder.Name = name;
             return transponder;
         }

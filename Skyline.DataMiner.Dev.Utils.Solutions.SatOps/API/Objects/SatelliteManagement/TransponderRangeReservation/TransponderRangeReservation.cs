@@ -24,7 +24,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         private string slotName;
         private string nodeId;
 
-        private TransponderRangeReservation()
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="TransponderRangeReservation"/>.
+        /// The reservation is not persisted until it is passed to the create method of the
+        /// transponder range reservation repository.
+        /// </summary>
+        public TransponderRangeReservation()
         {
         }
 
@@ -159,14 +164,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
 
                 return relativeEndFrequency.Value - relativeStartFrequency.Value;
             }
-        }
-
-        /// <summary>
-        /// Creates a new, empty <see cref="TransponderRangeReservation"/>.
-        /// </summary>
-        internal static TransponderRangeReservation CreateNew()
-        {
-            return new TransponderRangeReservation();
         }
 
         /// <summary>

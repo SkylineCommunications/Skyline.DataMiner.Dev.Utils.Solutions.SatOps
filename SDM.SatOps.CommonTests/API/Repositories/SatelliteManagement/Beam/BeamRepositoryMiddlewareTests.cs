@@ -41,23 +41,6 @@
         }
 
         [TestMethod]
-        public void Initialize_Always_DelegatesToInner()
-        {
-            // Arrange
-            var expected = Beam.CreateNewBeam();
-            var inner = new Mock<IBeamRepository>();
-            inner.Setup(x => x.Initialize()).Returns(expected);
-            var repository = new BeamRepositoryMiddleware(inner.Object, null);
-
-            // Act
-            var result = repository.Initialize();
-
-            // Assert
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Initialize(), Times.Once);
-        }
-
-        [TestMethod]
         public void Count_WithoutArguments_DelegatesToInner()
         {
             // Arrange
@@ -206,8 +189,8 @@
         public void Create_WithNonCreatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<Beam>>();
@@ -225,8 +208,8 @@
         public void Create_WithCreatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
 
@@ -363,7 +346,7 @@
         public void Delete_WithNonDeletableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
+            var input = new Beam();
             var inner = new Mock<IBeamRepository>();
             var middleware = new Mock<IMiddlewareMarker<Beam>>();
             var repository = new BeamRepositoryMiddleware(inner.Object, middleware.Object);
@@ -379,7 +362,7 @@
         public void Delete_WithDeletableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
+            var input = new Beam();
             var inner = new Mock<IBeamRepository>();
 
             var middleware = new Mock<IMiddlewareMarker<Beam>>();
@@ -701,7 +684,7 @@
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Beam.CreateNewBeam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Read(id)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -798,8 +781,8 @@
         public void Update_WithNonUpdatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<Beam>>();
@@ -817,8 +800,8 @@
         public void Update_WithUpdatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
 
@@ -844,7 +827,7 @@
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Beam.CreateNewBeam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Activate(id)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -861,8 +844,8 @@
         public void Activate_WithBeam_DelegatesToInner()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<Beam>>();
@@ -880,8 +863,8 @@
         public void Activate_WithBeamCollection_DelegatesToInner()
         {
             // Arrange
-            var input = new List<Beam> { Beam.CreateNewBeam() };
-            IReadOnlyCollection<Beam> expected = new List<Beam> { Beam.CreateNewBeam() };
+            var input = new List<Beam> { new Beam() };
+            IReadOnlyCollection<Beam> expected = new List<Beam> { new Beam() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -899,7 +882,7 @@
         {
             // Arrange
             var input = new List<Guid> { Guid.NewGuid() };
-            IReadOnlyCollection<Beam> expected = new List<Beam> { Beam.CreateNewBeam() };
+            IReadOnlyCollection<Beam> expected = new List<Beam> { new Beam() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -917,7 +900,7 @@
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Beam.CreateNewBeam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Deprecate(id)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -934,8 +917,8 @@
         public void Deprecate_WithBeam_DelegatesToInner()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Deprecate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -952,8 +935,8 @@
         public void Deprecate_WithBeamCollection_DelegatesToInner()
         {
             // Arrange
-            var input = new List<Beam> { Beam.CreateNewBeam() };
-            IReadOnlyCollection<Beam> expected = new List<Beam> { Beam.CreateNewBeam() };
+            var input = new List<Beam> { new Beam() };
+            IReadOnlyCollection<Beam> expected = new List<Beam> { new Beam() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Deprecate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -971,7 +954,7 @@
         {
             // Arrange
             var input = new List<Guid> { Guid.NewGuid() };
-            IReadOnlyCollection<Beam> expected = new List<Beam> { Beam.CreateNewBeam() };
+            IReadOnlyCollection<Beam> expected = new List<Beam> { new Beam() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Deprecate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -989,7 +972,7 @@
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = Beam.CreateNewBeam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Reactivate(id)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -1006,8 +989,8 @@
         public void Reactivate_WithBeam_DelegatesToInner()
         {
             // Arrange
-            var input = Beam.CreateNewBeam();
-            var expected = Beam.CreateNewBeam();
+            var input = new Beam();
+            var expected = new Beam();
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -1024,8 +1007,8 @@
         public void Reactivate_WithBeamCollection_DelegatesToInner()
         {
             // Arrange
-            var input = new List<Beam> { Beam.CreateNewBeam() };
-            IReadOnlyCollection<Beam> expected = new List<Beam> { Beam.CreateNewBeam() };
+            var input = new List<Beam> { new Beam() };
+            IReadOnlyCollection<Beam> expected = new List<Beam> { new Beam() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -1043,7 +1026,7 @@
         {
             // Arrange
             var input = new List<Guid> { Guid.NewGuid() };
-            IReadOnlyCollection<Beam> expected = new List<Beam> { Beam.CreateNewBeam() };
+            IReadOnlyCollection<Beam> expected = new List<Beam> { new Beam() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
             var repository = new BeamRepositoryMiddleware(inner.Object, null);
@@ -1061,8 +1044,7 @@
         {
             // Arrange
             var inner = new Mock<IBeamRepository>();
-            var expected = Beam.CreateNewBeam();
-            inner.Setup(x => x.Initialize()).Returns(expected);
+            inner.Setup(x => x.Count()).Returns(42L);
             var middleware = new Mock<IMiddlewareMarker<Beam>>();
 
             // Act
@@ -1072,7 +1054,7 @@
             Assert.IsNotNull(result);
             Assert.IsInstanceOfType(result, typeof(BeamRepositoryMiddleware));
             Assert.AreNotSame(inner.Object, result);
-            Assert.AreSame(expected, result.Initialize());
+            Assert.AreEqual(42L, result.Count());
         }
 
         [TestMethod]

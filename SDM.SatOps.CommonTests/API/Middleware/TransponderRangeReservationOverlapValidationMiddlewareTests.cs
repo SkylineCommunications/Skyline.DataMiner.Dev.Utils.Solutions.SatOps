@@ -594,7 +594,7 @@
         {
             var reservation = id.HasValue
                 ? TransponderRangeReservation.CreateWithId(id.Value)
-                : TransponderRangeReservation.CreateNew();
+                : new TransponderRangeReservation();
 
             reservation.Name = name;
             reservation.Transponder = TransponderId;

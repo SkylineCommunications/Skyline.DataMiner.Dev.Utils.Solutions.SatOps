@@ -30,11 +30,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         private IJobsRepository Jobs => SatOpsApi.MediaOpsPlan.Jobs;
 
-        public TransponderRangeReservation Initialize()
-        {
-            return TransponderRangeReservation.CreateNew();
-        }
-
         public long Count()
         {
             return ReadAllReservationJobs().LongCount();

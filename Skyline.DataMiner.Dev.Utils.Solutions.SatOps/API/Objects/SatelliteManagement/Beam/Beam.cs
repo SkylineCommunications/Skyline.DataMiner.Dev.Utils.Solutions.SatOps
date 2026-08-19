@@ -16,6 +16,20 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         private readonly DomModel.BeamsInstance originalInstance;
         private readonly DomModel.BeamsInstance updatedInstance;
 
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="Beam"/>.
+        /// The beam is not persisted until it is passed to the create method of the beam repository.
+        /// </summary>
+        public Beam()
+            : this(new DomModel.BeamsInstance())
+        {
+        }
+
+        private Beam(DomModel.BeamsInstance instance)
+            : this(instance, instance.Clone())
+        {
+        }
+
         private Beam(DomModel.BeamsInstance original, DomModel.BeamsInstance updated)
             : base(original.ID.Id)
         {
@@ -31,15 +45,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
-            return new Beam(instance, instance.Clone());
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Beam"/> backed by a new <see cref="DomModel.BeamsInstance"/>.
-        /// </summary>
-        internal static Beam CreateNewBeam()
-        {
-            var instance = new DomModel.BeamsInstance();
             return new Beam(instance, instance.Clone());
         }
 

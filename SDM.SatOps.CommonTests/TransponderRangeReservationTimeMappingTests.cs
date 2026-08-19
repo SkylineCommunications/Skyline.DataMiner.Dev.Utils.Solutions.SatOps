@@ -63,8 +63,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static object CreateReservation(Type reservationType, DateTime start, DateTime end, DateTime? preRoll, DateTime? postRoll)
         {
-            var factory = reservationType.GetMethod("CreateNew", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            var reservation = factory.Invoke(null, Array.Empty<object>());
+            var reservation = Activator.CreateInstance(reservationType);
 
             reservationType.GetProperty("StartTime").SetValue(reservation, start);
             reservationType.GetProperty("EndTime").SetValue(reservation, end);

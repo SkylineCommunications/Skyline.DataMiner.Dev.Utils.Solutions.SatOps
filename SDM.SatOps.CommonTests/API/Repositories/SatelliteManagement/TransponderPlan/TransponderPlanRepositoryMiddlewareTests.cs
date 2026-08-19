@@ -38,22 +38,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         }
 
         [TestMethod]
-        public void Initialize_Always_DelegatesToInner()
-        {
-            // Arrange
-            var inner = new Mock<ITransponderPlanRepository>();
-            inner.Setup(x => x.Initialize()).Returns((TransponderPlanObject)null);
-            var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
-
-            // Act
-            var result = sut.Initialize();
-
-            // Assert
-            Assert.IsNull(result);
-            inner.Verify(x => x.Initialize(), Times.Once);
-        }
-
-        [TestMethod]
         public void Count_WithoutArguments_DelegatesToInner()
         {
             // Arrange
@@ -187,7 +171,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateBulk_WithNonBulkCreatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
@@ -206,7 +190,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateBulk_WithBulkCreatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
@@ -231,8 +215,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Create_WithNonCreatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
@@ -249,8 +233,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Create_WithCreatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Create(input)).Returns(expected);
 
@@ -274,7 +258,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateOrUpdate_WithNonBulkRepositoryMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
@@ -293,7 +277,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void CreateOrUpdate_WithBulkRepositoryMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
@@ -349,7 +333,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void DeleteBulk_WithNonBulkDeletableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var inner = new Mock<ITransponderPlanRepository>();
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, middleware.Object);
@@ -365,7 +349,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void DeleteBulk_WithBulkDeletableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var inner = new Mock<ITransponderPlanRepository>();
 
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
@@ -388,7 +372,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Delete_WithNonDeletableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
 
@@ -403,7 +387,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Delete_WithDeletableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
 
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
@@ -759,7 +743,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Read(id)).Returns(expected);
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
@@ -794,7 +778,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void UpdateBulk_WithNonBulkUpdatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
@@ -813,7 +797,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void UpdateBulk_WithBulkUpdatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
@@ -838,8 +822,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Update_WithNonUpdatableMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
@@ -857,8 +841,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Update_WithNullMiddleware_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
@@ -875,8 +859,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Update_WithUpdatableMiddleware_DelegatesToMiddleware()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Update(input)).Returns(expected);
 
@@ -902,7 +886,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Activate(id)).Returns(expected);
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
@@ -919,8 +903,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Activate_WithObject_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
@@ -938,7 +922,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Activate_WithObjects_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Activate(input)).Returns(expected);
@@ -991,7 +975,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Deprecate(id)).Returns(expected);
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
@@ -1008,8 +992,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Deprecate_WithObject_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Deprecate(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
@@ -1043,7 +1027,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Deprecate_WithObjects_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Deprecate(input)).Returns(expected);
@@ -1081,7 +1065,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var id = Guid.NewGuid();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Reactivate(id)).Returns(expected);
             var sut = new TransponderPlanRepositoryMiddleware(inner.Object, null);
@@ -1114,8 +1098,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Reactivate_WithObject_DelegatesToInner()
         {
             // Arrange
-            var input = TransponderPlanObject.CreateNewTransponderPlan();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
+            var input = new TransponderPlanObject();
+            var expected = new TransponderPlanObject();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
@@ -1149,7 +1133,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Reactivate_WithObjects_DelegatesToInner()
         {
             // Arrange
-            var input = new[] { TransponderPlanObject.CreateNewTransponderPlan() };
+            var input = new[] { new TransponderPlanObject() };
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
@@ -1221,8 +1205,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var inner = new Mock<ITransponderPlanRepository>();
-            var expected = TransponderPlanObject.CreateNewTransponderPlan();
-            inner.Setup(x => x.Initialize()).Returns(expected);
+            inner.Setup(x => x.Count()).Returns(42L);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanObject>>();
 
             // Act
@@ -1230,8 +1213,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(TransponderPlanRepositoryMiddleware));
-            Assert.AreSame(expected, result.Initialize());
-            inner.Verify(x => x.Initialize(), Times.Once);
+            Assert.AreEqual(42L, result.Count());
+            inner.Verify(x => x.Count(), Times.Once);
         }
 
         [TestMethod]

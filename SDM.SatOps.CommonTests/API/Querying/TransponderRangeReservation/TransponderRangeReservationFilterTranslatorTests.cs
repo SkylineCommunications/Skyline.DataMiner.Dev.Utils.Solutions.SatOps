@@ -124,7 +124,7 @@
 
         private static TransponderRangeReservation CreateReservation(string name)
         {
-            var reservation = TransponderRangeReservation.CreateNew();
+            var reservation = new TransponderRangeReservation();
             reservation.Name = name;
             return reservation;
         }

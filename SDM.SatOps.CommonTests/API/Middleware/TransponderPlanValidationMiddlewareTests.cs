@@ -218,7 +218,7 @@
         public void OnCreateSingle_NullResolvedPlans_CallsNext()
         {
             var plan = CreateValidPlan();
-            var sut = new TransponderPlanValidationMiddleware(id => Transponder.CreateNewTransponder(), id => null);
+            var sut = new TransponderPlanValidationMiddleware(id => new Transponder(), id => null);
 
             var result = sut.OnCreate(plan, p => p);
 
@@ -548,17 +548,17 @@
 
         private static TransponderPlanValidationMiddleware CreateSut()
         {
-            return new TransponderPlanValidationMiddleware(id => Transponder.CreateNewTransponder());
+            return new TransponderPlanValidationMiddleware(id => new Transponder());
         }
 
         private static TransponderPlanValidationMiddleware CreateSut(IEnumerable<TransponderPlan> existingPlans)
         {
-            return new TransponderPlanValidationMiddleware(id => Transponder.CreateNewTransponder(), id => existingPlans);
+            return new TransponderPlanValidationMiddleware(id => new Transponder(), id => existingPlans);
         }
 
         private static TransponderPlan CreateValidPlan()
         {
-            var plan = TransponderPlan.CreateNewTransponderPlan();
+            var plan = new TransponderPlan();
             plan.Name = "Plan";
             plan.DefaultSlotSize = 10;
             plan.Transponder = Guid.NewGuid();

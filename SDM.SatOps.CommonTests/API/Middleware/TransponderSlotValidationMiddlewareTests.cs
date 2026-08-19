@@ -410,7 +410,7 @@
         public void OnDeleteSingle_ValidSlot_CallsNextWithoutValidation()
         {
             var sut = new TransponderSlotValidationMiddleware(id => null);
-            var slot = TransponderSlot.CreateNewTransponderSlot();
+            var slot = new TransponderSlot();
             TransponderSlot received = null;
 
             sut.OnDelete(slot, s => received = s);
@@ -522,12 +522,12 @@
 
         private static TransponderSlotValidationMiddleware CreateSut()
         {
-            return new TransponderSlotValidationMiddleware(id => TransponderPlan.CreateNewTransponderPlan());
+            return new TransponderSlotValidationMiddleware(id => new TransponderPlan());
         }
 
         private static TransponderSlot CreateValidSlot()
         {
-            var slot = TransponderSlot.CreateNewTransponderSlot();
+            var slot = new TransponderSlot();
             slot.TransponderPlan = PlanId;
             slot.Name = "Slot";
             slot.SlotStartFrequency = 100;
