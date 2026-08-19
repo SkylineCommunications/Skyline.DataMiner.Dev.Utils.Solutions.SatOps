@@ -24,5 +24,21 @@
             }
             return dms.GetConnection().GetSatOpsApi();
         }
+
+        /// <summary>
+        /// Gets an instance of the SatOps API from the specified GQI DMS connection.
+        /// </summary>
+        /// <param name="args">The initialization arguments containing the DMS instance.</param>
+        /// <returns>An instance of <see cref="ISatOpsApi"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is <see langword="null"/>.</exception>
+        public static ISatOpsApi GetSatOpsApi(this OnInitInputArgs args)
+        {
+            if(args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
+            return GetSatOpsApi(args.DMS);
+        }
     }
 }
