@@ -3,6 +3,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -16,11 +17,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     {
         private const double OverlapTolerance = 1e-9;
 
-        private readonly Func<Guid, IEnumerable<TransponderRangeReservation>> existingReservationsResolver;
+        private readonly ITransponderRangeReservationRepository reservationRepository;
 
-        public TransponderRangeReservationOverlapValidationMiddleware(Func<Guid, IEnumerable<TransponderRangeReservation>> existingReservationsResolver)
+        public TransponderRangeReservationOverlapValidationMiddleware(ITransponderRangeReservationRepository reservationRepository)
         {
-            this.existingReservationsResolver = existingReservationsResolver ?? throw new ArgumentNullException(nameof(existingReservationsResolver));
+            this.reservationRepository = reservationRepository ?? throw new ArgumentNullException(nameof(reservationRepository));
         }
 
         public TransponderRangeReservation OnCreate(TransponderRangeReservation oToCreate, Func<TransponderRangeReservation, TransponderRangeReservation> next)
@@ -140,7 +141,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 return;
             }
 
-            var existingReservations = (existingReservationsResolver(reservation.Transponder.Value) ?? Enumerable.Empty<TransponderRangeReservation>())
+            var existingReservations = (reservationRepository.ReadByTransponder(reservation.Transponder.Value) ?? Enumerable.Empty<TransponderRangeReservation>())
                 .Where(existing => existing != null
                     && existing.Id != excludeId
                     && HasRequiredRanges(existing));

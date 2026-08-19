@@ -2,8 +2,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -11,11 +11,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
     internal sealed class TransponderRangeReservationValidationMiddleware : IBulkRepositoryMiddleware<TransponderRangeReservation>
     {
-        private readonly Func<Guid, Transponder> transponderResolver;
+        private readonly ITransponderRepository transponderRepository;
 
-        public TransponderRangeReservationValidationMiddleware(Func<Guid, Transponder> transponderResolver)
+        public TransponderRangeReservationValidationMiddleware(ITransponderRepository transponderRepository)
         {
-            this.transponderResolver = transponderResolver ?? throw new ArgumentNullException(nameof(transponderResolver));
+            this.transponderRepository = transponderRepository ?? throw new ArgumentNullException(nameof(transponderRepository));
         }
 
         public TransponderRangeReservation OnCreate(TransponderRangeReservation oToCreate, Func<TransponderRangeReservation, TransponderRangeReservation> next)
@@ -179,7 +179,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Start Time must be earlier than End Time.", nameof(reservation));
 
             var transponderId = reservation.Transponder.Value;
-            if (transponderResolver(transponderId) == null)
+            if (transponderRepository.Read(transponderId) == null)
                 throw new ArgumentException($"Transponder with id '{transponderId}' does not exist.", nameof(reservation));
         }
     }

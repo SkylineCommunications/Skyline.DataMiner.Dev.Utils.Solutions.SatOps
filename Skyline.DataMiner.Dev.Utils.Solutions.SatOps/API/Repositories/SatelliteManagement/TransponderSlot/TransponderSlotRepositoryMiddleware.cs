@@ -7,8 +7,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
-    internal sealed class TransponderSlotRepositoryMiddleware : ITransponderSlotRepository
+    internal sealed class TransponderSlotRepositoryMiddleware : ITransponderSlotRepository, ITransponderSlotBuilder
     {
         private readonly ITransponderSlotRepository inner;
         private readonly IMiddlewareMarker<TransponderSlot> middleware;
@@ -46,16 +47,23 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IReadOnlyCollection<TransponderSlot> Create(IEnumerable<TransponderSlot> oToCreate)
         {
+            var slots = ExpandGenerationRequests(oToCreate);
+
             if (middleware is IBulkCreatableMiddleware<TransponderSlot> bulkCreatableMiddleware)
             {
-                return bulkCreatableMiddleware.OnCreate(oToCreate, inner.Create);
+                return bulkCreatableMiddleware.OnCreate(slots, inner.Create);
             }
 
-            return inner.Create(oToCreate);
+            return inner.Create(slots);
         }
 
         public TransponderSlot Create(TransponderSlot oToCreate)
         {
+            if (IsGenerationRequest(oToCreate))
+            {
+                return Create(new[] { oToCreate }).FirstOrDefault();
+            }
+
             if (middleware is ICreatableMiddleware<TransponderSlot> creatableMiddleware)
             {
                 return creatableMiddleware.OnCreate(oToCreate, inner.Create);
@@ -66,12 +74,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IReadOnlyCollection<TransponderSlot> CreateOrUpdate(IEnumerable<TransponderSlot> oToCreateOrUpdate)
         {
+            var slots = ExpandGenerationRequests(oToCreateOrUpdate);
+
             if (middleware is IBulkRepositoryMiddleware<TransponderSlot> bulkRepositoryMiddleware)
             {
-                return bulkRepositoryMiddleware.OnCreateOrUpdate(oToCreateOrUpdate, inner.CreateOrUpdate);
+                return bulkRepositoryMiddleware.OnCreateOrUpdate(slots, inner.CreateOrUpdate);
             }
 
-            return inner.CreateOrUpdate(oToCreateOrUpdate);
+            return inner.CreateOrUpdate(slots);
         }
 
         public void Delete(Guid apiObjectId)
@@ -211,14 +221,65 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return inner.Update(oToUpdate);
         }
 
-        public IReadOnlyCollection<TransponderSlot> GenerateSlots(Guid transponderPlanId)
+        public IReadOnlyCollection<TransponderSlot> BuildSlots(Guid transponderPlanId)
         {
-            return inner.GenerateSlots(transponderPlanId);
+            if (inner is ITransponderSlotBuilder builder)
+            {
+                return builder.BuildSlots(transponderPlanId);
+            }
+
+            throw new NotSupportedException($"The wrapped repository does not implement {nameof(ITransponderSlotBuilder)}.");
         }
 
-        public IReadOnlyCollection<TransponderSlot> GenerateSlots(TransponderPlan transponderPlan)
+        /// <summary>
+        /// Replaces every slot generation request by the slots calculated for its transponder plan.
+        /// The existing slots of that plan are removed first, otherwise every calculated slot would be
+        /// reported as overlapping the persisted slot it replaces.
+        /// </summary>
+        private IEnumerable<TransponderSlot> ExpandGenerationRequests(IEnumerable<TransponderSlot> slots)
         {
-            return inner.GenerateSlots(transponderPlan);
+            if (slots == null)
+                return null;
+
+            var materialized = slots.ToList();
+            if (!materialized.Any(IsGenerationRequest))
+                return materialized;
+
+            var expanded = new List<TransponderSlot>();
+            var handledPlans = new HashSet<Guid>();
+
+            foreach (var slot in materialized)
+            {
+                if (!IsGenerationRequest(slot))
+                {
+                    expanded.Add(slot);
+                    continue;
+                }
+
+                var transponderPlanId = slot.TransponderPlan.Value;
+                if (!handledPlans.Add(transponderPlanId))
+                    continue;
+
+                var built = BuildSlots(transponderPlanId);
+                inner.DeleteSlotsByTransponderPlan(transponderPlanId);
+                expanded.AddRange(built);
+            }
+
+            return expanded;
+        }
+
+        /// <summary>
+        /// Determines whether the given slot is a request to generate all slots of its transponder plan,
+        /// which is the case when only the transponder plan is filled in.
+        /// </summary>
+        private static bool IsGenerationRequest(TransponderSlot slot)
+        {
+            return slot != null
+                && slot.TransponderPlan.HasValue
+                && slot.TransponderPlan.Value != Guid.Empty
+                && string.IsNullOrEmpty(slot.Name)
+                && !slot.SlotStartFrequency.HasValue
+                && !slot.SlotEndFrequency.HasValue;
         }
 
         public IEnumerable<TransponderSlot> ReadByTransponderPlan(Guid transponderPlanId)

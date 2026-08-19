@@ -72,11 +72,15 @@ var kuBandTransponders = api.Transponders.Read(
 
 **Generate slots for a transponder plan:**
 
+Slot generation runs through the regular `Create` method. Submit a slot that only has its `TransponderPlan`
+filled in and the API replaces it by the slots calculated from the plan rows, removing the existing slots of
+the plan in the same call.
+
 ```csharp
 var plan = api.TransponderPlans.ReadByTransponder(transponder.Id).First();
-var slots = api.TransponderSlots.GenerateSlots(plan);
+var createdSlots = api.TransponderSlots.Create(new TransponderSlot { TransponderPlan = plan.Id });
 
-engine.GenerateInformation($"Generated {slots.Count} slot(s) for plan '{plan.Name}'.");
+engine.GenerateInformation($"Generated {createdSlots.Count} slot(s) for plan '{plan.Name}'.");
 ```
 
 **Look up range reservations in a time window:**

@@ -1,4 +1,4 @@
-﻿
+
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net;
@@ -8,8 +8,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using System;
@@ -21,15 +21,15 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     {
         private readonly IConnection _connection;
         private readonly IMediaOpsPlanApi _mediaOpsPlanApi;
-        private readonly Func<Guid, Satellite> _satelliteResolver;
+        private readonly ISatelliteRepository _satelliteRepository;
         private readonly ProfileHelper _profileHelper;
         private readonly ILogger _logger;
 
-        public TransponderResourceCreationMiddleware(IConnection connection, Func<Guid, Satellite> satelliteResolver, ILogger logger = null)
+        public TransponderResourceCreationMiddleware(IConnection connection, ISatelliteRepository satelliteRepository, ILogger logger = null)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _mediaOpsPlanApi = connection.GetMediaOpsPlanApi();
-            _satelliteResolver = satelliteResolver ?? throw new ArgumentNullException(nameof(satelliteResolver));
+            _satelliteRepository = satelliteRepository ?? throw new ArgumentNullException(nameof(satelliteRepository));
             _profileHelper = new ProfileHelper(connection.HandleMessages);
             _logger = logger;
         }
@@ -146,7 +146,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
                 try
                 {
-                    var satellite = _satelliteResolver(transponder.TransponderSatellite.Value);
+                    var satellite = _satelliteRepository.Read(transponder.TransponderSatellite.Value);
                     if (satellite != null && !string.IsNullOrWhiteSpace(satellite.Name))
                         names.Add(satellite.Name);
                 }
@@ -342,7 +342,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (!transponder.TransponderSatellite.HasValue || transponder.TransponderSatellite.Value == Guid.Empty)
                 throw new ArgumentException("Transponder satellite ID is required.", nameof(transponder));
 
-            var satellite = _satelliteResolver(transponder.TransponderSatellite.Value) ??
+            var satellite = _satelliteRepository.Read(transponder.TransponderSatellite.Value) ??
                 throw new ArgumentException($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.", nameof(transponder));
             var satelliteName = satellite.Name;
 
@@ -416,7 +416,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                     return;
                 }
 
-                var satellite = _satelliteResolver(transponder.TransponderSatellite.Value);
+                var satellite = _satelliteRepository.Read(transponder.TransponderSatellite.Value);
                 if (satellite == null)
                 {
                     _logger?.Error($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.");

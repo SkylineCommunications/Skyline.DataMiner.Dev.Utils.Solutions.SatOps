@@ -1,16 +1,19 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Moq;
 
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using SLDataGateway.API.Types.Querying;
 
     using DomModel = Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
@@ -97,7 +100,7 @@
         [TestMethod]
         public void OnCreateSingle_UnknownTransponder_ThrowsArgumentException()
         {
-            var sut = new TransponderPlanValidationMiddleware(id => null);
+            var sut = new TransponderPlanValidationMiddleware(CreateTransponderRepository(null), CreatePlanRepository(Enumerable.Empty<TransponderPlan>()));
             var plan = CreateValidPlan();
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(plan, p => p));
@@ -218,7 +221,7 @@
         public void OnCreateSingle_NullResolvedPlans_CallsNext()
         {
             var plan = CreateValidPlan();
-            var sut = new TransponderPlanValidationMiddleware(id => new Transponder(), id => null);
+            var sut = new TransponderPlanValidationMiddleware(CreateTransponderRepository(new Transponder()), CreatePlanRepository(null));
 
             var result = sut.OnCreate(plan, p => p);
 
@@ -548,12 +551,26 @@
 
         private static TransponderPlanValidationMiddleware CreateSut()
         {
-            return new TransponderPlanValidationMiddleware(id => new Transponder());
+            return new TransponderPlanValidationMiddleware(CreateTransponderRepository(new Transponder()), CreatePlanRepository(Enumerable.Empty<TransponderPlan>()));
         }
 
         private static TransponderPlanValidationMiddleware CreateSut(IEnumerable<TransponderPlan> existingPlans)
         {
-            return new TransponderPlanValidationMiddleware(id => new Transponder(), id => existingPlans);
+            return new TransponderPlanValidationMiddleware(CreateTransponderRepository(new Transponder()), CreatePlanRepository(existingPlans));
+        }
+
+        private static ITransponderRepository CreateTransponderRepository(Transponder transponder)
+        {
+            var repository = new Mock<ITransponderRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(transponder);
+            return repository.Object;
+        }
+
+        private static ITransponderPlanRepository CreatePlanRepository(IEnumerable<TransponderPlan> existingPlans)
+        {
+            var repository = new Mock<ITransponderPlanRepository>();
+            repository.Setup(r => r.ReadByTransponder(It.IsAny<Guid>())).Returns(existingPlans);
+            return repository.Object;
         }
 
         private static TransponderPlan CreateValidPlan()

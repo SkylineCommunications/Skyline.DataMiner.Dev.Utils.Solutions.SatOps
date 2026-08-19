@@ -6,7 +6,6 @@
     using Skyline.DataMiner.SDM.Registration;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlanRow;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
@@ -58,7 +57,7 @@
             lazyBeamRepository = new Lazy<IBeamRepository>
                 (
                     () => new BeamRepository(this)
-                              .WithMiddleware(new BeamValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
+                              .WithMiddleware(new BeamValidationMiddleware(Satellites))
                 );
             lazyTransponderRepository = new Lazy<ITransponderRepository>
                 (
@@ -66,9 +65,9 @@
                     {
                         var repository = new TransponderRepository(this);
                         return repository
-                            .WithMiddleware(new TransponderValidationMiddleware(satelliteId => Satellites.Read(satelliteId)))
-                            .WithMiddleware(new TransponderResourceCreationMiddleware(connection, satelliteId => Satellites.Read(satelliteId), Logger))
-                            .WithMiddleware(new TransponderNameUniquenessMiddleware(names => repository.ReadByNames(names)));
+                            .WithMiddleware(new TransponderValidationMiddleware(Satellites))
+                            .WithMiddleware(new TransponderResourceCreationMiddleware(connection, Satellites, Logger))
+                            .WithMiddleware(new TransponderNameUniquenessMiddleware(repository));
                     }
                 );
             lazyTransponderPlanRepository = new Lazy<ITransponderPlanRepository>
@@ -77,9 +76,7 @@
                     {
                         var repository = new TransponderPlanRepository(this);
                         return repository.WithMiddleware(
-                            new TransponderPlanValidationMiddleware(
-                                transponderId => Transponders.Read(transponderId),
-                                transponderId => repository.ReadByTransponder(transponderId)));
+                            new TransponderPlanValidationMiddleware(Transponders, repository));
                     }
                 );
             lazyTransponderPlanRowRepository = new Lazy<ITransponderPlanRowRepository>
@@ -88,9 +85,7 @@
                     {
                         var repository = new TransponderPlanRowRepository(this);
                         return repository.WithMiddleware(
-                            new TransponderPlanRowValidationMiddleware(
-                                transponderPlanId => TransponderPlans.Read(transponderPlanId),
-                                transponderPlanId => repository.Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId))));
+                            new TransponderPlanRowValidationMiddleware(TransponderPlans, repository));
                     }
                 );
             lazyTransponderRangeReservationRepository = new Lazy<ITransponderRangeReservationRepository>
@@ -99,8 +94,8 @@
                     {
                         var repository = new TransponderRangeReservationRepository(this);
                         return repository
-                            .WithMiddleware(new TransponderRangeReservationValidationMiddleware(transponderId => Transponders.Read(transponderId)))
-                            .WithMiddleware(new TransponderRangeReservationOverlapValidationMiddleware(transponderId => repository.ReadByTransponder(transponderId)));
+                            .WithMiddleware(new TransponderRangeReservationValidationMiddleware(Transponders))
+                            .WithMiddleware(new TransponderRangeReservationOverlapValidationMiddleware(repository));
                     }
                 );
             lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>
@@ -109,8 +104,8 @@
                     {
                         var repository = new TransponderSlotRepository(this);
                         return repository
-                            .WithMiddleware(new TransponderSlotValidationMiddleware(transponderPlanId => TransponderPlans.Read(transponderPlanId)))
-                            .WithMiddleware(new SlotOverlapValidationMiddleware(planId => repository.ReadByTransponderPlan(planId)));
+                            .WithMiddleware(new TransponderSlotValidationMiddleware(TransponderPlans))
+                            .WithMiddleware(new SlotOverlapValidationMiddleware(repository));
                     }
                 );
         }

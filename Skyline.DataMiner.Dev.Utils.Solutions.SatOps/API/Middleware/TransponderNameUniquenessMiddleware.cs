@@ -3,6 +3,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -19,18 +20,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     /// </remarks>
     internal sealed class TransponderNameUniquenessMiddleware : IBulkRepositoryMiddleware<Transponder>
     {
-        private readonly Func<IEnumerable<string>, IEnumerable<Transponder>> existingTranspondersByNameResolver;
+        private readonly ITransponderRepository transponderRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TransponderNameUniquenessMiddleware"/> class.
         /// </summary>
-        /// <param name="existingTranspondersByNameResolver">
-        /// A delegate that returns the already persisted transponders that carry one of the supplied names.
+        /// <param name="transponderRepository">
+        /// The repository used to look up the already persisted transponders that carry one of the submitted names.
         /// Only the names of the batch being validated are requested, so the whole transponder set never has to be read.
+        /// This must be the repository instance without this middleware applied, to avoid re-entering validation.
         /// </param>
-        public TransponderNameUniquenessMiddleware(Func<IEnumerable<string>, IEnumerable<Transponder>> existingTranspondersByNameResolver)
+        public TransponderNameUniquenessMiddleware(ITransponderRepository transponderRepository)
         {
-            this.existingTranspondersByNameResolver = existingTranspondersByNameResolver ?? throw new ArgumentNullException(nameof(existingTranspondersByNameResolver));
+            this.transponderRepository = transponderRepository ?? throw new ArgumentNullException(nameof(transponderRepository));
         }
 
         public Transponder OnCreate(Transponder oToCreate, Func<Transponder, Transponder> next)
@@ -172,7 +174,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var existingTransponders = existingTranspondersByNameResolver(namesInBatch)?.ToList();
+            var existingTransponders = transponderRepository.ReadByNames(namesInBatch)?.ToList();
             if (existingTransponders == null || existingTransponders.Count == 0)
                 return;
 

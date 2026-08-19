@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
     using System.Collections.Generic;
@@ -11,6 +11,7 @@
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -22,15 +23,15 @@
         private static readonly Guid PlanId = Guid.NewGuid();
 
         [TestMethod]
-        public void Constructor_NullResolver_ThrowsArgumentNullException()
+        public void Constructor_NullRepository_ThrowsArgumentNullException()
         {
             Assert.ThrowsException<ArgumentNullException>(() => new SlotOverlapValidationMiddleware(null));
         }
 
         [TestMethod]
-        public void Constructor_ValidResolver_CreatesInstance()
+        public void Constructor_ValidRepository_CreatesInstance()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.IsNotNull(sut);
         }
@@ -38,7 +39,7 @@
         [TestMethod]
         public void OnCreateSingle_NullSlot_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnCreate((TransponderSlot)null, s => s));
         }
@@ -46,7 +47,7 @@
         [TestMethod]
         public void OnCreateSingle_NullNext_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slot = CreateSlot("A", 100, 200, PlanId);
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnCreate(slot, (Func<TransponderSlot, TransponderSlot>)null));
@@ -56,7 +57,7 @@
         public void OnCreateSingle_NoOverlap_CallsNext()
         {
             var existing = CreateSlot("Existing", 200, 300, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { existing });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
             var slot = CreateSlot("New", 100, 200, PlanId);
             var called = false;
 
@@ -74,7 +75,7 @@
         public void OnCreateSingle_OverlappingSlot_ThrowsArgumentException()
         {
             var existing = CreateSlot("Existing", 150, 300, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { existing });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
             var slot = CreateSlot("New", 100, 200, PlanId);
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
@@ -83,61 +84,61 @@
         [TestMethod]
         public void OnCreateSingle_NoPlan_SkipsValidation()
         {
-            var resolverCalled = false;
-            var sut = new SlotOverlapValidationMiddleware(id =>
+            var readCalled = false;
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id =>
             {
-                resolverCalled = true;
+                readCalled = true;
                 return Enumerable.Empty<TransponderSlot>();
-            });
+            }));
             var slot = CreateSlot("New", 100, 200, null);
 
             var result = sut.OnCreate(slot, s => s);
 
-            Assert.IsFalse(resolverCalled);
+            Assert.IsFalse(readCalled);
             Assert.AreSame(slot, result);
         }
 
         [TestMethod]
         public void OnCreateSingle_EmptyPlanId_SkipsValidation()
         {
-            var resolverCalled = false;
-            var sut = new SlotOverlapValidationMiddleware(id =>
+            var readCalled = false;
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id =>
             {
-                resolverCalled = true;
+                readCalled = true;
                 return Enumerable.Empty<TransponderSlot>();
-            });
+            }));
             var slot = CreateSlot("New", 100, 200, Guid.Empty);
 
             sut.OnCreate(slot, s => s);
 
-            Assert.IsFalse(resolverCalled);
+            Assert.IsFalse(readCalled);
         }
 
         [TestMethod]
         public void OnCreateSingle_OpenEndedFrequencies_SkipsValidation()
         {
-            var resolverCalled = false;
-            var sut = new SlotOverlapValidationMiddleware(id =>
+            var readCalled = false;
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id =>
             {
-                resolverCalled = true;
+                readCalled = true;
                 return Enumerable.Empty<TransponderSlot>();
-            });
+            }));
             var slot = CreateSlot("New", null, 200, PlanId);
 
             sut.OnCreate(slot, s => s);
 
-            Assert.IsFalse(resolverCalled);
+            Assert.IsFalse(readCalled);
 
             var slot2 = CreateSlot("New2", 100, null, PlanId);
             sut.OnCreate(slot2, s => s);
 
-            Assert.IsFalse(resolverCalled);
+            Assert.IsFalse(readCalled);
         }
 
         [TestMethod]
-        public void OnCreateSingle_ResolverReturnsNull_CallsNext()
+        public void OnCreateSingle_RepositoryReturnsNull_CallsNext()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => null);
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => null));
             var slot = CreateSlot("New", 100, 200, PlanId);
 
             var result = sut.OnCreate(slot, s => s);
@@ -149,7 +150,7 @@
         public void OnCreateSingle_ExistingWithoutFrequencies_Ignored()
         {
             var existing = CreateSlot("Existing", null, null, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { null, existing });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { null, existing }));
             var slot = CreateSlot("New", 100, 200, PlanId);
 
             var result = sut.OnCreate(slot, s => s);
@@ -160,7 +161,7 @@
         [TestMethod]
         public void OnUpdateSingle_NullSlot_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnUpdate((TransponderSlot)null, s => s));
         }
@@ -168,7 +169,7 @@
         [TestMethod]
         public void OnUpdateSingle_NullNext_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slot = CreateSlot("A", 100, 200, PlanId);
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnUpdate(slot, (Func<TransponderSlot, TransponderSlot>)null));
@@ -178,7 +179,7 @@
         public void OnUpdateSingle_ExcludesItself_CallsNext()
         {
             var slot = CreateSlot("Slot", 100, 200, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { slot });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { slot }));
 
             var result = sut.OnUpdate(slot, s => s);
 
@@ -189,7 +190,7 @@
         public void OnUpdateSingle_OverlappingOtherSlot_ThrowsArgumentException()
         {
             var existing = CreateSlot("Existing", 150, 300, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { existing });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
             var slot = CreateSlot("Slot", 100, 200, PlanId);
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(slot, s => s));
@@ -198,7 +199,7 @@
         [TestMethod]
         public void OnCreateBulk_NullCollection_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnCreate((IEnumerable<TransponderSlot>)null, s => s.ToList()));
         }
@@ -206,7 +207,7 @@
         [TestMethod]
         public void OnCreateBulk_NullNext_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnCreate(
                 new List<TransponderSlot>(),
@@ -216,7 +217,7 @@
         [TestMethod]
         public void OnCreateBulk_BoundaryTouchingSlots_CallsNext()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 200, PlanId),
@@ -231,7 +232,7 @@
         [TestMethod]
         public void OnCreateBulk_OverlappingSlots_ThrowsArgumentException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 250, PlanId),
@@ -244,7 +245,7 @@
         [TestMethod]
         public void OnCreateBulk_DuplicateNames_ThrowsArgumentException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("Same", 100, 200, PlanId),
@@ -257,7 +258,7 @@
         [TestMethod]
         public void OnCreateBulk_DifferentPlans_NoOverlapDetected()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 250, PlanId),
@@ -276,7 +277,7 @@
         [TestMethod]
         public void OnUpdateBulk_NullCollection_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnUpdate((IEnumerable<TransponderSlot>)null, s => s.ToList()));
         }
@@ -284,7 +285,7 @@
         [TestMethod]
         public void OnUpdateBulk_NullNext_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnUpdate(
                 new List<TransponderSlot>(),
@@ -294,7 +295,7 @@
         [TestMethod]
         public void OnUpdateBulk_NoOverlap_CallsNext()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 200, PlanId),
@@ -309,7 +310,7 @@
         [TestMethod]
         public void OnUpdateBulk_OverlappingSlots_ThrowsArgumentException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 350, PlanId),
@@ -322,7 +323,7 @@
         [TestMethod]
         public void OnCreateOrUpdate_NullCollection_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnCreateOrUpdate(null, s => s.ToList()));
         }
@@ -330,7 +331,7 @@
         [TestMethod]
         public void OnCreateOrUpdate_NullNext_ThrowsArgumentNullException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
 
             Assert.ThrowsException<ArgumentNullException>(() => sut.OnCreateOrUpdate(
                 new List<TransponderSlot>(),
@@ -340,7 +341,7 @@
         [TestMethod]
         public void OnCreateOrUpdate_NoOverlap_CallsNext()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 200, PlanId),
@@ -361,7 +362,7 @@
         [TestMethod]
         public void OnCreateOrUpdate_OverlappingSlots_ThrowsArgumentException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot>
             {
                 CreateSlot("A", 100, 250, PlanId),
@@ -375,7 +376,7 @@
         public void OnCreateBulk_OverlapsPersistedSlot_ThrowsArgumentException()
         {
             var persisted = CreateSlot("Persisted", 150, 300, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { persisted });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { persisted }));
             var slots = new List<TransponderSlot> { CreateSlot("New", 100, 200, PlanId) };
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
@@ -385,7 +386,7 @@
         public void OnCreateOrUpdate_DuplicateNameOfPersistedSlot_ThrowsArgumentException()
         {
             var persisted = CreateSlot("Same", 100, 200, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { persisted });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { persisted }));
             var slots = new List<TransponderSlot> { CreateSlot("same", 300, 400, PlanId) };
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(slots, s => s.ToList()));
@@ -395,7 +396,7 @@
         public void OnCreateSingle_DuplicateNameOfPersistedSlot_ThrowsArgumentException()
         {
             var persisted = CreateSlot("Same", 100, 200, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { persisted });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { persisted }));
             var slot = CreateSlot("same", 300, 400, PlanId);
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
@@ -406,7 +407,7 @@
         {
             var slot = CreateSlot("A", 100, 200, PlanId);
             var other = CreateSlot("B", 300, 400, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { slot, other });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { slot, other }));
 
             slot.SlotStartFrequency = 250;
             slot.SlotEndFrequency = 300;
@@ -420,7 +421,7 @@
         {
             var first = CreateSlot("Wide", 0, 1000, PlanId);
             var second = CreateSlot("Inner", 10, 20, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { first, second });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { first, second }));
             var slot = CreateSlot("New", 1000, 1100, PlanId);
 
             var result = sut.OnCreate(slot, s => s);
@@ -433,7 +434,7 @@
         {
             var wide = CreateSlot("Wide", 0, 1000, PlanId);
             var inner = CreateSlot("Inner", 10, 20, PlanId);
-            var sut = new SlotOverlapValidationMiddleware(id => new[] { wide, inner });
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { wide, inner }));
             var slot = CreateSlot("New", 500, 600, PlanId);
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
@@ -442,7 +443,7 @@
         [TestMethod]
         public void OnCountWithFilter_Always_ReturnsNextResult()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             FilterElement<TransponderSlot> received = null;
 
             var result = sut.OnCount(
@@ -460,7 +461,7 @@
         [TestMethod]
         public void OnCountWithQuery_Always_ReturnsNextResult()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var query = new Mock<IQuery<TransponderSlot>>().Object;
             IQuery<TransponderSlot> received = null;
 
@@ -479,7 +480,7 @@
         [TestMethod]
         public void OnDeleteBulk_Always_CallsNextWithSameCollection()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slots = new List<TransponderSlot> { CreateSlot("A", 100, 200, PlanId) };
             IEnumerable<TransponderSlot> received = null;
 
@@ -491,7 +492,7 @@
         [TestMethod]
         public void OnDeleteSingle_Always_CallsNextWithSameSlot()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var slot = CreateSlot("A", 100, 200, PlanId);
             TransponderSlot received = null;
 
@@ -503,7 +504,7 @@
         [TestMethod]
         public void OnDeleteSingle_NullSlot_CallsNextWithNull()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var called = false;
 
             sut.OnDelete((TransponderSlot)null, s =>
@@ -518,7 +519,7 @@
         [TestMethod]
         public void OnReadWithFilter_Always_ReturnsNextResult()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var expected = new[] { CreateSlot("A", 100, 200, PlanId) };
             FilterElement<TransponderSlot> received = null;
 
@@ -537,7 +538,7 @@
         [TestMethod]
         public void OnReadWithQuery_Always_ReturnsNextResult()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var query = new Mock<IQuery<TransponderSlot>>().Object;
             var expected = new[] { CreateSlot("A", 100, 200, PlanId) };
             IQuery<TransponderSlot> received = null;
@@ -557,7 +558,7 @@
         [TestMethod]
         public void OnReadPagedWithFilter_Always_ReturnsNextResult()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var expected = new[] { new Mock<IPagedResult<TransponderSlot>>().Object };
             var called = false;
 
@@ -577,7 +578,7 @@
         [TestMethod]
         public void OnReadPagedWithQuery_Always_ReturnsNextResult()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var query = new Mock<IQuery<TransponderSlot>>().Object;
             var expected = new[] { new Mock<IPagedResult<TransponderSlot>>().Object };
             IQuery<TransponderSlot> received = null;
@@ -597,7 +598,7 @@
         [TestMethod]
         public void OnReadPagedWithFilterAndPageSize_Always_ForwardsPageSize()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var expected = new[] { new Mock<IPagedResult<TransponderSlot>>().Object };
             var receivedPageSize = 0;
 
@@ -618,7 +619,7 @@
         [TestMethod]
         public void OnReadPagedWithQueryAndPageSize_Always_ForwardsQueryAndPageSize()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var query = new Mock<IQuery<TransponderSlot>>().Object;
             var expected = new[] { new Mock<IPagedResult<TransponderSlot>>().Object };
             IQuery<TransponderSlot> receivedQuery = null;
@@ -642,7 +643,7 @@
         [TestMethod]
         public void OnReadPagedWithQueryAndPageSize_NullQuery_ForwardsNull()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var called = false;
 
             var result = sut.OnReadPaged(
@@ -663,13 +664,20 @@
         [TestMethod]
         public void OnReadPagedWithQueryAndPageSize_NullNext_ThrowsNullReferenceException()
         {
-            var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
             var query = new Mock<IQuery<TransponderSlot>>().Object;
 
             Assert.ThrowsException<NullReferenceException>(() => sut.OnReadPaged(
                 query,
                 10,
                 (Func<IQuery<TransponderSlot>, int, IEnumerable<IPagedResult<TransponderSlot>>>)null));
+        }
+
+        private static ITransponderSlotRepository CreateRepository(Func<Guid, IEnumerable<TransponderSlot>> existingSlotsResolver)
+        {
+            var repository = new Mock<ITransponderSlotRepository>();
+            repository.Setup(r => r.ReadByTransponderPlan(It.IsAny<Guid>())).Returns(existingSlotsResolver);
+            return repository.Object;
         }
 
         private static TransponderSlot CreateSlot(string name, double? start, double? end, Guid? planId)

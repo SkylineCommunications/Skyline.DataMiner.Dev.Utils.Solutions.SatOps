@@ -12,6 +12,7 @@
 
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -221,9 +222,9 @@
         }
 
         [TestMethod]
-        public void OnCreateOrUpdate_ResolverReturnsNull_CallsNext()
+        public void OnCreateOrUpdate_RepositoryReturnsNull_CallsNext()
         {
-            var sut = new TransponderNameUniquenessMiddleware(names => null);
+            var sut = new TransponderNameUniquenessMiddleware(CreateRepository(names => null));
 
             var result = sut.OnCreateOrUpdate(new[] { CreateTransponder("A") }, t => t.ToList());
 
@@ -234,11 +235,11 @@
         public void OnCreateOrUpdate_OnlyRequestsTheNamesOfTheBatch()
         {
             IEnumerable<string> requestedNames = null;
-            var sut = new TransponderNameUniquenessMiddleware(names =>
+            var sut = new TransponderNameUniquenessMiddleware(CreateRepository(names =>
             {
                 requestedNames = names.ToList();
                 return Enumerable.Empty<Transponder>();
-            });
+            }));
 
             sut.OnCreateOrUpdate(new[] { CreateTransponder(" A "), CreateTransponder("B"), CreateTransponder(null) }, t => t.ToList());
 
@@ -248,16 +249,16 @@
         [TestMethod]
         public void OnCreateOrUpdate_NoNamedTransponders_DoesNotQueryExistingTransponders()
         {
-            var resolverCalled = false;
-            var sut = new TransponderNameUniquenessMiddleware(names =>
+            var readCalled = false;
+            var sut = new TransponderNameUniquenessMiddleware(CreateRepository(names =>
             {
-                resolverCalled = true;
+                readCalled = true;
                 return Enumerable.Empty<Transponder>();
-            });
+            }));
 
             sut.OnCreateOrUpdate(new[] { CreateTransponder(" "), null }, t => t.ToList());
 
-            Assert.IsFalse(resolverCalled);
+            Assert.IsFalse(readCalled);
         }
 
         [TestMethod]
@@ -435,7 +436,14 @@
         private static TransponderNameUniquenessMiddleware CreateSut(params Transponder[] existing)
         {
             var list = existing ?? new Transponder[0];
-            return new TransponderNameUniquenessMiddleware(names => ResolveByName(list, names));
+            return new TransponderNameUniquenessMiddleware(CreateRepository(names => ResolveByName(list, names)));
+        }
+
+        private static ITransponderRepository CreateRepository(Func<IEnumerable<string>, IEnumerable<Transponder>> existingTranspondersByNameResolver)
+        {
+            var repository = new Mock<ITransponderRepository>();
+            repository.Setup(r => r.ReadByNames(It.IsAny<IEnumerable<string>>())).Returns(existingTranspondersByNameResolver);
+            return repository.Object;
         }
 
         /// <summary>

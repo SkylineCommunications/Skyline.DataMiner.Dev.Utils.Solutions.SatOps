@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,8 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -23,15 +25,15 @@
         private static readonly Guid PlanId = Guid.NewGuid();
 
         [TestMethod]
-        public void Constructor_NullPlanResolver_ThrowsArgumentNullException()
+        public void Constructor_NullPlanRepository_ThrowsArgumentNullException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new TransponderPlanRowValidationMiddleware(null));
+            Assert.ThrowsException<ArgumentNullException>(() => new TransponderPlanRowValidationMiddleware(null, CreateRowRepository()));
         }
 
         [TestMethod]
-        public void Constructor_NullRowsResolver_ThrowsArgumentNullException()
+        public void Constructor_NullRowsRepository_ThrowsArgumentNullException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new TransponderPlanRowValidationMiddleware(_ => new TransponderPlan(), null));
+            Assert.ThrowsException<ArgumentNullException>(() => new TransponderPlanRowValidationMiddleware(CreatePlanRepository(new TransponderPlan()), null));
         }
 
         [TestMethod]
@@ -80,7 +82,7 @@
         [TestMethod]
         public void OnCreateSingle_UnknownPlan_ThrowsArgumentException()
         {
-            var sut = new TransponderPlanRowValidationMiddleware(_ => null);
+            var sut = new TransponderPlanRowValidationMiddleware(CreatePlanRepository(null), CreateRowRepository());
             var row = CreateValidRow();
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(row, r => r));
@@ -456,7 +458,21 @@
 
         private static TransponderPlanRowValidationMiddleware CreateSut()
         {
-            return new TransponderPlanRowValidationMiddleware(_ => new TransponderPlan());
+            return new TransponderPlanRowValidationMiddleware(CreatePlanRepository(new TransponderPlan()), CreateRowRepository());
+        }
+
+        private static ITransponderPlanRepository CreatePlanRepository(TransponderPlan plan)
+        {
+            var repository = new Mock<ITransponderPlanRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(plan);
+            return repository.Object;
+        }
+
+        private static ITransponderPlanRowRepository CreateRowRepository()
+        {
+            var repository = new Mock<ITransponderPlanRowRepository>();
+            repository.Setup(r => r.Read(It.IsAny<FilterElement<TransponderPlanRow>>())).Returns(Enumerable.Empty<TransponderPlanRow>());
+            return repository.Object;
         }
 
         private static TransponderPlanRow CreateValidRow(double bandwidth = 1d)

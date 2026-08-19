@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,7 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
 
     /// <summary>
     /// Tests for the <c>TransponderResourceCreationMiddleware</c>.
@@ -23,11 +24,11 @@
         public void Constructor_NullConnection_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => new TransponderResourceCreationMiddleware(null, id => new Satellite()));
+            Assert.ThrowsException<ArgumentNullException>(() => new TransponderResourceCreationMiddleware(null, CreateSatelliteRepository()));
         }
 
         [TestMethod]
-        public void Constructor_NullResolver_ThrowsArgumentNullException()
+        public void Constructor_NullRepository_ThrowsArgumentNullException()
         {
             // Arrange
             var connection = new Mock<IConnection>();
@@ -43,7 +44,7 @@
             var connection = new Mock<IConnection>();
 
             // Act
-            var sut = new TransponderResourceCreationMiddleware(connection.Object, id => new Satellite());
+            var sut = new TransponderResourceCreationMiddleware(connection.Object, CreateSatelliteRepository());
 
             // Assert
             Assert.IsNotNull(sut);
@@ -238,7 +239,14 @@
         private static TransponderResourceCreationMiddleware CreateSut()
         {
             var connection = new Mock<IConnection>();
-            return new TransponderResourceCreationMiddleware(connection.Object, id => new Satellite());
+            return new TransponderResourceCreationMiddleware(connection.Object, CreateSatelliteRepository());
+        }
+
+        private static ISatelliteRepository CreateSatelliteRepository()
+        {
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(new Satellite());
+            return repository.Object;
         }
     }
 }

@@ -3,7 +3,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -11,11 +11,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
     internal sealed class BeamValidationMiddleware : IBulkRepositoryMiddleware<Beam>
     {
-        private readonly Func<Guid, Satellite> satelliteResolver;
+        private readonly ISatelliteRepository satelliteRepository;
 
-        public BeamValidationMiddleware(Func<Guid, Satellite> satelliteResolver)
+        public BeamValidationMiddleware(ISatelliteRepository satelliteRepository)
         {
-            this.satelliteResolver = satelliteResolver ?? throw new ArgumentNullException(nameof(satelliteResolver));
+            this.satelliteRepository = satelliteRepository ?? throw new ArgumentNullException(nameof(satelliteRepository));
         }
 
         public Beam OnCreate(Beam oToCreate, Func<Beam, Beam> next)
@@ -166,7 +166,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.BeamSatelliteIsRequired, nameof(beam));
 
             var satelliteId = beam.BeamSatellite.Value;
-            if (satelliteResolver(satelliteId) == null)
+            if (satelliteRepository.Read(satelliteId) == null)
                 throw new ArgumentException(string.Format(ExceptionMessages.BeamSatelliteDoesNotExist, satelliteId), nameof(beam));
         }
     }

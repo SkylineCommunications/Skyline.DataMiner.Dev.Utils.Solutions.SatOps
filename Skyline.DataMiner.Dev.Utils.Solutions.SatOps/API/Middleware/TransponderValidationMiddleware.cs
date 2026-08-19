@@ -2,8 +2,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -12,11 +12,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
     internal sealed class TransponderValidationMiddleware : IBulkRepositoryMiddleware<Transponder>
     {
-        private readonly Func<Guid, Satellite> satelliteResolver;
+        private readonly ISatelliteRepository satelliteRepository;
 
-        public TransponderValidationMiddleware(Func<Guid, Satellite> satelliteResolver)
+        public TransponderValidationMiddleware(ISatelliteRepository satelliteRepository)
         {
-            this.satelliteResolver = satelliteResolver ?? throw new ArgumentNullException(nameof(satelliteResolver));
+            this.satelliteRepository = satelliteRepository ?? throw new ArgumentNullException(nameof(satelliteRepository));
         }
 
         public Transponder OnCreate(Transponder oToCreate, Func<Transponder, Transponder> next)
@@ -189,7 +189,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Resource DOM is required.", nameof(transponder));
 
             var satelliteId = transponder.TransponderSatellite.Value;
-            if (satelliteResolver(satelliteId) == null)
+            if (satelliteRepository.Read(satelliteId) == null)
                 throw new ArgumentException($"Transponder satellite with id '{satelliteId}' does not exist.", nameof(transponder));
         }
     }

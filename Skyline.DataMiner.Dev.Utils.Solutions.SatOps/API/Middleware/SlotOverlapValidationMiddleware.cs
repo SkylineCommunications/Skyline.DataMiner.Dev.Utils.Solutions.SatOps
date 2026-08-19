@@ -3,6 +3,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -15,8 +16,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     /// </summary>
     /// <remarks>
     /// Single-slot and bulk operations share the same validation routine: the submitted slots are combined
-    /// with the already persisted slots of the same transponder plan (as returned by the resolver, excluding
-    /// the slots that are part of the submission itself) and the resulting set is validated as a whole.
+    /// with the already persisted slots of the same transponder plan (looked up through the slot repository,
+    /// excluding the slots that are part of the submission itself) and the resulting set is validated as a whole.
     /// Conflicts that only exist between already persisted slots are ignored, so pre-existing data cannot
     /// block an unrelated create or update.
     /// </remarks>
@@ -24,18 +25,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     {
         private const double OverlapTolerance = 1e-9;
 
-        private readonly Func<Guid, IEnumerable<TransponderSlot>> existingSlotsResolver;
+        private readonly ITransponderSlotRepository slotRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SlotOverlapValidationMiddleware"/> class.
         /// </summary>
-        /// <param name="existingSlotsResolver">
-        /// A delegate that returns all existing slots for a given transponder plan identifier.
-        /// Used to check create/update operations against persisted slots.
+        /// <param name="slotRepository">
+        /// The repository used to look up the slots that are already persisted for a transponder plan.
+        /// This must be the repository instance without this middleware applied, to avoid re-entering validation.
         /// </param>
-        public SlotOverlapValidationMiddleware(Func<Guid, IEnumerable<TransponderSlot>> existingSlotsResolver)
+        public SlotOverlapValidationMiddleware(ITransponderSlotRepository slotRepository)
         {
-            this.existingSlotsResolver = existingSlotsResolver ?? throw new ArgumentNullException(nameof(existingSlotsResolver));
+            this.slotRepository = slotRepository ?? throw new ArgumentNullException(nameof(slotRepository));
         }
 
         public TransponderSlot OnCreate(TransponderSlot oToCreate, Func<TransponderSlot, TransponderSlot> next)
@@ -175,7 +176,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         {
             var submittedIds = new HashSet<Guid>(submitted.Select(s => s.Id));
 
-            var persisted = (existingSlotsResolver(planId) ?? Enumerable.Empty<TransponderSlot>())
+            var persisted = (slotRepository.ReadByTransponderPlan(planId) ?? Enumerable.Empty<TransponderSlot>())
                 .Where(s => HasValidatableRange(s) && !submittedIds.Contains(s.Id))
                 .Select(s => new SlotCandidate(s, isSubmitted: false));
 

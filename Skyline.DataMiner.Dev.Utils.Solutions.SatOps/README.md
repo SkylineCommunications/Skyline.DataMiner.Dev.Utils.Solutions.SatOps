@@ -82,8 +82,13 @@ var slots = api.TransponderSlots.ReadByTransponderPlan(plan.Id);
 
 **Generate slots from a transponder plan:**
 
+Slots are generated through the regular `Create` method. Submit a slot that only has its `TransponderPlan`
+filled in and the API replaces it by the slots calculated from the plan rows. The slots that already exist
+for the plan are removed as part of the same call, and the calculated slots pass the same validation as
+manually created slots.
+
 ```csharp
-var generatedSlots = api.TransponderSlots.GenerateSlots(plan);
+var createdSlots = api.TransponderSlots.Create(new TransponderSlot { TransponderPlan = plan.Id });
 ```
 
 **Work with range reservations:**

@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,7 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -144,7 +145,7 @@
         [TestMethod]
         public void OnCreateSingle_UnknownTransponderPlan_ThrowsArgumentException()
         {
-            var sut = new TransponderSlotValidationMiddleware(id => null);
+            var sut = new TransponderSlotValidationMiddleware(CreatePlanRepository(null));
             var slot = CreateValidSlot();
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
@@ -325,7 +326,7 @@
         [TestMethod]
         public void OnCreateOrUpdate_UnknownTransponderPlan_ThrowsArgumentException()
         {
-            var sut = new TransponderSlotValidationMiddleware(id => null);
+            var sut = new TransponderSlotValidationMiddleware(CreatePlanRepository(null));
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(
                 new List<TransponderSlot> { CreateValidSlot() },
@@ -409,7 +410,7 @@
         [TestMethod]
         public void OnDeleteSingle_ValidSlot_CallsNextWithoutValidation()
         {
-            var sut = new TransponderSlotValidationMiddleware(id => null);
+            var sut = new TransponderSlotValidationMiddleware(CreatePlanRepository(null));
             var slot = new TransponderSlot();
             TransponderSlot received = null;
 
@@ -522,7 +523,14 @@
 
         private static TransponderSlotValidationMiddleware CreateSut()
         {
-            return new TransponderSlotValidationMiddleware(id => new TransponderPlan());
+            return new TransponderSlotValidationMiddleware(CreatePlanRepository(new TransponderPlan()));
+        }
+
+        private static ITransponderPlanRepository CreatePlanRepository(TransponderPlan plan)
+        {
+            var repository = new Mock<ITransponderPlanRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(plan);
+            return repository.Object;
         }
 
         private static TransponderSlot CreateValidSlot()

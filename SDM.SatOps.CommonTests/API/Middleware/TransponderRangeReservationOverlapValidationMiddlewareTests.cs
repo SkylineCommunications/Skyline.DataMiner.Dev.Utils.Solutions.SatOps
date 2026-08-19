@@ -11,6 +11,7 @@
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -587,7 +588,10 @@
 
         private static TransponderRangeReservationOverlapValidationMiddleware CreateSut(Func<Guid, IEnumerable<TransponderRangeReservation>> resolver)
         {
-            return new TransponderRangeReservationOverlapValidationMiddleware(resolver);
+            var repository = new Mock<ITransponderRangeReservationRepository>();
+            repository.Setup(r => r.ReadByTransponder(It.IsAny<Guid>())).Returns(resolver);
+
+            return new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
         }
 
         private static TransponderRangeReservation CreateReservation(string name, int startHour, int endHour, double startFrequency, double endFrequency, Guid? id = null)

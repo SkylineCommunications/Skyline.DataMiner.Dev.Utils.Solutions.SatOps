@@ -1,15 +1,17 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Moq;
 
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -142,7 +144,7 @@
         [TestMethod]
         public void OnCreateSingle_UnknownTransponder_ThrowsArgumentException()
         {
-            var sut = new TransponderRangeReservationValidationMiddleware(id => null);
+            var sut = new TransponderRangeReservationValidationMiddleware(CreateTransponderRepository(null));
             var reservation = CreateReservation(0, 2, 100, 200);
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(reservation, r => r));
@@ -502,7 +504,14 @@
 
         private static TransponderRangeReservationValidationMiddleware CreateSut()
         {
-            return new TransponderRangeReservationValidationMiddleware(id => new Transponder());
+            return new TransponderRangeReservationValidationMiddleware(CreateTransponderRepository(new Transponder()));
+        }
+
+        private static ITransponderRepository CreateTransponderRepository(Transponder transponder)
+        {
+            var repository = new Mock<ITransponderRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(transponder);
+            return repository.Object;
         }
 
         private static TransponderRangeReservation CreateReservation(int startHour, int endHour, double startFrequency, double endFrequency)

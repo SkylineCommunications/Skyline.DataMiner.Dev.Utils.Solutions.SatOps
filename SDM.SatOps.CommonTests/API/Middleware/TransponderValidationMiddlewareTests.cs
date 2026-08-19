@@ -12,6 +12,7 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -152,7 +153,7 @@
         [TestMethod]
         public void OnCreateSingle_UnknownSatellite_ThrowsArgumentException()
         {
-            var sut = new TransponderValidationMiddleware(id => null);
+            var sut = new TransponderValidationMiddleware(CreateSatelliteRepository(null));
             var transponder = CreateValidTransponder();
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(transponder, t => t));
@@ -522,7 +523,14 @@
 
         private static TransponderValidationMiddleware CreateSut()
         {
-            return new TransponderValidationMiddleware(id => new Satellite());
+            return new TransponderValidationMiddleware(CreateSatelliteRepository(new Satellite()));
+        }
+
+        private static ISatelliteRepository CreateSatelliteRepository(Satellite satellite)
+        {
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(satellite);
+            return repository.Object;
         }
 
         private static Transponder CreateValidTransponder()

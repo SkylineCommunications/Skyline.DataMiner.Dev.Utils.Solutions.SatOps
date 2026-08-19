@@ -17,7 +17,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using System.Collections.Generic;
     using System.Linq;
 
-    internal class TransponderSlotRepository : Repository, ITransponderSlotRepository
+    internal class TransponderSlotRepository : Repository, ITransponderSlotRepository, ITransponderSlotBuilder
     {
         public TransponderSlotRepository(SatOpsApi satOpsApi) : base(satOpsApi)
         {
@@ -270,7 +270,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return TransponderSlot.FromInstance(new TransponderSlotsInstance(updatedDomInstance));
         }
 
-        public IReadOnlyCollection<TransponderSlot> GenerateSlots(Guid transponderPlanId)
+        public IReadOnlyCollection<TransponderSlot> BuildSlots(Guid transponderPlanId)
         {
             if (transponderPlanId == Guid.Empty)
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
@@ -288,13 +288,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 .Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId))
                 .ToList();
 
-            DeleteSlotsByTransponderPlan(transponderPlanId);
-
             double transponderBandwidth = transponder.Bandwidth.GetValueOrDefault();
             double transponderStartFrequency = transponder.StartFrequency.GetValueOrDefault();
             double transponderDownlinkStartFrequency = transponder.DownlinkStartFreq.GetValueOrDefault();
 
-            var createdSlots = new List<TransponderSlot>();
+            var slots = new List<TransponderSlot>();
             foreach (var row in planRows)
             {
                 double offset = row.Offset.GetValueOrDefault();
@@ -312,19 +310,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                     slot.Bandwidth = bandwidth;
                     slot.UplinkFreq = calc.UplinkFrequency;
                     slot.DownlinkFreq = calc.DownlinkFrequency;
-                    createdSlots.Add(CreateInternal(slot));
+                    slots.Add(slot);
                 }
             }
 
-            return createdSlots;
-        }
-
-        public IReadOnlyCollection<TransponderSlot> GenerateSlots(TransponderPlan transponderPlan)
-        {
-            if (transponderPlan == null)
-                throw new ArgumentNullException(nameof(transponderPlan));
-
-            return GenerateSlots(transponderPlan.Id);
+            return slots;
         }
 
         public IEnumerable<TransponderSlot> ReadByTransponderPlan(Guid transponderPlanId)

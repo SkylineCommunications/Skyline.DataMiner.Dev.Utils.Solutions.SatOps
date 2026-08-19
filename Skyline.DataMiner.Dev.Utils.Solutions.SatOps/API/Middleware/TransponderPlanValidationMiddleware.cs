@@ -3,8 +3,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -13,18 +14,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
     internal sealed class TransponderPlanValidationMiddleware : IBulkRepositoryMiddleware<TransponderPlan>
     {
-        private readonly Func<Guid, Transponder> transponderResolver;
-        private readonly Func<Guid, IEnumerable<TransponderPlan>> transponderPlansResolver;
+        private readonly ITransponderRepository transponderRepository;
+        private readonly ITransponderPlanRepository transponderPlanRepository;
 
-        public TransponderPlanValidationMiddleware(Func<Guid, Transponder> transponderResolver)
-            : this(transponderResolver, _ => Enumerable.Empty<TransponderPlan>())
+        public TransponderPlanValidationMiddleware(ITransponderRepository transponderRepository, ITransponderPlanRepository transponderPlanRepository)
         {
-        }
-
-        public TransponderPlanValidationMiddleware(Func<Guid, Transponder> transponderResolver, Func<Guid, IEnumerable<TransponderPlan>> transponderPlansResolver)
-        {
-            this.transponderResolver = transponderResolver ?? throw new ArgumentNullException(nameof(transponderResolver));
-            this.transponderPlansResolver = transponderPlansResolver ?? throw new ArgumentNullException(nameof(transponderPlansResolver));
+            this.transponderRepository = transponderRepository ?? throw new ArgumentNullException(nameof(transponderRepository));
+            this.transponderPlanRepository = transponderPlanRepository ?? throw new ArgumentNullException(nameof(transponderPlanRepository));
         }
 
         public TransponderPlan OnCreate(TransponderPlan oToCreate, Func<TransponderPlan, TransponderPlan> next)
@@ -184,7 +180,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.TransponderPlanTransponderIsRequired, nameof(transponderPlan));
 
             var transponderId = transponderPlan.Transponder.Value;
-            if (transponderResolver(transponderId) == null)
+            if (transponderRepository.Read(transponderId) == null)
                 throw new ArgumentException(string.Format(ExceptionMessages.TransponderWithIdDoesNotExist, transponderId), nameof(transponderPlan));
 
             ValidatePlanConstraints(transponderPlan, transponderId);
@@ -192,7 +188,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidatePlanConstraints(TransponderPlan transponderPlan, Guid transponderId)
         {
-            var existingPlans = (transponderPlansResolver(transponderId) ?? Enumerable.Empty<TransponderPlan>())
+            var existingPlans = (transponderPlanRepository.ReadByTransponder(transponderId) ?? Enumerable.Empty<TransponderPlan>())
                 .Where(plan => plan != null && plan.Status != InstanceStatus.Deprecated && plan.Id != transponderPlan.Id)
                 .ToList();
 

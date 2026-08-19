@@ -2,8 +2,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -12,18 +14,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
     internal sealed class TransponderPlanRowValidationMiddleware : IBulkRepositoryMiddleware<TransponderPlanRow>
     {
-        private readonly Func<Guid, TransponderPlan> transponderPlanResolver;
-        private readonly Func<Guid, IEnumerable<TransponderPlanRow>> transponderPlanRowsResolver;
+        private readonly ITransponderPlanRepository transponderPlanRepository;
+        private readonly ITransponderPlanRowRepository transponderPlanRowRepository;
 
-        public TransponderPlanRowValidationMiddleware(Func<Guid, TransponderPlan> transponderPlanResolver)
-            : this(transponderPlanResolver, _ => Enumerable.Empty<TransponderPlanRow>())
+        public TransponderPlanRowValidationMiddleware(ITransponderPlanRepository transponderPlanRepository, ITransponderPlanRowRepository transponderPlanRowRepository)
         {
-        }
-
-        public TransponderPlanRowValidationMiddleware(Func<Guid, TransponderPlan> transponderPlanResolver, Func<Guid, IEnumerable<TransponderPlanRow>> transponderPlanRowsResolver)
-        {
-            this.transponderPlanResolver = transponderPlanResolver ?? throw new ArgumentNullException(nameof(transponderPlanResolver));
-            this.transponderPlanRowsResolver = transponderPlanRowsResolver ?? throw new ArgumentNullException(nameof(transponderPlanRowsResolver));
+            this.transponderPlanRepository = transponderPlanRepository ?? throw new ArgumentNullException(nameof(transponderPlanRepository));
+            this.transponderPlanRowRepository = transponderPlanRowRepository ?? throw new ArgumentNullException(nameof(transponderPlanRowRepository));
         }
 
         public TransponderPlanRow OnCreate(TransponderPlanRow oToCreate, Func<TransponderPlanRow, TransponderPlanRow> next)
@@ -198,7 +195,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Offset is required.", nameof(transponderPlanRow));
 
             var transponderPlanId = transponderPlanRow.TransponderPlan.Value;
-            if (transponderPlanResolver(transponderPlanId) == null)
+            if (transponderPlanRepository.Read(transponderPlanId) == null)
                 throw new ArgumentException($"Transponder plan with id '{transponderPlanId}' does not exist.", nameof(transponderPlanRow));
 
             ValidateDuplicateBandwidthAgainstExistingRows(transponderPlanRow, transponderPlanId);
@@ -206,7 +203,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateDuplicateBandwidthAgainstExistingRows(TransponderPlanRow transponderPlanRow, Guid transponderPlanId)
         {
-            var duplicateExists = (transponderPlanRowsResolver(transponderPlanId) ?? Enumerable.Empty<TransponderPlanRow>())
+            var existingRows = transponderPlanRowRepository.Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId));
+            var duplicateExists = (existingRows ?? Enumerable.Empty<TransponderPlanRow>())
                 .Where(row => row != null && row.Id != transponderPlanRow.Id && row.Bandwidth.HasValue)
                 .Any(row => row.Bandwidth.Value == transponderPlanRow.Bandwidth.Value);
 

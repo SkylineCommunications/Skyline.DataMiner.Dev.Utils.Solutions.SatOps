@@ -13,6 +13,7 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using SLDataGateway.API.Types.Querying;
 
     /// <summary>
@@ -439,7 +440,14 @@
 
         private static BeamValidationMiddleware CreateSut(bool satelliteExists)
         {
-            return new BeamValidationMiddleware(id => satelliteExists ? new Satellite() : null);
+            return new BeamValidationMiddleware(CreateSatelliteRepository(satelliteExists ? new Satellite() : null));
+        }
+
+        private static ISatelliteRepository CreateSatelliteRepository(Satellite satellite)
+        {
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(satellite);
+            return repository.Object;
         }
 
         private static Beam CreateBeam(Guid? satelliteId)

@@ -1,9 +1,19 @@
 namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Moq;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
     using System.Runtime.Serialization;
@@ -46,9 +56,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance",
                 dom => SetNestedProperty(dom, "Beam.BeamSatellite", (Guid?)Guid.NewGuid()));
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), satelliteType);
-            var resolver = BuildNullResolverDelegate(satelliteType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildSatelliteRepository(null) }, null);
+
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { beamType, typeof(Func<,>).MakeGenericType(beamType, beamType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, beam, BuildIdentityDelegate(beamType));
@@ -81,9 +90,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "Transponder.DOMResource", (Guid?)Guid.NewGuid());
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), satelliteType);
-            var resolver = BuildNullResolverDelegate(satelliteType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildSatelliteRepository(null) }, null);
+
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderType, typeof(Func<,>).MakeGenericType(transponderType, transponderType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponder, BuildIdentityDelegate(transponderType));
@@ -116,9 +124,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "Transponder.DOMResource", (Guid?)Guid.NewGuid());
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), satelliteType);
-            var resolver = BuildNullResolverDelegate(satelliteType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildSatelliteRepository(null) }, null);
+
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderType, typeof(Func<,>).MakeGenericType(transponderType, transponderType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponder, BuildIdentityDelegate(transponderType));
@@ -221,9 +228,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderRepositoryForRead(null), BuildTransponderPlanRepository(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
@@ -249,9 +254,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderRepositoryForRead(null), BuildTransponderPlanRepository(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
@@ -280,9 +283,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlan.EndTime", (DateTime?)DateTime.UtcNow.AddHours(1));
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderRepositoryForRead(null), BuildTransponderPlanRepository(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
@@ -325,14 +326,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 });
             SetApiObjectId(existingPlan, existingPlanId);
 
-            var transponderResolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var transponderResolver = BuildConstantResolverDelegate(transponderType, transponderResolverType, FormatterServices.GetUninitializedObject(transponderType));
+            var transponderRepository = BuildTransponderRepositoryForRead((Transponder)FormatterServices.GetUninitializedObject(transponderType));
+            var plansRepository = BuildTransponderPlanRepository(null, existingPlan);
 
-            var planCollectionType = typeof(IEnumerable<>).MakeGenericType(transponderPlanType);
-            var plansResolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), planCollectionType);
-            var plansResolver = BuildEnumerableResolverDelegate(transponderPlanType, plansResolverType, existingPlan);
-
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { transponderResolver, plansResolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { transponderRepository, plansRepository }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
@@ -379,14 +376,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 });
             SetApiObjectId(existingPlan, existingPlanId);
 
-            var transponderResolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var transponderResolver = BuildConstantResolverDelegate(transponderType, transponderResolverType, FormatterServices.GetUninitializedObject(transponderType));
+            var transponderRepository = BuildTransponderRepositoryForRead((Transponder)FormatterServices.GetUninitializedObject(transponderType));
+            var plansRepository = BuildTransponderPlanRepository(null, existingPlan);
 
-            var planCollectionType = typeof(IEnumerable<>).MakeGenericType(transponderPlanType);
-            var plansResolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), planCollectionType);
-            var plansResolver = BuildEnumerableResolverDelegate(transponderPlanType, plansResolverType, existingPlan);
-
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { transponderResolver, plansResolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { transponderRepository, plansRepository }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanType, typeof(Func<,>).MakeGenericType(transponderPlanType, transponderPlanType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlan, BuildIdentityDelegate(transponderPlanType));
@@ -413,9 +406,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlanRow.Offset", (double?)0.0);
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
-            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository(null), BuildTransponderPlanRowRepository() }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
@@ -443,9 +434,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlanRow.Offset", (double?)0.0);
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
-            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository(null), BuildTransponderPlanRowRepository() }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
@@ -473,9 +462,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlanRow.Offset", (double?)0.0);
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
-            var resolver = BuildConstantResolverDelegate(transponderPlanType, resolverType, FormatterServices.GetUninitializedObject(transponderPlanType));
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository((TransponderPlan)FormatterServices.GetUninitializedObject(transponderPlanType)), BuildTransponderPlanRowRepository() }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
@@ -519,14 +506,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 });
             SetApiObjectId(existingRow, existingRowId);
 
-            var planResolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
-            var planResolver = BuildConstantResolverDelegate(transponderPlanType, planResolverType, FormatterServices.GetUninitializedObject(transponderPlanType));
+            var planRepository = BuildTransponderPlanRepository((TransponderPlan)FormatterServices.GetUninitializedObject(transponderPlanType));
+            var rowsRepository = BuildTransponderPlanRowRepository(existingRow);
 
-            var rowCollectionType = typeof(IEnumerable<>).MakeGenericType(transponderPlanRowType);
-            var rowsResolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), rowCollectionType);
-            var rowsResolver = BuildEnumerableResolverDelegate(transponderPlanRowType, rowsResolverType, existingRow);
-
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { planResolver, rowsResolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { planRepository, rowsRepository }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
@@ -557,9 +540,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
-            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderSlotType, typeof(Func<,>).MakeGenericType(transponderSlotType, transponderSlotType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderSlot, BuildIdentityDelegate(transponderSlotType));
@@ -590,9 +571,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
                 });
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderPlanType);
-            var resolver = BuildNullResolverDelegate(transponderPlanType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderSlotType, typeof(Func<,>).MakeGenericType(transponderSlotType, transponderSlotType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderSlot, BuildIdentityDelegate(transponderSlotType));
@@ -618,9 +597,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 endTime: DateTime.UtcNow.AddHours(1),
                 name: "Reservation-1");
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderRepositoryForRead(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { reservationType, typeof(Func<,>).MakeGenericType(reservationType, reservationType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, reservation, BuildIdentityDelegate(reservationType));
@@ -646,9 +623,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 endTime: DateTime.UtcNow,
                 name: "Reservation-2");
 
-            var resolverType = typeof(Func<,>).MakeGenericType(typeof(Guid), transponderType);
-            var resolver = BuildNullResolverDelegate(transponderType, resolverType);
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { resolver }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderRepositoryForRead(null) }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { reservationType, typeof(Func<,>).MakeGenericType(reservationType, reservationType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, reservation, BuildIdentityDelegate(reservationType));
@@ -755,32 +730,39 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             return Expression.Lambda(delegateType, parameter, parameter).Compile();
         }
 
-        private static Delegate BuildNullResolverDelegate(Type returnType, Type delegateType)
+        private static ISatelliteRepository BuildSatelliteRepository(Satellite satellite)
         {
-            var parameter = Expression.Parameter(typeof(Guid), "id");
-            var body = Expression.Constant(null, returnType);
-            return Expression.Lambda(delegateType, body, parameter).Compile();
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(satellite);
+
+            return repository.Object;
         }
 
-        private static Delegate BuildConstantResolverDelegate(Type returnType, Type delegateType, object value)
+        private static ITransponderRepository BuildTransponderRepositoryForRead(Transponder transponder)
         {
-            var parameter = Expression.Parameter(typeof(Guid), "id");
-            var body = Expression.Constant(value, returnType);
-            return Expression.Lambda(delegateType, body, parameter).Compile();
+            var repository = new Mock<ITransponderRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(transponder);
+
+            return repository.Object;
         }
 
-        private static Delegate BuildEnumerableResolverDelegate(Type itemType, Type delegateType, params object[] items)
+        private static ITransponderPlanRepository BuildTransponderPlanRepository(TransponderPlan plan, params object[] plansByTransponder)
         {
-            var typedArray = Array.CreateInstance(itemType, items.Length);
-            for (int i = 0; i < items.Length; i++)
-            {
-                typedArray.SetValue(items[i], i);
-            }
+            var repository = new Mock<ITransponderPlanRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(plan);
+            repository.Setup(r => r.ReadByTransponder(It.IsAny<Guid>())).Returns(plansByTransponder.Cast<TransponderPlan>().ToList());
 
-            var parameter = Expression.Parameter(typeof(Guid), "id");
-            var enumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
-            var body = Expression.Constant(typedArray, enumerableType);
-            return Expression.Lambda(delegateType, body, parameter).Compile();
+            return repository.Object;
+        }
+
+        private static ITransponderPlanRowRepository BuildTransponderPlanRowRepository(params object[] rows)
+        {
+            var repository = new Mock<ITransponderPlanRowRepository>();
+            repository
+                .Setup(r => r.Read(It.IsAny<Skyline.DataMiner.Net.Messages.SLDataGateway.FilterElement<TransponderPlanRow>>()))
+                .Returns(rows.Cast<TransponderPlanRow>().ToList());
+
+            return repository.Object;
         }
 
         private static Exception InvokeAndUnwrap(MethodInfo method, object target, object value, Delegate next)
@@ -837,13 +819,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         private static object CreateTransponderValidationMiddleware(params object[] existingTransponders)
         {
             var middlewareType = CommonAssembly.GetType("Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware.TransponderNameUniquenessMiddleware", throwOnError: true);
-            var transpondersResolver = BuildTranspondersByNameResolverDelegate(TransponderType, existingTransponders);
+            var transponderRepository = BuildTransponderRepository(existingTransponders);
 
             return Activator.CreateInstance(
                 middlewareType,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                 null,
-                new object[] { transpondersResolver },
+                new object[] { transponderRepository },
                 null);
         }
 
@@ -878,23 +860,16 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         /// <summary>
-        /// Builds a <c>Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;T&gt;&gt;</c> that returns the supplied items regardless of the requested names.
+        /// Builds a transponder repository stub that returns the supplied items regardless of the requested names.
         /// The middleware narrows the result down by name itself, so the requested names can be ignored here.
         /// </summary>
-        private static Delegate BuildTranspondersByNameResolverDelegate(Type itemType, params object[] items)
+        private static ITransponderRepository BuildTransponderRepository(params object[] items)
         {
-            var typedArray = Array.CreateInstance(itemType, items.Length);
-            for (int i = 0; i < items.Length; i++)
-            {
-                typedArray.SetValue(items[i], i);
-            }
+            var transponders = items.Cast<Transponder>().ToList();
+            var repository = new Mock<ITransponderRepository>();
+            repository.Setup(r => r.ReadByNames(It.IsAny<IEnumerable<string>>())).Returns(transponders);
 
-            var enumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
-            var delegateType = typeof(Func<,>).MakeGenericType(typeof(IEnumerable<string>), enumerableType);
-            var parameter = Expression.Parameter(typeof(IEnumerable<string>), "names");
-            var body = Expression.Constant(typedArray, enumerableType);
-
-            return Expression.Lambda(delegateType, body, parameter).Compile();
+            return repository.Object;
         }
 
         private static Delegate BuildBulkIdentityDelegate(Type apiType)

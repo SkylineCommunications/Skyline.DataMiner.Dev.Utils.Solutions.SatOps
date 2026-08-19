@@ -2,8 +2,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -11,11 +11,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
     internal sealed class TransponderSlotValidationMiddleware : IBulkRepositoryMiddleware<TransponderSlot>
     {
-        private readonly Func<Guid, TransponderPlan> transponderPlanResolver;
+        private readonly ITransponderPlanRepository transponderPlanRepository;
 
-        public TransponderSlotValidationMiddleware(Func<Guid, TransponderPlan> transponderPlanResolver)
+        public TransponderSlotValidationMiddleware(ITransponderPlanRepository transponderPlanRepository)
         {
-            this.transponderPlanResolver = transponderPlanResolver ?? throw new ArgumentNullException(nameof(transponderPlanResolver));
+            this.transponderPlanRepository = transponderPlanRepository ?? throw new ArgumentNullException(nameof(transponderPlanRepository));
         }
 
         public TransponderSlot OnCreate(TransponderSlot oToCreate, Func<TransponderSlot, TransponderSlot> next)
@@ -184,7 +184,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Downlink Frequency is required.", nameof(transponderSlot));
 
             var transponderPlanId = transponderSlot.TransponderPlan.Value;
-            if (transponderPlanResolver(transponderPlanId) == null)
+            if (transponderPlanRepository.Read(transponderPlanId) == null)
                 throw new ArgumentException($"Transponder plan with id '{transponderPlanId}' does not exist.", nameof(transponderSlot));
         }
     }
