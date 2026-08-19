@@ -4,8 +4,8 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
-		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.GQI</AssemblyName>
-		<RootNamespace>Skyline.DataMiner.SDM.SatOps.GQI</RootNamespace>
+		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Automation</AssemblyName>
+		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Automation</RootNamespace>
 		<Copyright>Copyright © 2026</Copyright>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
@@ -19,7 +19,7 @@
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
 		<Version>0.1.5</Version>
-		<PackageReleaseNotes>0.1.3: Rebuilt against SatOps.Common 0.1.3 (transponder names are now enforced to be globally unique by the API, and the auto-provisioned resource is rolled back if the transponder cannot be persisted). 0.1.2: Rebuilt against SatOps.Common 0.1.2 (transponder delete now also removes the leaked satellite capability discrete). 0.1.1: Rebuilt against SatOps.Common 0.1.1 (Transponder delete now cascades to the auto-provisioned MediaOps Plan resource).</PackageReleaseNotes>
+		<PackageReleaseNotes>0.1.4: Rebuilt aga3: Rebuilt against SatOps.Common 0.1.3 (transponder names are now enforced to be globally unique by the API, and the auto-provisioned resource is rolled back if the transponder cannot be persisted). 0.1.2: Rebuilt against SatOps.Common 0.1.2 (transponder delete now also removes the leaked satellite capability discrete). 0.1.1: Rebuilt against SatOps.Common 0.1.1 (Transponder delete now cascades to the auto-provisioned MediaOps Plan resource).</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -38,6 +38,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Skyline.DataMiner.Dev.Utils.Solutions.SatOps\SDM.SatOps.Common.csproj" />
+	  <ProjectReference Include="..\Skyline.DataMiner.Dev.Utils.Solutions.SatOps\Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.csproj" />
 	</ItemGroup>
 </Project>

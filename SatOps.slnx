@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Tests/">
+    <Project Path="SDM.SatOps.CommonTests/Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+  </Folder>
+  <Project Path="SDM.SatOps.Automation/Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Automation.csproj" Id="ecb7b08f-b30c-4239-a5ef-3b1eb60dbb77" />
+  <Project Path="SDM.SatOps.GQI/Skyline.DataMiner.Dev.Utils.Solutions.SatOps.GQI.csproj" Id="ecb216c6-89cb-43a0-951f-c62f079a756c" />
+  <Project Path="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol/Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol.csproj" Id="11084824-b0ec-4d18-9f54-ce8d938be064" />
+  <Project Path="Skyline.DataMiner.Dev.Utils.Solutions.SatOps/Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.csproj" />
+</Solution>

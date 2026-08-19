@@ -2,7 +2,7 @@
 {
     using Skyline.DataMiner.Analytics.GenericInterface;
     using Skyline.DataMiner.SDM.SatOps.Common.API;
-    using Skyline.DataMiner.SDM.SatOps.Common.API.Extensions;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Extensions;
     using System;
 
     /// <summary>

@@ -5,7 +5,7 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common</AssemblyName>
-		<RootNamespace>Skyline.DataMiner.SDM.SatOps.Common</RootNamespace>
+		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Common</RootNamespace>
 		<Copyright>Copyright © 2026</Copyright>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
