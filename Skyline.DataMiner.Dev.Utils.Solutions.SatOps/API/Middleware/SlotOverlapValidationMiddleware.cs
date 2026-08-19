@@ -14,10 +14,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     /// within the same transponder plan when creating or updating transponder slots.
     /// </summary>
     /// <remarks>
-    /// For single-slot operations (<see cref="OnCreate(TransponderSlot, Func{TransponderSlot, TransponderSlot})"/>
-    /// and <see cref="OnUpdate(TransponderSlot, Func{TransponderSlot, TransponderSlot})"/>), the check is performed
-    /// against all existing slots for the same plan using the provided resolver.
-    /// For bulk operations, the check is performed within the submitted batch.
+    /// Single-slot and bulk operations share the same validation routine: the submitted slots are combined
+    /// with the already persisted slots of the same transponder plan (as returned by the resolver, excluding
+    /// the slots that are part of the submission itself) and the resulting set is validated as a whole.
+    /// Conflicts that only exist between already persisted slots are ignored, so pre-existing data cannot
+    /// block an unrelated create or update.
     /// </remarks>
     internal sealed class SlotOverlapValidationMiddleware : IBulkRepositoryMiddleware<TransponderSlot>
     {
@@ -30,7 +31,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         /// </summary>
         /// <param name="existingSlotsResolver">
         /// A delegate that returns all existing slots for a given transponder plan identifier.
-        /// Used to check single-slot create/update operations against persisted slots.
+        /// Used to check create/update operations against persisted slots.
         /// </param>
         public SlotOverlapValidationMiddleware(Func<Guid, IEnumerable<TransponderSlot>> existingSlotsResolver)
         {
@@ -45,7 +46,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateAgainstExisting(oToCreate, excludeId: Guid.Empty);
+            ValidateSlots(new[] { oToCreate }, nameof(oToCreate));
             return next(oToCreate);
         }
 
@@ -57,7 +58,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateBatch(oToCreate);
+            ValidateSlots(oToCreate, nameof(oToCreate));
             return next(oToCreate);
         }
 
@@ -69,7 +70,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateAgainstExisting(oToUpdate, excludeId: oToUpdate.Id);
+            ValidateSlots(new[] { oToUpdate }, nameof(oToUpdate));
             return next(oToUpdate);
         }
 
@@ -81,7 +82,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateBatch(oToUpdate);
+            ValidateSlots(oToUpdate, nameof(oToUpdate));
             return next(oToUpdate);
         }
 
@@ -93,7 +94,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateBatch(oToCreateOrUpdate);
+            ValidateSlots(oToCreateOrUpdate, nameof(oToCreateOrUpdate));
             return next(oToCreateOrUpdate);
         }
 
@@ -148,84 +149,131 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         }
 
         /// <summary>
-        /// Validates a single slot against existing slots for the same plan.
+        /// Validates the submitted slots against each other and against the slots that are already persisted
+        /// for the same transponder plan. This is the single validation entry point used by both the
+        /// single-slot and the bulk operations.
         /// </summary>
-        /// <param name="slot">The slot to validate.</param>
-        /// <param name="excludeId">The ID of the slot to exclude from comparison (use <see cref="Guid.Empty"/> for new slots, or the slot's own ID for updates).</param>
-        private void ValidateAgainstExisting(TransponderSlot slot, Guid excludeId)
+        /// <param name="slots">The submitted slots.</param>
+        /// <param name="parameterName">The name of the public parameter reported on validation failure.</param>
+        private void ValidateSlots(IEnumerable<TransponderSlot> slots, string parameterName)
         {
-            if (!slot.TransponderPlan.HasValue || slot.TransponderPlan.Value == Guid.Empty)
+            var submitted = slots.Where(HasValidatableRange).ToList();
+            if (submitted.Count == 0)
                 return;
 
-            if (!slot.SlotStartFrequency.HasValue || !slot.SlotEndFrequency.HasValue)
-                return;
-
-            var planId = slot.TransponderPlan.Value;
-            var existing = (existingSlotsResolver(planId) ?? Enumerable.Empty<TransponderSlot>())
-                .Where(s => s != null
-                    && s.Id != excludeId
-                    && s.SlotStartFrequency.HasValue
-                    && s.SlotEndFrequency.HasValue);
-
-            var overlappingSlot = existing.FirstOrDefault(existingSlot => SlotsOverlap(
-                slot.SlotStartFrequency.Value, slot.SlotEndFrequency.Value,
-                existingSlot.SlotStartFrequency.Value, existingSlot.SlotEndFrequency.Value));
-
-            if (overlappingSlot != null)
+            foreach (var group in submitted.GroupBy(s => s.TransponderPlan.Value))
             {
-                throw new ArgumentException(
-                    string.Format(ExceptionMessages.SlotOverlapDetected, slot.Name, overlappingSlot.Name),
-                    nameof(slot));
+                ValidatePlan(group.Key, group.ToList(), parameterName);
             }
         }
 
         /// <summary>
-        /// Validates a batch of slots for internal overlaps and duplicate names within each transponder plan group.
+        /// Validates all slots of a single transponder plan: the submitted ones combined with the persisted ones
+        /// that are not part of the submission.
         /// </summary>
-        private static void ValidateBatch(IEnumerable<TransponderSlot> slots)
+        private void ValidatePlan(Guid planId, IReadOnlyCollection<TransponderSlot> submitted, string parameterName)
         {
-            var validSlots = slots
-                .Where(s => s != null
-                    && s.TransponderPlan.HasValue
-                    && s.TransponderPlan.Value != Guid.Empty
-                    && s.SlotStartFrequency.HasValue
-                    && s.SlotEndFrequency.HasValue)
+            var submittedIds = new HashSet<Guid>(submitted.Select(s => s.Id));
+
+            var persisted = (existingSlotsResolver(planId) ?? Enumerable.Empty<TransponderSlot>())
+                .Where(s => HasValidatableRange(s) && !submittedIds.Contains(s.Id))
+                .Select(s => new SlotCandidate(s, isSubmitted: false));
+
+            var sorted = submitted
+                .Select(s => new SlotCandidate(s, isSubmitted: true))
+                .Concat(persisted)
+                .OrderBy(c => c.Start)
                 .ToList();
 
-            var byPlan = validSlots.GroupBy(s => s.TransponderPlan.Value);
-            foreach (var group in byPlan)
+            var namesSeen = new Dictionary<string, SlotCandidate>(StringComparer.OrdinalIgnoreCase);
+            var overlapping = new List<SlotCandidate>();
+
+            foreach (var current in sorted)
             {
-                var sorted = group.OrderBy(s => s.SlotStartFrequency.Value).ToList();
-                var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                ValidateName(current, namesSeen, parameterName);
 
-                for (int i = 0; i < sorted.Count; i++)
-                {
-                    var current = sorted[i];
+                overlapping.RemoveAll(c => !SlotsOverlap(c.Start, c.End, current.Start, current.End));
+                ValidateOverlap(current, overlapping, parameterName);
 
-                    if (!string.IsNullOrEmpty(current.Name) && !seenNames.Add(current.Name))
-                    {
-                        throw new ArgumentException(
-                            string.Format(ExceptionMessages.DuplicateSlotNameDetected, current.Name));
-                    }
-
-                    if (i + 1 >= sorted.Count)
-                        continue;
-
-                    var next = sorted[i + 1];
-                    if (SlotsOverlap(
-                        current.SlotStartFrequency.Value, current.SlotEndFrequency.Value,
-                        next.SlotStartFrequency.Value, next.SlotEndFrequency.Value))
-                    {
-                        throw new ArgumentException(
-                            string.Format(ExceptionMessages.SlotOverlapDetected, current.Name, next.Name));
-                    }
-                }
+                overlapping.Add(current);
             }
+        }
+
+        /// <summary>
+        /// Verifies that the name of the given slot is not already used by another slot of the same plan.
+        /// Collisions between two persisted slots are ignored.
+        /// </summary>
+        private static void ValidateName(SlotCandidate current, IDictionary<string, SlotCandidate> namesSeen, string parameterName)
+        {
+            if (string.IsNullOrEmpty(current.Slot.Name))
+                return;
+
+            if (!namesSeen.TryGetValue(current.Slot.Name, out var previous))
+            {
+                namesSeen.Add(current.Slot.Name, current);
+                return;
+            }
+
+            if (current.IsSubmitted || previous.IsSubmitted)
+            {
+                throw new ArgumentException(
+                    string.Format(ExceptionMessages.DuplicateSlotNameDetected, current.Slot.Name),
+                    parameterName);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that the given slot does not overlap any of the still open slots that start before it.
+        /// Overlaps between two persisted slots are ignored.
+        /// </summary>
+        private static void ValidateOverlap(SlotCandidate current, IEnumerable<SlotCandidate> overlapping, string parameterName)
+        {
+            foreach (var other in overlapping)
+            {
+                if (!current.IsSubmitted && !other.IsSubmitted)
+                    continue;
+
+                var reported = current.IsSubmitted && !other.IsSubmitted ? current : other;
+                var conflicting = ReferenceEquals(reported, current) ? other : current;
+
+                throw new ArgumentException(
+                    string.Format(ExceptionMessages.SlotOverlapDetected, reported.Slot.Name, conflicting.Slot.Name),
+                    parameterName);
+            }
+        }
+
+        private static bool HasValidatableRange(TransponderSlot slot)
+        {
+            return slot != null
+                && slot.TransponderPlan.HasValue
+                && slot.TransponderPlan.Value != Guid.Empty
+                && slot.SlotStartFrequency.HasValue
+                && slot.SlotEndFrequency.HasValue;
         }
 
         private static bool SlotsOverlap(double start1, double end1, double start2, double end2)
         {
             return start1 < end2 - OverlapTolerance && end1 > start2 + OverlapTolerance;
+        }
+
+        /// <summary>
+        /// Pairs a slot with its origin so that conflicts between two already persisted slots can be ignored.
+        /// </summary>
+        private sealed class SlotCandidate
+        {
+            public SlotCandidate(TransponderSlot slot, bool isSubmitted)
+            {
+                Slot = slot;
+                IsSubmitted = isSubmitted;
+            }
+
+            public TransponderSlot Slot { get; }
+
+            public bool IsSubmitted { get; }
+
+            public double Start => Slot.SlotStartFrequency.Value;
+
+            public double End => Slot.SlotEndFrequency.Value;
         }
     }
 }

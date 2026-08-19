@@ -372,6 +372,74 @@
         }
 
         [TestMethod]
+        public void OnCreateBulk_OverlapsPersistedSlot_ThrowsArgumentException()
+        {
+            var persisted = CreateSlot("Persisted", 150, 300, PlanId);
+            var sut = new SlotOverlapValidationMiddleware(id => new[] { persisted });
+            var slots = new List<TransponderSlot> { CreateSlot("New", 100, 200, PlanId) };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_DuplicateNameOfPersistedSlot_ThrowsArgumentException()
+        {
+            var persisted = CreateSlot("Same", 100, 200, PlanId);
+            var sut = new SlotOverlapValidationMiddleware(id => new[] { persisted });
+            var slots = new List<TransponderSlot> { CreateSlot("same", 300, 400, PlanId) };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(slots, s => s.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_DuplicateNameOfPersistedSlot_ThrowsArgumentException()
+        {
+            var persisted = CreateSlot("Same", 100, 200, PlanId);
+            var sut = new SlotOverlapValidationMiddleware(id => new[] { persisted });
+            var slot = CreateSlot("same", 300, 400, PlanId);
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+        }
+
+        [TestMethod]
+        public void OnUpdateBulk_SubmittedSlotsExcludedFromPersisted_CallsNext()
+        {
+            var slot = CreateSlot("A", 100, 200, PlanId);
+            var other = CreateSlot("B", 300, 400, PlanId);
+            var sut = new SlotOverlapValidationMiddleware(id => new[] { slot, other });
+
+            slot.SlotStartFrequency = 250;
+            slot.SlotEndFrequency = 300;
+            var result = sut.OnUpdate(new List<TransponderSlot> { slot }, s => s.ToList());
+
+            Assert.AreEqual(1, result.Count);
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_PreExistingOverlapBetweenPersistedSlots_CallsNext()
+        {
+            var first = CreateSlot("Wide", 0, 1000, PlanId);
+            var second = CreateSlot("Inner", 10, 20, PlanId);
+            var sut = new SlotOverlapValidationMiddleware(id => new[] { first, second });
+            var slot = CreateSlot("New", 1000, 1100, PlanId);
+
+            var result = sut.OnCreate(slot, s => s);
+
+            Assert.AreSame(slot, result);
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_OverlapsWiderPersistedSlot_ThrowsArgumentException()
+        {
+            var wide = CreateSlot("Wide", 0, 1000, PlanId);
+            var inner = CreateSlot("Inner", 10, 20, PlanId);
+            var sut = new SlotOverlapValidationMiddleware(id => new[] { wide, inner });
+            var slot = CreateSlot("New", 500, 600, PlanId);
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+        }
+
+        [TestMethod]
         public void OnCountWithFilter_Always_ReturnsNextResult()
         {
             var sut = new SlotOverlapValidationMiddleware(id => Enumerable.Empty<TransponderSlot>());
