@@ -124,11 +124,40 @@ api.TransponderRangeReservations.ReserveRange(reservation.Id, startFrequency: 10
 
 **Enable logging (optional):**
 
-Provide an `ILogger` implementation to surface diagnostics from the middleware pipeline.
+Provide an `ILogger` implementation to surface diagnostics from the middleware pipeline. By default the API
+uses a `NullLogger`, so logging is a no-op until you set one.
+
+Derive from `LoggerBase` and implement the single `Log(string, LogType)` method; the `Debug`, `Information`,
+`Warning` and `Error` helpers are routed through it for you.
 
 ```csharp
-api.SetLogger(myLogger);
+using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
+
+public class ConsoleLogger : LoggerBase
+{
+    public override void Log(string message, LogType type = LogType.Information)
+    {
+        Console.WriteLine($"{FormatDateTimeNow()}|{GetLogTypeAbbreviation(type)}|{message}");
+    }
+}
+
+api.SetLogger(new ConsoleLogger());
 ```
+
+Ready made loggers are shipped with the host specific DevPacks:
+
+| Package | Logger | Writes to |
+| --- | --- | --- |
+| `...SatOps.Automation` | `EngineLogger(IEngine)` | Automation script log |
+| `...SatOps.Protocol` | `ProtocolLogger(SLProtocol)` | Protocol (connector) log |
+
+```csharp
+api.SetLogger(new EngineLogger(engine));
+```
+
+> `LogType` is defined by this package (`Skyline.DataMiner.Solutions.SatOps.Common.Logging.LogType`) rather than
+> reusing `Skyline.DataMiner.Automation.LogType`. This keeps the Common assembly free of any dependency on
+> `SLManagedAutomation`, which is not resolvable in hosts such as the GQI DxM process.
 
 ## About
 

@@ -1,4 +1,3 @@
-
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 {
     using Skyline.DataMiner.Net;
@@ -193,15 +192,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 if (satellites == null)
                     return satelliteNamesById;
 
-                foreach (var satellite in satellites)
-                {
-                    if (satellite != null)
-                        satelliteNamesById[satellite.Id] = satellite.Name;
-                }
+                satelliteNamesById = satellites
+                    .Where(satellite => satellite != null)
+                    .ToDictionary(satellite => satellite.Id, satellite => satellite.Name);
             }
             catch (Exception e)
             {
-                _logger?.Error($"Failed to resolve the satellites '{string.Join(", ", satelliteIds)}' referenced by the transponders.", e);
+                _logger?.Error($"Failed to resolve the satellites '{string.Join(", ", satelliteIds)}' referenced by the transponders. Exception: {e}");
             }
 
             return satelliteNamesById;
@@ -237,7 +234,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             }
             catch (Exception e)
             {
-                _logger?.Error($"Failed to deprecate transponder resource(s) '{string.Join(", ", ids)}'.", e);
+                _logger?.Error($"Failed to deprecate transponder resource(s) '{string.Join(", ", ids)}'. Exception: {e}");
             }
 
             try
@@ -246,7 +243,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             }
             catch (Exception e)
             {
-                _logger?.Error($"Transponder resource(s) '{string.Join(", ", ids)}' were deprecated but could not be deleted (likely still referenced by active bookings); left deprecated.", e);
+                _logger?.Error($"Transponder resource(s) '{string.Join(", ", ids)}' were deprecated but could not be deleted (likely still referenced by active bookings); left deprecated. Exception: {e}");
             }
         }
 
@@ -293,7 +290,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 }
                 catch (Exception e)
                 {
-                    _logger?.Error($"Failed to remove satellite discrete '{satelliteName}' from capability '{NamingConstants.SatelliteCapabilityName}'.", e);
+                    _logger?.Error($"Failed to remove satellite discrete '{satelliteName}' from capability '{NamingConstants.SatelliteCapabilityName}'. Exception: {e}");
                 }
             }
         }
@@ -377,7 +374,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             }
             catch (Exception e)
             {
-                _logger?.Error($"Failed to roll back transponder resource(s) '{string.Join(", ", resourceIds)}' after the transponder could not be persisted.", e);
+                _logger?.Error($"Failed to roll back transponder resource(s) '{string.Join(", ", resourceIds)}' after the transponder could not be persisted. Exception: {e}");
                 return;
             }
 
@@ -535,7 +532,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             }
             catch (Exception e)
             {
-                _logger?.Error($"Failed to update resource for transponder '{transponder.Name}' (Resource ID: {transponder.DOMResource.Value}).", e);
+                _logger?.Error($"Failed to update resource for transponder '{transponder.Name}' (Resource ID: {transponder.DOMResource.Value}). Exception: {e}");
             }
         }
 

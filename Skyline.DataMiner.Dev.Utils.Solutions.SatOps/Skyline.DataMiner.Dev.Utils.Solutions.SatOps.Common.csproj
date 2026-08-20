@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -21,8 +21,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.2.1</Version>
-		<PackageReleaseNotes>0.2.1: Every exposer class now exposes the entity's own id (SatelliteId, BeamId, TransponderId, PlanId, PlanRowId, SlotId and ReservationId), so any entity can be read with a server-side id filter. This is the only way to read a single transponder slot, because ITransponderSlotRepository has no Read(Guid). Fixed BeamExposers.BeamSatellite, which filtered on the beam's own DOM instance id instead of on the BeamSatellite field and therefore never returned the beams of a satellite. 0.2.0: Bulk create/update/delete now resolve referenced objects with a single batched repository read instead of one read per item, and the per-parent collection reads are cached per batch. The repository batch read Read(IEnumerable&lt;Guid&gt;) now issues a server-side id filter instead of reading every instance of the module and filtering client side. Validation order and error messages are unchanged. 0.1.3: Transponder names are now enforced to be globally unique (case-insensitive) by the API instead of only by the calling scripts. Because every Transponder provisions a MediaOps Plan resource with the same name, and DataMiner rejects duplicate resource names, the check runs before any resource is provisioned. The resource name is additionally verified against the existing resources (catching orphans and resources owned by other solutions) and on rename. If persisting a Transponder fails after its resource was created, the resource is now rolled back instead of being orphaned. 0.1.2: Deleting a Transponder now also removes the satellite discrete it added to the shared "Satellite" capability (profile parameter), but only when no remaining resource still references that satellite. This prevents leaked satellite profile parameters after transponder cleanup. 0.1.1: Deleting a Transponder now also cleans up the MediaOps Plan resource that was auto-provisioned for it (previously orphaned). The resource is deprecated and then deleted; if the delete is blocked by active bookings it is left deprecated and logged. Cleanup runs for every delete overload, including delete-by-id. 0.1.0: SlotName is persisted automatically on TransponderRangeReservation Create/Update; the AddSlotNameProperty helper is no longer exposed on ITransponderRangeReservationRepository or its middleware. ReserveRange overloads remain public. Reads hydrate SlotName back onto the reservation.</PackageReleaseNotes>
+		<Version>0.2.3</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

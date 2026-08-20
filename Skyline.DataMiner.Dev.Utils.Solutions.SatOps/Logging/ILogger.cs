@@ -1,43 +1,70 @@
 ﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.Logging
 {
-    using System;
-    using Skyline.DataMiner.Automation;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
-    /// Defines a logger interface for logging messages with different severity levels.
+    /// Defines logging methods for debug, information, warning, and error messages.
     /// </summary>
     public interface ILogger
     {
         /// <summary>
-        /// Logs a message with the specified log type.
+        /// Logs a debug-level message including contextual information about the caller.
         /// </summary>
-        /// <param name="message">The message to log.</param>
-        /// <param name="type">The type of log entry. Defaults to <see cref="LogType.Information"/>.</param>
-        void Log(string message, LogType type = LogType.Information);
+        /// <param name="callerInstance">The instance of the object that triggers the log entry.</param>
+        /// <param name="message">The message template to log.</param>
+        /// <param name="args">Optional arguments to format into the message template.</param>
+        /// <param name="methodName">The name of the calling method (automatically provided by the compiler).</param>
+        void Debug(object callerInstance, string message, object[] args = null, [CallerMemberName] string methodName = "");
 
         /// <summary>
-        /// Logs a debug message.
+        /// Logs a debug-level message without additional caller context.
         /// </summary>
-        /// <param name="message">The debug message to log.</param>
+        /// <param name="message">The message to log.</param>
         void Debug(string message);
 
         /// <summary>
-        /// Logs an informational message.
+        /// Logs an error-level message including contextual information about the caller.
         /// </summary>
-        /// <param name="message">The informational message to log.</param>
+        /// <param name="callerInstance">The instance of the object that triggers the log entry.</param>
+        /// <param name="message">The message template to log.</param>
+        /// <param name="args">Optional arguments to format into the message template.</param>
+        /// <param name="methodName">The name of the calling method (automatically provided by the compiler).</param>
+        void Error(object callerInstance, string message, object[] args = null, [CallerMemberName] string methodName = "");
+
+        /// <summary>
+        /// Logs an error-level message without additional caller context.
+        /// </summary>
+        /// <param name="message">The message to log.</param>
+        void Error(string message);
+
+        /// <summary>
+        /// Logs an information-level message including contextual information about the caller.
+        /// </summary>
+        /// <param name="callerInstance">The instance of the object that triggers the log entry.</param>
+        /// <param name="message">The message template to log.</param>
+        /// <param name="args">Optional arguments to format into the message template.</param>
+        /// <param name="methodName">The name of the calling method (automatically provided by the compiler).</param>
+        void Information(object callerInstance, string message, object[] args = null, [CallerMemberName] string methodName = "");
+
+        /// <summary>
+        /// Logs an information-level message without additional caller context.
+        /// </summary>
+        /// <param name="message">The message to log.</param>
         void Information(string message);
 
         /// <summary>
-        /// Logs a warning message.
+        /// Logs a warning-level message including contextual information about the caller.
         /// </summary>
-        /// <param name="message">The warning message to log.</param>
-        void Warning(string message);
+        /// <param name="callerInstance">The instance of the object that triggers the log entry.</param>
+        /// <param name="message">The message template to log.</param>
+        /// <param name="args">Optional arguments to format into the message template.</param>
+        /// <param name="methodName">The name of the calling method (automatically provided by the compiler).</param>
+        void Warning(object callerInstance, string message, object[] args = null, [CallerMemberName] string methodName = "");
 
         /// <summary>
-        /// Logs an error message with an optional exception.
+        /// Logs a warning-level message without additional caller context.
         /// </summary>
-        /// <param name="message">The error message to log.</param>
-        /// <param name="exception">The optional exception associated with the error.</param>
-        void Error(string message, Exception exception = null);
+        /// <param name="message">The message to log.</param>
+        void Warning(string message);
     }
 }

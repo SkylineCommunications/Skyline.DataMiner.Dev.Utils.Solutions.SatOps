@@ -164,7 +164,7 @@
         /// <summary>
         /// Gets the logger instance for this API.
         /// </summary>
-        internal ILogger Logger { get; private set; }
+        internal ILogger Logger { get; private set; } = new NullLogger();
 
         /// <summary>
         /// Checks whether the SatOps solution is installed on the DataMiner system.

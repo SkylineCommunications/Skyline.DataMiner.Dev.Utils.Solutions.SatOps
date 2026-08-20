@@ -9,7 +9,6 @@
 		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol</AssemblyName>
 		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Protocol</RootNamespace>
 		
-		<Version>0.2.1</Version>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -21,6 +20,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>SatOps SDM NuGet Package for protocols.</Description>
+		<Version>0.2.3</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
