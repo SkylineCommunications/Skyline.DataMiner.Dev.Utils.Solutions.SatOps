@@ -1,4 +1,4 @@
-﻿namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteManagement.TransponderSlot
+namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteManagement.TransponderSlot
 {
     using System;
     using System.Collections.Generic;
@@ -37,19 +37,6 @@
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
 
             Assert.IsNotNull(sut);
-        }
-
-        [TestMethod]
-        public void Count_NoArguments_DelegatesToInner()
-        {
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Count()).Returns(42L);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
-
-            var result = sut.Count();
-
-            Assert.AreEqual(42L, result);
-            inner.Verify(x => x.Count(), Times.Once);
         }
 
         [TestMethod]
@@ -194,63 +181,6 @@
         }
 
         [TestMethod]
-        public void CreateOrUpdate_NonBulkRepositoryMiddleware_DelegatesToInner()
-        {
-            var input = new[] { new TransponderSlot() };
-            var expected = new List<TransponderSlot>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
-
-            var result = sut.CreateOrUpdate(input);
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.CreateOrUpdate(input), Times.Once);
-        }
-
-        [TestMethod]
-        public void CreateOrUpdate_BulkRepositoryMiddleware_InvokesMiddleware()
-        {
-            var input = new[] { new TransponderSlot() };
-            var expected = new List<TransponderSlot>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.CreateOrUpdate(input)).Returns(expected);
-            var bulk = new Mock<IBulkRepositoryMiddleware<TransponderSlot>>();
-            bulk.Setup(x => x.OnCreateOrUpdate(input, It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
-                .Returns((IEnumerable<TransponderSlot> o, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(o));
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
-
-            var result = sut.CreateOrUpdate(input);
-
-            Assert.AreSame(expected, result);
-            bulk.Verify(x => x.OnCreateOrUpdate(input, It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()), Times.Once);
-        }
-
-        [TestMethod]
-        public void Delete_ById_DelegatesToInner()
-        {
-            var id = Guid.NewGuid();
-            var inner = new Mock<ITransponderSlotRepository>();
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
-
-            sut.Delete(id);
-
-            inner.Verify(x => x.Delete(id), Times.Once);
-        }
-
-        [TestMethod]
-        public void Delete_ByIds_DelegatesToInner()
-        {
-            var ids = new[] { Guid.NewGuid(), Guid.NewGuid() };
-            var inner = new Mock<ITransponderSlotRepository>();
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
-
-            sut.Delete(ids);
-
-            inner.Verify(x => x.Delete(ids), Times.Once);
-        }
-
-        [TestMethod]
         public void Delete_BulkWithNonDeletableMiddleware_DelegatesToInner()
         {
             var input = new[] { new TransponderSlot() };
@@ -320,20 +250,6 @@
         }
 
         [TestMethod]
-        public void Read_NoArguments_DelegatesToInner()
-        {
-            var expected = new List<TransponderSlot>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Read()).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
-
-            var result = sut.Read();
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Read(), Times.Once);
-        }
-
-        [TestMethod]
         public void Read_FilterWithNonReadableMiddleware_DelegatesToInner()
         {
             var filter = new Mock<FilterElement<TransponderSlot>>().Object;
@@ -397,34 +313,6 @@
 
             Assert.AreSame(expected, result);
             readable.Verify(x => x.OnRead(query, It.IsAny<Func<IQuery<TransponderSlot>, IEnumerable<TransponderSlot>>>()), Times.Once);
-        }
-
-        [TestMethod]
-        public void ReadPaged_NoArguments_DelegatesToInner()
-        {
-            var expected = new List<IPagedResult<TransponderSlot>>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.ReadPaged()).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IPageableMiddleware<TransponderSlot>>().Object);
-
-            var result = sut.ReadPaged();
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.ReadPaged(), Times.Once);
-        }
-
-        [TestMethod]
-        public void ReadPaged_PageSize_DelegatesToInner()
-        {
-            var expected = new List<IPagedResult<TransponderSlot>>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.ReadPaged(25)).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
-
-            var result = sut.ReadPaged(25);
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.ReadPaged(25), Times.Once);
         }
 
         [TestMethod]
@@ -574,109 +462,14 @@
         }
 
         [TestMethod]
-        public void Read_ById_DelegatesToInner()
-        {
-            var id = Guid.NewGuid();
-            var expected = new TransponderSlot();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Read(id)).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
-
-            var result = sut.Read(id);
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Read(id), Times.Once);
-        }
-
-        [TestMethod]
-        public void Read_ByIds_DelegatesToInner()
-        {
-            var ids = new[] { Guid.NewGuid(), Guid.NewGuid() };
-            var expected = new List<TransponderSlot>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Read(ids)).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
-
-            var result = sut.Read((IEnumerable<Guid>)ids);
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Read(ids), Times.Once);
-        }
-
-        [TestMethod]
-        public void Update_BulkWithNonUpdatableMiddleware_DelegatesToInner()
-        {
-            var input = new[] { new TransponderSlot() };
-            var expected = new List<TransponderSlot>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Update(input)).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object);
-
-            var result = sut.Update((IEnumerable<TransponderSlot>)input);
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Update(input), Times.Once);
-        }
-
-        [TestMethod]
-        public void Update_BulkWithBulkUpdatableMiddleware_InvokesMiddleware()
-        {
-            var input = new[] { new TransponderSlot() };
-            var expected = new List<TransponderSlot>();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Update(input)).Returns(expected);
-            var bulk = new Mock<IBulkUpdatableMiddleware<TransponderSlot>>();
-            bulk.Setup(x => x.OnUpdate(input, It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
-                .Returns((IEnumerable<TransponderSlot> o, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(o));
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
-
-            var result = sut.Update((IEnumerable<TransponderSlot>)input);
-
-            Assert.AreSame(expected, result);
-            bulk.Verify(x => x.OnUpdate(input, It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()), Times.Once);
-        }
-
-        [TestMethod]
-        public void Update_SingleWithNullMiddleware_DelegatesToInner()
-        {
-            var input = new TransponderSlot();
-            var expected = new TransponderSlot();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Update(input)).Returns(expected);
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, null);
-
-            var result = sut.Update(input);
-
-            Assert.AreSame(expected, result);
-            inner.Verify(x => x.Update(input), Times.Once);
-        }
-
-        [TestMethod]
-        public void Update_SingleWithUpdatableMiddleware_InvokesMiddleware()
-        {
-            var input = new TransponderSlot();
-            var expected = new TransponderSlot();
-            var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Update(input)).Returns(expected);
-            var updatable = new Mock<IUpdatableMiddleware<TransponderSlot>>();
-            updatable.Setup(x => x.OnUpdate(input, It.IsAny<Func<TransponderSlot, TransponderSlot>>()))
-                     .Returns((TransponderSlot o, Func<TransponderSlot, TransponderSlot> next) => next(o));
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, updatable.Object);
-
-            var result = sut.Update(input);
-
-            Assert.AreSame(expected, result);
-            updatable.Verify(x => x.OnUpdate(input, It.IsAny<Func<TransponderSlot, TransponderSlot>>()), Times.Once);
-        }
-
-        [TestMethod]
         public void CreateBulk_GenerationRequest_ExpandsIntoTheCalculatedSlots()
         {
             var planId = Guid.NewGuid();
             var built = new List<TransponderSlot> { CreateSlot("A36", planId), CreateSlot("B36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
-            inner.As<ITransponderSlotBuilder>().Setup(x => x.BuildSlots(planId)).Returns(built);
+            var generator = new Mock<ITransponderSlotGenerator>();
+            generator.Setup(x => x.BuildSlots(planId)).Returns(built);
 
             IEnumerable<TransponderSlot> validated = null;
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
@@ -684,7 +477,7 @@
                 .Callback<IEnumerable<TransponderSlot>, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>((s, _) => validated = s)
                 .Returns(built);
 
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
             var result = sut.Create(new[] { CreateGenerationRequest(planId) });
 
@@ -701,15 +494,17 @@
             var sequence = new List<string>();
 
             var inner = new Mock<ITransponderSlotRepository>();
-            inner.As<ITransponderSlotBuilder>().Setup(x => x.BuildSlots(planId)).Returns(built).Callback(() => sequence.Add("build"));
             inner.Setup(x => x.DeleteSlotsByTransponderPlan(planId)).Callback(() => sequence.Add("delete"));
+
+            var generator = new Mock<ITransponderSlotGenerator>();
+            generator.Setup(x => x.BuildSlots(planId)).Returns(built).Callback(() => sequence.Add("build"));
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
                 .Returns(built)
                 .Callback(() => sequence.Add("validate"));
 
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
             sut.Create(new[] { CreateGenerationRequest(planId) });
 
@@ -723,17 +518,17 @@
             var slots = new[] { CreateSlot("A36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
-            var builder = inner.As<ITransponderSlotBuilder>();
+            var generator = new Mock<ITransponderSlotGenerator>();
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
                 .Returns(slots);
 
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
             sut.Create(slots);
 
-            builder.Verify(x => x.BuildSlots(It.IsAny<Guid>()), Times.Never);
+            generator.Verify(x => x.BuildSlots(It.IsAny<Guid>()), Times.Never);
             inner.Verify(x => x.DeleteSlotsByTransponderPlan(It.IsAny<Guid>()), Times.Never);
         }
 
@@ -744,18 +539,18 @@
             var built = new List<TransponderSlot> { CreateSlot("A36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
-            var builder = inner.As<ITransponderSlotBuilder>();
-            builder.Setup(x => x.BuildSlots(planId)).Returns(built);
+            var generator = new Mock<ITransponderSlotGenerator>();
+            generator.Setup(x => x.BuildSlots(planId)).Returns(built);
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
                 .Returns(built);
 
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
             sut.Create(new[] { CreateGenerationRequest(planId), CreateGenerationRequest(planId) });
 
-            builder.Verify(x => x.BuildSlots(planId), Times.Once);
+            generator.Verify(x => x.BuildSlots(planId), Times.Once);
             inner.Verify(x => x.DeleteSlotsByTransponderPlan(planId), Times.Once);
         }
 
@@ -767,18 +562,57 @@
             var built = new List<TransponderSlot> { first, CreateSlot("B36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
-            inner.As<ITransponderSlotBuilder>().Setup(x => x.BuildSlots(planId)).Returns(built);
+            var generator = new Mock<ITransponderSlotGenerator>();
+            generator.Setup(x => x.BuildSlots(planId)).Returns(built);
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
                 .Returns(built);
 
-            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object);
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
             var result = sut.Create(CreateGenerationRequest(planId));
 
             Assert.AreSame(first, result);
             inner.Verify(x => x.DeleteSlotsByTransponderPlan(planId), Times.Once);
+        }
+
+        [TestMethod]
+        public void CreateByPlanId_BuildsDeletesAndValidatesTheCalculatedSlots()
+        {
+            var planId = Guid.NewGuid();
+            var built = new List<TransponderSlot> { CreateSlot("A36", planId), CreateSlot("B36", planId) };
+            var sequence = new List<string>();
+            IEnumerable<TransponderSlot> validated = null;
+
+            var inner = new Mock<ITransponderSlotRepository>();
+            inner.Setup(x => x.DeleteSlotsByTransponderPlan(planId)).Callback(() => sequence.Add("delete"));
+
+            var generator = new Mock<ITransponderSlotGenerator>();
+            generator.Setup(x => x.BuildSlots(planId)).Returns(built).Callback(() => sequence.Add("build"));
+
+            var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
+            bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
+                .Callback<IEnumerable<TransponderSlot>, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>((s, _) => { validated = s; sequence.Add("validate"); })
+                .Returns(built);
+
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
+
+            var result = sut.Create(planId);
+
+            Assert.AreSame(built, result);
+            CollectionAssert.AreEqual(built, validated.ToList());
+            CollectionAssert.AreEqual(new[] { "build", "delete", "validate" }, sequence);
+        }
+
+        [TestMethod]
+        public void CreateByPlanId_EmptyGuid_ThrowsArgumentException()
+        {
+            var inner = new Mock<ITransponderSlotRepository>();
+            var generator = new Mock<ITransponderSlotGenerator>();
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object, generator.Object);
+
+            Assert.ThrowsException<ArgumentException>(() => sut.Create(Guid.Empty));
         }
 
         private static TransponderSlot CreateGenerationRequest(Guid planId)
@@ -830,15 +664,17 @@
         [TestMethod]
         public void WithMiddleware_ValidArguments_ReturnsWrappingMiddleware()
         {
+            var filter = new Mock<FilterElement<TransponderSlot>>().Object;
             var inner = new Mock<ITransponderSlotRepository>();
-            inner.Setup(x => x.Count()).Returns(42L);
+            inner.Setup(x => x.Count(filter)).Returns(42L);
             var marker = new Mock<IMiddlewareMarker<TransponderSlot>>().Object;
+            var generator = new Mock<ITransponderSlotGenerator>().Object;
 
-            var result = inner.Object.WithMiddleware(marker);
+            var result = inner.Object.WithMiddleware(marker, generator);
 
             Assert.IsNotNull(result);
             Assert.AreNotSame(inner.Object, result);
-            Assert.AreEqual(42L, result.Count());
+            Assert.AreEqual(42L, result.Count(filter));
         }
 
         [TestMethod]
@@ -846,7 +682,7 @@
         {
             ITransponderSlotRepository repository = null;
 
-            Assert.ThrowsException<ArgumentNullException>(() => repository.WithMiddleware(null));
+            Assert.ThrowsException<ArgumentNullException>(() => repository.WithMiddleware(null, null));
         }
     }
 }

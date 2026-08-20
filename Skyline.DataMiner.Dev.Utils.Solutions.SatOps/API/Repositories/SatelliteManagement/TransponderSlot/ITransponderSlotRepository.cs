@@ -2,14 +2,25 @@
 {
     using System;
     using System.Collections.Generic;
+    using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
 
     /// <summary>
     /// Represents a repository for managing <see cref="TransponderSlot"/> entities.
     /// </summary>
-    public interface ITransponderSlotRepository : IRepository<TransponderSlot>
+    public interface ITransponderSlotRepository : IBulkCreatableRepository<TransponderSlot>, IBulkDeletableRepository<TransponderSlot>, 
+        IPageableRepository<TransponderSlot>, ICountableRepository<TransponderSlot>
     {
+        /// <summary>
+        /// Generates the slots of the specified transponder plan and persists them.
+        /// The slots are calculated from the plan rows and the transponder of the plan.
+        /// Any slots that already belong to the plan are removed first.
+        /// </summary>
+        /// <param name="transponderPlanId">The unique identifier of the transponder plan.</param>
+        /// <returns>The collection of created <see cref="TransponderSlot"/> instances.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="transponderPlanId"/> is an empty GUID.</exception>
+        IReadOnlyCollection<TransponderSlot> Create(Guid transponderPlanId);
+
         /// <summary>
         /// Reads all slots that belong to the specified transponder plan.
         /// </summary>
@@ -22,19 +33,5 @@
         /// </summary>
         /// <param name="transponderPlanId">The unique identifier of the transponder plan.</param>
         void DeleteSlotsByTransponderPlan(Guid transponderPlanId);
-    }
-
-    /// <summary>
-    /// Calculates the slots of a transponder plan. Implemented by the transponder slot repository so that the
-    /// create pipeline can expand a slot generation request, without exposing the calculation on the public API.
-    /// </summary>
-    internal interface ITransponderSlotBuilder
-    {
-        /// <summary>
-        /// Calculates the slots for the specified transponder plan without persisting or deleting anything.
-        /// </summary>
-        /// <param name="transponderPlanId">The unique identifier of the transponder plan.</param>
-        /// <returns>The collection of calculated, not yet persisted, <see cref="TransponderSlot"/> instances.</returns>
-        IReadOnlyCollection<TransponderSlot> BuildSlots(Guid transponderPlanId);
     }
 }

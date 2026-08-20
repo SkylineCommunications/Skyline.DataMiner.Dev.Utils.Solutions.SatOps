@@ -102,10 +102,11 @@
                 (
                     () =>
                     {
-                        var repository = new TransponderSlotRepository(this);
+                        var slotGenerator = new TransponderSlotGenerator(this);
+                        var repository = new TransponderSlotRepository(this, slotGenerator);
                         return repository
-                            .WithMiddleware(new TransponderSlotValidationMiddleware(TransponderPlans))
-                            .WithMiddleware(new SlotOverlapValidationMiddleware(repository));
+                            .WithMiddleware(new TransponderSlotValidationMiddleware(TransponderPlans), slotGenerator)
+                            .WithMiddleware(new SlotOverlapValidationMiddleware(repository), slotGenerator);
                     }
                 );
         }

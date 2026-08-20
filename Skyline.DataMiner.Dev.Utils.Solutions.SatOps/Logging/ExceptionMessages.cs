@@ -29,7 +29,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.Logging
         public const string CannotUpdateNonExistingTransponderPlanRow = "Cannot update a transponder plan row that does not exist.";
 
         public const string CannotCreateExistingTransponderSlot = "Cannot create an existing transponder slot.";
-        public const string CannotUpdateNonExistingTransponderSlot = "Cannot update a transponder slot that does not exist.";
         public const string CannotCreateExistingTransponderRangeReservation = "Cannot create an existing transponder range reservation.";
         public const string CannotUpdateNonExistingTransponderRangeReservation = "Cannot update a transponder range reservation that does not exist.";
         public const string ReservationIsNotValidTransponderRangeReservation = "The specified reservation is not a valid transponder range reservation.";

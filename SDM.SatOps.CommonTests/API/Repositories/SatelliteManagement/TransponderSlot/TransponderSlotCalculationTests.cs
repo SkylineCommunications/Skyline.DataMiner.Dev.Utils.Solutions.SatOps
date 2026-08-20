@@ -88,8 +88,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
         private static IReadOnlyList<CalculatedSlot> CalculateSlots(double transponderBandwidth, double offset, double step, double bandwidth, double limit)
         {
-            var method = typeof(TransponderSlotRepository).GetMethod("CalculateSlots", BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.IsNotNull(method, "TransponderSlotRepository.CalculateSlots was not found.");
+            var method = typeof(TransponderSlotGenerator).GetMethod("CalculateSlots", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(method, "TransponderSlotGenerator.CalculateSlots was not found.");
 
             var calculations = (IEnumerable)method.Invoke(
                 null,

@@ -49,5 +49,6 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 </Project>
