@@ -41,4 +41,6 @@ Every repository is built as a small pipeline: the public interface (e.g. `IBeam
 
 The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
 
+`TransponderSlot`s are the one exception to the full CRUD surface: they are derived data, calculated from the plan rows and the transponder of their `TransponderPlan`. `ITransponderSlotRepository` therefore only inherits the creatable, deletable, pageable and countable repository interfaces — there is no update method, and regenerating the slots of a plan is done by calling `Create` with the transponder plan id, which recalculates the slots and replaces the ones currently stored for that plan.
+
 The core library also depends on `Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan`: a SatOps `Transponder` is also represented as a `Resource` in the MediaOps data model, so `TransponderResourceCreationMiddleware` keeps a matching MediaOps resource in sync whenever a transponder is created or updated.

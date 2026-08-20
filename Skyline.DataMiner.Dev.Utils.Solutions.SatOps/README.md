@@ -80,13 +80,17 @@ var plans = api.TransponderPlans.ReadByTransponder(transponder.Id);
 var slots = api.TransponderSlots.ReadByTransponderPlan(plan.Id);
 ```
 
-**Generate slots from a transponder plan:**
+**Generate slots from a transponder plan (there is no `Update` for slots):**
 
-Slots are generated through the regular `Create` method. Pass the id of the transponder plan, or submit a slot
-that only has its `TransponderPlan` filled in, and the API replaces it by the slots calculated from the plan
-rows. The slots that already exist for the plan are removed as part of the same call, and the calculated slots
-pass the same validation as manually created slots. Regenerating the slots of a plan is therefore simply calling
-`Create` again — the slot repository exposes create, delete, read and count only, slots are never updated in place.
+Slots are never edited individually: they are fully derived from the plan rows and the transponder of the plan,
+so any change to those inputs simply means the slots have to be recalculated. Because of that,
+`ITransponderSlotRepository` intentionally has no update method — it only exposes create, delete, read and count —
+and every write goes through `Create`.
+
+Pass the id of the transponder plan, or submit a slot that only has its `TransponderPlan` filled in, and the API
+replaces it by the slots calculated from the plan rows. The slots that already exist for the plan are removed as
+part of the same call, and the calculated slots pass the same validation as manually created slots. Regenerating
+the slots of a plan is therefore simply calling `Create` again.
 
 ```csharp
 var createdSlots = api.TransponderSlots.Create(plan.Id);
@@ -142,5 +146,7 @@ The `SDM.SatOps.GQI`, `SDM.SatOps.Automation` and `SatOps.Protocol` packages are
 Every repository is built as a small pipeline: the public interface (e.g. `IBeamRepository`) is implemented by a repository-specific **decorator middleware** (e.g. `BeamRepositoryMiddleware`), which optionally forwards the call to a **validation middleware** (e.g. `BeamValidationMiddleware`) before reaching the actual **repository** (e.g. `BeamRepository`) that talks to DataMiner DOM instances through `DomHelper`. This keeps validation/business rules decoupled from persistence, and lets new cross-cutting behavior be added without touching the storage code.
 
 The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
+
+`TransponderSlot`s are the one exception to the full CRUD surface: they are derived data, calculated from the plan rows and the transponder of their `TransponderPlan`. `ITransponderSlotRepository` therefore only inherits the creatable, deletable, pageable and countable repository interfaces — there is no update method, and regenerating the slots of a plan is done by calling `Create` with the transponder plan id, which recalculates the slots and replaces the ones currently stored for that plan.
 
 The core library also depends on `Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan`: a SatOps `Transponder` is also represented as a `Resource` in the MediaOps data model, so `TransponderResourceCreationMiddleware` keeps a matching MediaOps resource in sync whenever a transponder is created or updated.
