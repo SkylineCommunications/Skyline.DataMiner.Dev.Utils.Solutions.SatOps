@@ -13,6 +13,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
     public static class TransponderExposers
     {
         /// <summary>
+        /// Exposes the <see cref="Transponder.Id"/> property for querying as "TransponderId".
+        /// </summary>
+        public static readonly Exposer<Transponder, Guid> TransponderId = new Exposer<Transponder, Guid>((obj) => obj.Id, "TransponderId");
+
+        /// <summary>
         /// Exposes the <see cref="Transponder.Name"/> property for querying as "TransponderName".
         /// </summary>
         public static readonly Exposer<Transponder, string> TransponderName = new Exposer<Transponder, string>((obj) => obj.Name, "TransponderName");

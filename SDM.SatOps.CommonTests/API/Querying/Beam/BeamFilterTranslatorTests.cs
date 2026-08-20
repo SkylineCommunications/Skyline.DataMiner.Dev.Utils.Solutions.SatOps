@@ -117,6 +117,19 @@
             AssertTranslated(result);
         }
 
+        [TestMethod]
+        public void Translate_BeamIdFilter_IsSupported()
+        {
+            // Arrange
+            var translator = new BeamFilterTranslator();
+
+            // Act
+            var result = translator.Translate(BeamExposers.BeamId.Equal(Guid.NewGuid()));
+
+            // Assert
+            AssertTranslated(result);
+        }
+
         private static void AssertTranslated(FilterElement<DomInstance> result)
         {
             var and = result as ANDFilterElement<DomInstance>;

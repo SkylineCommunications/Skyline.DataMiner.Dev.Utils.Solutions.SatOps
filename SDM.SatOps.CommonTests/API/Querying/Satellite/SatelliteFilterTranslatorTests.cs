@@ -122,6 +122,19 @@
             AssertTranslated(result);
         }
 
+        [TestMethod]
+        public void Translate_SatelliteIdFilter_IsSupported()
+        {
+            // Arrange
+            var translator = new SatelliteFilterTranslator();
+
+            // Act
+            var result = translator.Translate(SatelliteExposers.SatelliteId.Equal(Guid.NewGuid()));
+
+            // Assert
+            AssertTranslated(result);
+        }
+
         private static void AssertTranslated(FilterElement<DomInstance> result)
         {
             var and = result as ANDFilterElement<DomInstance>;

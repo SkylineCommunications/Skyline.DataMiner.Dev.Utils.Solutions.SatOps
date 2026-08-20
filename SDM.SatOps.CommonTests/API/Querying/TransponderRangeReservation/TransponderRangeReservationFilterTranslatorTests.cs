@@ -122,6 +122,24 @@
             Assert.AreEqual(0, result.Count);
         }
 
+        [TestMethod]
+        public void ApplyClientSide_ReservationIdFilter_ReturnsMatchingReservation()
+        {
+            // Arrange
+            var translator = new TransponderRangeReservationFilterTranslator();
+            var reservations = new[] { CreateReservation("a"), CreateReservation("b") };
+            var expected = reservations[1];
+
+            // Act
+            var result = translator.ApplyClientSide(
+                TransponderRangeReservationExposers.ReservationId.Equal(expected.Id),
+                reservations).ToList();
+
+            // Assert
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(expected.Id, result[0].Id);
+        }
+
         private static TransponderRangeReservation CreateReservation(string name)
         {
             var reservation = new TransponderRangeReservation();

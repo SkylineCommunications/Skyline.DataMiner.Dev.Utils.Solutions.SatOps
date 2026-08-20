@@ -15,6 +15,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
+            [SatelliteExposers.SatelliteId.fieldName] = HandleGuid,
             [SatelliteExposers.SatelliteName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.SatelliteName), comparer, (string)value),
             [SatelliteExposers.SatelliteAbbreviation.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField

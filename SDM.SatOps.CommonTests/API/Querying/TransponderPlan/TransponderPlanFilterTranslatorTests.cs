@@ -61,6 +61,19 @@
             AssertTranslated(translator.Translate(TransponderPlanExposers.Transponder.Equal(Guid.NewGuid())));
         }
 
+        [TestMethod]
+        public void Translate_PlanIdFilter_IsSupported()
+        {
+            // Arrange
+            var translator = new TransponderPlanFilterTranslator();
+
+            // Act
+            var result = translator.Translate(TransponderPlanExposers.PlanId.Equal(Guid.NewGuid()));
+
+            // Assert
+            AssertTranslated(result);
+        }
+
         private static void AssertTranslated(FilterElement<DomInstance> result)
         {
             var and = result as ANDFilterElement<DomInstance>;

@@ -15,6 +15,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
+            [TransponderPlanExposers.PlanId.fieldName] = HandleGuid,
             [TransponderPlanExposers.PlanName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.PlanName), comparer, (string)value),
             [TransponderPlanExposers.StartTime.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField

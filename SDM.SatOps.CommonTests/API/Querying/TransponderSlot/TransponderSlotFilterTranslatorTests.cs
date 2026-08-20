@@ -84,6 +84,19 @@
             Assert.AreEqual(3, and.subFilters.Length);
         }
 
+        [TestMethod]
+        public void Translate_SlotIdFilter_IsSupported()
+        {
+            // Arrange
+            var translator = new TransponderSlotFilterTranslator();
+
+            // Act
+            var result = translator.Translate(TransponderSlotExposers.SlotId.Equal(Guid.NewGuid()));
+
+            // Assert
+            AssertTranslated(result);
+        }
+
         private static void AssertTranslated(FilterElement<DomInstance> result)
         {
             var and = result as ANDFilterElement<DomInstance>;

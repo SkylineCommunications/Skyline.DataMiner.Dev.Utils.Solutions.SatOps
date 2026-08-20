@@ -13,6 +13,11 @@
     public static class BeamExposers
     {
         /// <summary>
+        /// Exposes the <see cref="Beam.Id"/> property for querying as "BeamId".
+        /// </summary>
+        public static readonly Exposer<Beam, Guid> BeamId = new Exposer<Beam, Guid>((obj) => obj.Id, "BeamId");
+
+        /// <summary>
         /// Exposes the <see cref="Beam.Name"/> property for querying as "BeamName".
         /// </summary>
         public static readonly Exposer<Beam, string> BeamName = new Exposer<Beam, string>((obj) => obj.Name, "BeamName");

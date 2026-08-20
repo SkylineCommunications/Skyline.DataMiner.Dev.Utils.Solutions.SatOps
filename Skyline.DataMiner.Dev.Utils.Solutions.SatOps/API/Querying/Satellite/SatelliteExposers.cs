@@ -13,6 +13,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
     public static class SatelliteExposers
     {
         /// <summary>
+        /// Exposes the <see cref="Satellite.Id"/> property for querying as "SatelliteId".
+        /// </summary>
+        public static readonly Exposer<Satellite, Guid> SatelliteId = new Exposer<Satellite, Guid>((obj) => obj.Id, "SatelliteId");
+
+        /// <summary>
         /// Exposes the <see cref="Satellite.Name"/> property for querying as "SatelliteName".
         /// </summary>
         public static readonly Exposer<Satellite, string> SatelliteName = new Exposer<Satellite, string>((obj) => obj.Name, "SatelliteName");

@@ -57,7 +57,7 @@
             var id = Guid.NewGuid();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamSatellite.Equal(id));
+            var result = translator.Translate(BeamExposers.BeamId.Equal(id));
 
             // Assert
             var and = result as ANDFilterElement<DomInstance>;
@@ -74,7 +74,7 @@
             var id = Guid.NewGuid();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamSatellite.NotEqual(id));
+            var result = translator.Translate(BeamExposers.BeamId.NotEqual(id));
 
             // Assert
             var and = result as ANDFilterElement<DomInstance>;
@@ -87,7 +87,7 @@
         {
             // Arrange
             var translator = new BeamFilterTranslator();
-            var filter = BeamExposers.BeamSatellite.Equal(Guid.Empty);
+            var filter = BeamExposers.BeamId.Equal(Guid.Empty);
             var managed = filter as ManagedFilter<Beam, Guid>;
             Assert.IsNotNull(managed);
 

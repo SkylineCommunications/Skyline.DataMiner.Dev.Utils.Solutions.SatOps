@@ -13,6 +13,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot
     public static class TransponderSlotExposers
     {
         /// <summary>
+        /// Exposes the <see cref="TransponderSlot.Id"/> property for querying as "SlotId".
+        /// </summary>
+        public static readonly Exposer<TransponderSlot, Guid> SlotId = new Exposer<TransponderSlot, Guid>((obj) => obj.Id, "SlotId");
+
+        /// <summary>
         /// Exposes the <see cref="TransponderSlot.TransponderPlan"/> property for querying.
         /// </summary>
         public static readonly Exposer<TransponderSlot, Guid> TransponderPlan = new Exposer<TransponderSlot, Guid>((obj) => obj.TransponderPlan.Value, "TransponderPlan");

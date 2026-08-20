@@ -42,6 +42,18 @@ var wideSlots = api.TransponderSlots.Read(
     TransponderSlotExposers.Bandwidth.GreaterThan(36.0));
 ```
 
+Every exposer class also exposes the entity's own id (`SatelliteId`, `BeamId`, `TransponderId`, `PlanId`,
+`PlanRowId`, `SlotId` and `ReservationId`), which is the only way to read a single transponder slot
+(`ITransponderSlotRepository` has no `Read(Guid)`).
+
+```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot;
+
+var slot = api.TransponderSlots
+    .Read(TransponderSlotExposers.SlotId.Equal(slotId))
+    .FirstOrDefault();
+```
+
 **Create an entity:**
 
 Every repository exposes `Initialize()` to obtain a new, correctly backed instance. Fill in the properties and pass it to `Create`.

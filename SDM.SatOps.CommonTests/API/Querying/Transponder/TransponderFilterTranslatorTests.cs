@@ -180,6 +180,19 @@
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
         }
 
+        [TestMethod]
+        public void Translate_TransponderIdFilter_IsSupported()
+        {
+            // Arrange
+            var translator = new TransponderFilterTranslator();
+
+            // Act
+            var result = translator.Translate(TransponderExposers.TransponderId.Equal(Guid.NewGuid()));
+
+            // Assert
+            AssertTranslated(result);
+        }
+
         private static void AssertTranslated(FilterElement<DomInstance> result)
         {
             var and = result as ANDFilterElement<DomInstance>;
