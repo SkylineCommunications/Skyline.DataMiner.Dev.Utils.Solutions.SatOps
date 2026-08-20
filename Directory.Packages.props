@@ -21,7 +21,7 @@
     <PackageVersion Include="Skyline.DataMiner.CICD.CSharpAnalysis.Analyzer" Version="2.1.2" />
     <PackageVersion Include="Skyline.DataMiner.Dev.Protocol" Version="10.5.11.1" />
     <PackageVersion Include="Skyline.DataMiner.Dev.Utils.SDM.Abstractions" Version="1.0.1" />
-    <PackageVersion Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" Version="1.7.0-alpha005" />
+    <PackageVersion Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" Version="1.7.0-alpha013" />
     <PackageVersion Include="Skyline.DataMiner.SDM" Version="1.0.1" />
     <PackageVersion Include="Skyline.DataMiner.SDM.Registration.Common" Version="2.0.5" />
     <PackageVersion Include="Skyline.DataMiner.SDM.SourceGenerator.Runtime" Version="1.0.1" />
