@@ -57,10 +57,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             // set so that duplicates inside the batch itself are rejected.
             var takenResourceNames = ReadTakenResourceNames(transponders);
 
+            // Resolve every referenced satellite once instead of once per transponder.
+            var satelliteNamesById = ReadSatelliteNamesById(transponders);
+
             try
             {
                 foreach (var transponder in transponders)
-                    CreateResource(transponder, takenResourceNames);
+                    CreateResource(transponder, takenResourceNames, satelliteNamesById);
 
                 return next(transponders);
             }
@@ -80,8 +83,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         public IReadOnlyCollection<Transponder> OnUpdate(IEnumerable<Transponder> oToUpdate, Func<IEnumerable<Transponder>, IReadOnlyCollection<Transponder>> next)
         {
             var transponders = oToUpdate.ToList();
+
+            // Resolve every referenced satellite once instead of once per transponder.
+            var satelliteNamesById = ReadSatelliteNamesById(transponders);
+
             foreach (var transponder in transponders)
-                UpdateResource(transponder);
+                UpdateResource(transponder, satelliteNamesById);
             return next(transponders);
         }
 
@@ -139,24 +146,79 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         {
             var names = new List<string>();
 
+            // Resolve every referenced satellite with a single read instead of one read per transponder.
+            var satelliteNamesById = ReadSatelliteNamesById(transponders);
+
             foreach (var transponder in transponders)
             {
                 if (transponder?.TransponderSatellite == null || transponder.TransponderSatellite.Value == Guid.Empty)
                     continue;
 
-                try
+                if (satelliteNamesById.TryGetValue(transponder.TransponderSatellite.Value, out var satelliteName)
+                    && !string.IsNullOrWhiteSpace(satelliteName))
                 {
-                    var satellite = _satelliteRepository.Read(transponder.TransponderSatellite.Value);
-                    if (satellite != null && !string.IsNullOrWhiteSpace(satellite.Name))
-                        names.Add(satellite.Name);
-                }
-                catch (Exception e)
-                {
-                    _logger?.Error($"Failed to resolve satellite '{transponder.TransponderSatellite.Value}' for transponder '{transponder.Name}' during delete cleanup.", e);
+                    names.Add(satelliteName);
                 }
             }
 
             return names.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// Reads the satellites referenced by the supplied transponders with a single repository call and maps their
+        /// identifier to their name.
+        /// </summary>
+        /// <remarks>
+        /// Only the satellite name is needed to provision a transponder resource, so the batch is reduced to an
+        /// identifier/name map. A transponder whose satellite is absent from the map does not exist.
+        /// </remarks>
+        private Dictionary<Guid, string> ReadSatelliteNamesById(IEnumerable<Transponder> transponders)
+        {
+            var satelliteNamesById = new Dictionary<Guid, string>();
+
+            var satelliteIds = transponders
+                .Where(transponder => transponder != null
+                    && transponder.TransponderSatellite.HasValue
+                    && transponder.TransponderSatellite.Value != Guid.Empty)
+                .Select(transponder => transponder.TransponderSatellite.Value)
+                .Distinct()
+                .ToList();
+
+            if (satelliteIds.Count == 0)
+                return satelliteNamesById;
+
+            try
+            {
+                var satellites = _satelliteRepository.Read(satelliteIds);
+                if (satellites == null)
+                    return satelliteNamesById;
+
+                foreach (var satellite in satellites)
+                {
+                    if (satellite != null)
+                        satelliteNamesById[satellite.Id] = satellite.Name;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger?.Error($"Failed to resolve the satellites '{string.Join(", ", satelliteIds)}' referenced by the transponders.", e);
+            }
+
+            return satelliteNamesById;
+        }
+
+        /// <summary>
+        /// Resolves the name of a satellite, preferring the map that was pre-read for the batch and falling back to a
+        /// single read when the transponder is handled on its own.
+        /// </summary>
+        private bool TryResolveSatelliteName(Guid satelliteId, IReadOnlyDictionary<Guid, string> satelliteNamesById, out string satelliteName)
+        {
+            if (satelliteNamesById != null)
+                return satelliteNamesById.TryGetValue(satelliteId, out satelliteName);
+
+            var satellite = _satelliteRepository.Read(satelliteId);
+            satelliteName = satellite?.Name;
+            return satellite != null;
         }
 
         private void DeleteResources(IReadOnlyCollection<Guid> resourceIds)
@@ -325,6 +387,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void CreateResource(Transponder transponder, HashSet<string> takenResourceNames)
         {
+            CreateResource(transponder, takenResourceNames, null);
+        }
+
+        private void CreateResource(Transponder transponder, HashSet<string> takenResourceNames, IReadOnlyDictionary<Guid, string> satelliteNamesById)
+        {
             if (transponder == null)
                 throw new ArgumentNullException(nameof(transponder));
 
@@ -342,9 +409,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (!transponder.TransponderSatellite.HasValue || transponder.TransponderSatellite.Value == Guid.Empty)
                 throw new ArgumentException("Transponder satellite ID is required.", nameof(transponder));
 
-            var satellite = _satelliteRepository.Read(transponder.TransponderSatellite.Value) ??
+            if (!TryResolveSatelliteName(transponder.TransponderSatellite.Value, satelliteNamesById, out var satelliteName))
                 throw new ArgumentException($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.", nameof(transponder));
-            var satelliteName = satellite.Name;
 
             Guid transponderCapabilityId;
             try
@@ -388,6 +454,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void UpdateResource(Transponder transponder)
         {
+            UpdateResource(transponder, null);
+        }
+
+        private void UpdateResource(Transponder transponder, IReadOnlyDictionary<Guid, string> satelliteNamesById)
+        {
             if (!transponder.DOMResource.HasValue)
                 return;
 
@@ -416,14 +487,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                     return;
                 }
 
-                var satellite = _satelliteRepository.Read(transponder.TransponderSatellite.Value);
-                if (satellite == null)
+                if (!TryResolveSatelliteName(transponder.TransponderSatellite.Value, satelliteNamesById, out var satelliteName))
                 {
                     _logger?.Error($"Satellite '{transponder.TransponderSatellite.Value}' not found for transponder '{transponder.Name}'.");
                     return;
                 }
 
-                var satelliteName = satellite.Name;
                 var transponderCapabilityId = CreateOrGetTransponderCapability(satelliteName);
                 var transponderCapacityId = CreateOrGetTransponderCapacity();
 

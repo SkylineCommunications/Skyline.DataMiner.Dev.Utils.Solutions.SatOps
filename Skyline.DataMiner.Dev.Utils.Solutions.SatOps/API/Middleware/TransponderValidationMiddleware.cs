@@ -39,10 +39,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponder in oToCreate)
-            {
-                ValidateTransponder(transponder);
-            }
+            ValidateTransponders(oToCreate);
 
             return next(oToCreate);
         }
@@ -67,10 +64,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponder in oToUpdate)
-            {
-                ValidateTransponder(transponder);
-            }
+            ValidateTransponders(oToUpdate);
 
             return next(oToUpdate);
         }
@@ -83,10 +77,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponder in oToCreateOrUpdate)
-            {
-                ValidateTransponder(transponder);
-            }
+            ValidateTransponders(oToCreateOrUpdate);
 
             return next(oToCreateOrUpdate);
         }
@@ -158,6 +149,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateTransponder(Transponder transponder)
         {
+            ValidateTransponder(transponder, null);
+        }
+
+        /// <summary>
+        /// Validates a single transponder.
+        /// </summary>
+        /// <param name="transponder">The transponder to validate.</param>
+        /// <param name="knownSatelliteIds">
+        /// The identifiers of the satellites that were already resolved for the whole batch, or <see langword="null"/>
+        /// when the transponder is validated on its own and the satellite still has to be looked up.
+        /// </param>
+        private void ValidateTransponder(Transponder transponder, ISet<Guid> knownSatelliteIds)
+        {
             if (transponder == null)
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponder));
 
@@ -189,8 +193,31 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Resource DOM is required.", nameof(transponder));
 
             var satelliteId = transponder.TransponderSatellite.Value;
-            if (satelliteRepository.Read(satelliteId) == null)
+            var satelliteExists = knownSatelliteIds != null
+                ? knownSatelliteIds.Contains(satelliteId)
+                : satelliteRepository.Read(satelliteId) != null;
+
+            if (!satelliteExists)
                 throw new ArgumentException($"Transponder satellite with id '{satelliteId}' does not exist.", nameof(transponder));
+        }
+
+        /// <summary>
+        /// Validates every transponder of a batch, resolving the referenced satellites with a single repository read
+        /// instead of one read per transponder.
+        /// </summary>
+        /// <remarks>
+        /// The satellites are resolved up front, but the per-transponder checks keep their original order so that a
+        /// batch containing an invalid transponder still reports the same error as before.
+        /// </remarks>
+        private void ValidateTransponders(IEnumerable<Transponder> transponders)
+        {
+            var transpondersToValidate = transponders as IReadOnlyCollection<Transponder> ?? transponders.ToList();
+            var knownSatelliteIds = ReferenceValidationHelper.ReadExistingIds(transpondersToValidate, transponder => transponder.TransponderSatellite, satelliteRepository);
+
+            foreach (var transponder in transpondersToValidate)
+            {
+                ValidateTransponder(transponder, knownSatelliteIds);
+            }
         }
     }
 }

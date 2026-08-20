@@ -8,6 +8,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     internal sealed class TransponderSlotValidationMiddleware : IBulkRepositoryMiddleware<TransponderSlot>
     {
@@ -38,10 +39,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderSlot in oToCreate)
-            {
-                ValidateTransponderSlot(transponderSlot);
-            }
+            ValidateTransponderSlots(oToCreate);
 
             return next(oToCreate);
         }
@@ -66,10 +64,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderSlot in oToUpdate)
-            {
-                ValidateTransponderSlot(transponderSlot);
-            }
+            ValidateTransponderSlots(oToUpdate);
 
             return next(oToUpdate);
         }
@@ -82,10 +77,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderSlot in oToCreateOrUpdate)
-            {
-                ValidateTransponderSlot(transponderSlot);
-            }
+            ValidateTransponderSlots(oToCreateOrUpdate);
 
             return next(oToCreateOrUpdate);
         }
@@ -159,6 +151,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateTransponderSlot(TransponderSlot transponderSlot)
         {
+            ValidateTransponderSlot(transponderSlot, null);
+        }
+
+        /// <summary>
+        /// Validates a single transponder slot.
+        /// </summary>
+        /// <param name="transponderSlot">The slot to validate.</param>
+        /// <param name="knownTransponderPlanIds">
+        /// The identifiers of the transponder plans that were already resolved for the whole batch, or
+        /// <see langword="null"/> when the slot is validated on its own and the plan still has to be looked up.
+        /// </param>
+        private void ValidateTransponderSlot(TransponderSlot transponderSlot, ISet<Guid> knownTransponderPlanIds)
+        {
             if (transponderSlot == null)
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderSlot));
 
@@ -184,8 +189,31 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Downlink Frequency is required.", nameof(transponderSlot));
 
             var transponderPlanId = transponderSlot.TransponderPlan.Value;
-            if (transponderPlanRepository.Read(transponderPlanId) == null)
+            var transponderPlanExists = knownTransponderPlanIds != null
+                ? knownTransponderPlanIds.Contains(transponderPlanId)
+                : transponderPlanRepository.Read(transponderPlanId) != null;
+
+            if (!transponderPlanExists)
                 throw new ArgumentException($"Transponder plan with id '{transponderPlanId}' does not exist.", nameof(transponderSlot));
+        }
+
+        /// <summary>
+        /// Validates every slot of a batch, resolving the referenced transponder plans with a single repository read
+        /// instead of one read per slot.
+        /// </summary>
+        /// <remarks>
+        /// The plans are resolved up front, but the per-slot checks keep their original order so that a batch
+        /// containing an invalid slot still reports the same error as before.
+        /// </remarks>
+        private void ValidateTransponderSlots(IEnumerable<TransponderSlot> transponderSlots)
+        {
+            var slotsToValidate = transponderSlots as IReadOnlyCollection<TransponderSlot> ?? transponderSlots.ToList();
+            var knownTransponderPlanIds = ReferenceValidationHelper.ReadExistingIds(slotsToValidate, slot => slot.TransponderPlan, transponderPlanRepository);
+
+            foreach (var transponderSlot in slotsToValidate)
+            {
+                ValidateTransponderSlot(transponderSlot, knownTransponderPlanIds);
+            }
         }
     }
 }

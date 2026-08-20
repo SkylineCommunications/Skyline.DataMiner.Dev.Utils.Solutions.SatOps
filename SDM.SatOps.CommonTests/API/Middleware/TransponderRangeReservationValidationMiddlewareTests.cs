@@ -7,12 +7,15 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
 
+    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using SLDataGateway.API.Types.Querying;
+
+    using DomModel = Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
 
     /// <summary>
     /// Tests for the <c>TransponderRangeReservationValidationMiddleware</c> validation behavior.
@@ -511,7 +514,26 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var repository = new Mock<ITransponderRepository>();
             repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(transponder);
+
+            // The bulk paths resolve every referenced transponder with a single batch read, so the requested
+            // identifiers are echoed back as existing transponders.
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => transponder != null
+                    ? ids.Select(CreateTransponderWithId).ToList()
+                    : new List<Transponder>());
+
             return repository.Object;
+        }
+
+        private static Transponder CreateTransponderWithId(Guid id)
+        {
+            var domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(id) { ModuleId = DomModel.SlcSatellite_ManagementIds.ModuleId },
+                DomDefinitionId = DomModel.SlcSatellite_ManagementIds.Definitions.Transponders,
+            };
+
+            return Transponder.FromInstance(new DomModel.TranspondersInstance(domInstance));
         }
 
         private static TransponderRangeReservation CreateReservation(int startHour, int endHour, double startFrequency, double endFrequency)

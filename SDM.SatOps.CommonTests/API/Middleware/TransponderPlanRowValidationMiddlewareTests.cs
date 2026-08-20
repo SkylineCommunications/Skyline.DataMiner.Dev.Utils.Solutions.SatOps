@@ -8,6 +8,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 
     using Moq;
 
+    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
@@ -15,6 +16,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
     using SLDataGateway.API.Types.Querying;
+
+    using DomModel = Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
 
     /// <summary>
     /// Tests for the <c>TransponderPlanRowValidationMiddleware</c>.
@@ -461,11 +464,51 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             return new TransponderPlanRowValidationMiddleware(CreatePlanRepository(new TransponderPlan()), CreateRowRepository());
         }
 
+        [TestMethod]
+        public void OnCreateBatch_RowsOnSamePlan_ReadsPlanAndExistingRowsOnlyOnce()
+        {
+            var planRepository = new Mock<ITransponderPlanRepository>();
+            planRepository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => ids.Select(CreatePlanWithId).ToList());
+
+            var rowRepository = new Mock<ITransponderPlanRowRepository>();
+            rowRepository.Setup(r => r.Read(It.IsAny<FilterElement<TransponderPlanRow>>())).Returns(Enumerable.Empty<TransponderPlanRow>());
+
+            var sut = new TransponderPlanRowValidationMiddleware(planRepository.Object, rowRepository.Object);
+            var rows = new List<TransponderPlanRow> { CreateValidRow(10d), CreateValidRow(20d), CreateValidRow(30d) };
+
+            sut.OnCreate((IEnumerable<TransponderPlanRow>)rows, r => r.ToList());
+
+            // The plan existence check is batched and the persisted rows are read once per distinct plan.
+            planRepository.Verify(r => r.Read(It.IsAny<IEnumerable<Guid>>()), Times.Once);
+            planRepository.Verify(r => r.Read(It.IsAny<Guid>()), Times.Never);
+            rowRepository.Verify(r => r.Read(It.IsAny<FilterElement<TransponderPlanRow>>()), Times.Once);
+        }
+
         private static ITransponderPlanRepository CreatePlanRepository(TransponderPlan plan)
         {
             var repository = new Mock<ITransponderPlanRepository>();
             repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(plan);
+
+            // The bulk paths resolve every referenced plan with a single batch read, so the requested
+            // identifiers are echoed back as existing plans.
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => plan != null
+                    ? ids.Select(CreatePlanWithId).ToList()
+                    : new List<TransponderPlan>());
+
             return repository.Object;
+        }
+
+        private static TransponderPlan CreatePlanWithId(Guid id)
+        {
+            var domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(id) { ModuleId = DomModel.SlcSatellite_ManagementIds.ModuleId },
+                DomDefinitionId = DomModel.SlcSatellite_ManagementIds.Definitions.TransponderPlans,
+            };
+
+            return TransponderPlan.FromInstance(new DomModel.TransponderPlansInstance(domInstance));
         }
 
         private static ITransponderPlanRowRepository CreateRowRepository()

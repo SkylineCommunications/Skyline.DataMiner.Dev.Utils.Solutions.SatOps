@@ -5,6 +5,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
@@ -133,7 +134,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 idSet.Add(id);
             }
 
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+            var idFilter = DomInstanceFilterHelper.BuildIdOrFilter(idSet, SlcSatellite_ManagementIds.ModuleId);
+            if (idFilter == null)
+                return Enumerable.Empty<TransponderPlan>();
+
+            return DomHelper.DomInstances.Read(idFilter)
                 .Where(di => IsTransponderPlanInstance(di) && idSet.Contains(di.ID.Id))
                 .Select(di => TransponderPlan.FromInstance(new TransponderPlansInstance(di)));
         }

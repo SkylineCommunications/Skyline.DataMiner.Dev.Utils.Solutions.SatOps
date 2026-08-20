@@ -44,10 +44,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentNullException(nameof(next));
 
             var rowsToCreate = oToCreate.ToList();
-            foreach (var transponderPlanRow in rowsToCreate)
-            {
-                ValidateTransponderPlanRow(transponderPlanRow);
-            }
+            ValidateTransponderPlanRows(rowsToCreate);
 
             ValidateDuplicateBandwidthInBatch(rowsToCreate);
             return next(rowsToCreate);
@@ -74,10 +71,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentNullException(nameof(next));
 
             var rowsToUpdate = oToUpdate.ToList();
-            foreach (var transponderPlanRow in rowsToUpdate)
-            {
-                ValidateTransponderPlanRow(transponderPlanRow);
-            }
+            ValidateTransponderPlanRows(rowsToUpdate);
 
             ValidateDuplicateBandwidthInBatch(rowsToUpdate);
             return next(rowsToUpdate);
@@ -92,10 +86,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentNullException(nameof(next));
 
             var rowsToCreateOrUpdate = oToCreateOrUpdate.ToList();
-            foreach (var transponderPlanRow in rowsToCreateOrUpdate)
-            {
-                ValidateTransponderPlanRow(transponderPlanRow);
-            }
+            ValidateTransponderPlanRows(rowsToCreateOrUpdate);
 
             ValidateDuplicateBandwidthInBatch(rowsToCreateOrUpdate);
             return next(rowsToCreateOrUpdate);
@@ -170,6 +161,23 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateTransponderPlanRow(TransponderPlanRow transponderPlanRow)
         {
+            ValidateTransponderPlanRow(transponderPlanRow, null, null);
+        }
+
+        /// <summary>
+        /// Validates a single transponder plan row.
+        /// </summary>
+        /// <param name="transponderPlanRow">The row to validate.</param>
+        /// <param name="knownTransponderPlanIds">
+        /// The identifiers of the transponder plans that were already resolved for the whole batch, or
+        /// <see langword="null"/> when the row is validated on its own and the plan still has to be looked up.
+        /// </param>
+        /// <param name="rowCache">
+        /// Cache of the persisted rows per transponder plan, shared by all rows of the same batch, or
+        /// <see langword="null"/> when the row is validated on its own.
+        /// </param>
+        private void ValidateTransponderPlanRow(TransponderPlanRow transponderPlanRow, ISet<Guid> knownTransponderPlanIds, IDictionary<Guid, IReadOnlyList<TransponderPlanRow>> rowCache)
+        {
             if (transponderPlanRow == null)
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlanRow));
 
@@ -195,16 +203,49 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Offset is required.", nameof(transponderPlanRow));
 
             var transponderPlanId = transponderPlanRow.TransponderPlan.Value;
-            if (transponderPlanRepository.Read(transponderPlanId) == null)
+            var transponderPlanExists = knownTransponderPlanIds != null
+                ? knownTransponderPlanIds.Contains(transponderPlanId)
+                : transponderPlanRepository.Read(transponderPlanId) != null;
+
+            if (!transponderPlanExists)
                 throw new ArgumentException($"Transponder plan with id '{transponderPlanId}' does not exist.", nameof(transponderPlanRow));
 
-            ValidateDuplicateBandwidthAgainstExistingRows(transponderPlanRow, transponderPlanId);
+            ValidateDuplicateBandwidthAgainstExistingRows(transponderPlanRow, transponderPlanId, rowCache);
         }
 
-        private void ValidateDuplicateBandwidthAgainstExistingRows(TransponderPlanRow transponderPlanRow, Guid transponderPlanId)
+        /// <summary>
+        /// Validates every row of a batch, resolving the referenced transponder plans with a single repository read and
+        /// reading the persisted rows once per distinct plan instead of once per submitted row.
+        /// </summary>
+        /// <remarks>
+        /// The plans are resolved up front, but the per-row checks keep their original order so that a batch containing
+        /// an invalid row still reports the same error as before.
+        /// </remarks>
+        private void ValidateTransponderPlanRows(IReadOnlyCollection<TransponderPlanRow> transponderPlanRows)
         {
-            var existingRows = transponderPlanRowRepository.Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId));
-            var duplicateExists = (existingRows ?? Enumerable.Empty<TransponderPlanRow>())
+            var knownTransponderPlanIds = ReferenceValidationHelper.ReadExistingIds(transponderPlanRows, row => row.TransponderPlan, transponderPlanRepository);
+            var rowCache = new Dictionary<Guid, IReadOnlyList<TransponderPlanRow>>();
+
+            foreach (var transponderPlanRow in transponderPlanRows)
+            {
+                ValidateTransponderPlanRow(transponderPlanRow, knownTransponderPlanIds, rowCache);
+            }
+        }
+
+        /// <summary>
+        /// Returns the persisted rows of a transponder plan, reusing the batch cache when one is available.
+        /// </summary>
+        private IReadOnlyList<TransponderPlanRow> ReadRowsByTransponderPlan(Guid transponderPlanId, IDictionary<Guid, IReadOnlyList<TransponderPlanRow>> rowCache)
+        {
+            return ReferenceValidationHelper.ReadCached(
+                transponderPlanId,
+                rowCache,
+                planId => transponderPlanRowRepository.Read(TransponderPlanRowExposers.TransponderPlan.Equal(planId)));
+        }
+
+        private void ValidateDuplicateBandwidthAgainstExistingRows(TransponderPlanRow transponderPlanRow, Guid transponderPlanId, IDictionary<Guid, IReadOnlyList<TransponderPlanRow>> rowCache)
+        {
+            var duplicateExists = ReadRowsByTransponderPlan(transponderPlanId, rowCache)
                 .Where(row => row != null && row.Id != transponderPlanRow.Id && row.Bandwidth.HasValue)
                 .Any(row => row.Bandwidth.Value == transponderPlanRow.Bandwidth.Value);
 

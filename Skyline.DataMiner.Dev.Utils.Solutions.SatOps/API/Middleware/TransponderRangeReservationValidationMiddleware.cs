@@ -8,6 +8,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     internal sealed class TransponderRangeReservationValidationMiddleware : IBulkRepositoryMiddleware<TransponderRangeReservation>
     {
@@ -38,10 +39,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var reservation in oToCreate)
-            {
-                ValidateReservation(reservation);
-            }
+            ValidateReservations(oToCreate);
 
             return next(oToCreate);
         }
@@ -66,10 +64,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var reservation in oToUpdate)
-            {
-                ValidateReservation(reservation);
-            }
+            ValidateReservations(oToUpdate);
 
             return next(oToUpdate);
         }
@@ -82,10 +77,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var reservation in oToCreateOrUpdate)
-            {
-                ValidateReservation(reservation);
-            }
+            ValidateReservations(oToCreateOrUpdate);
 
             return next(oToCreateOrUpdate);
         }
@@ -154,6 +146,20 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateReservation(TransponderRangeReservation reservation)
         {
+            ValidateReservation(reservation, null);
+        }
+
+        /// <summary>
+        /// Validates a single reservation.
+        /// </summary>
+        /// <param name="reservation">The reservation to validate.</param>
+        /// <param name="knownTransponderIds">
+        /// The identifiers of the transponders that were already resolved for the whole batch, or
+        /// <see langword="null"/> when the reservation is validated on its own and the transponder still has to be
+        /// looked up.
+        /// </param>
+        private void ValidateReservation(TransponderRangeReservation reservation, ISet<Guid> knownTransponderIds)
+        {
             if (reservation == null)
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(reservation));
 
@@ -179,8 +185,31 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException("Start Time must be earlier than End Time.", nameof(reservation));
 
             var transponderId = reservation.Transponder.Value;
-            if (transponderRepository.Read(transponderId) == null)
+            var transponderExists = knownTransponderIds != null
+                ? knownTransponderIds.Contains(transponderId)
+                : transponderRepository.Read(transponderId) != null;
+
+            if (!transponderExists)
                 throw new ArgumentException($"Transponder with id '{transponderId}' does not exist.", nameof(reservation));
+        }
+
+        /// <summary>
+        /// Validates every reservation of a batch, resolving the referenced transponders with a single repository read
+        /// instead of one read per reservation.
+        /// </summary>
+        /// <remarks>
+        /// The transponders are resolved up front, but the per-reservation checks keep their original order so that a
+        /// batch containing an invalid reservation still reports the same error as before.
+        /// </remarks>
+        private void ValidateReservations(IEnumerable<TransponderRangeReservation> reservations)
+        {
+            var reservationsToValidate = reservations as IReadOnlyCollection<TransponderRangeReservation> ?? reservations.ToList();
+            var knownTransponderIds = ReferenceValidationHelper.ReadExistingIds(reservationsToValidate, reservation => reservation.Transponder, transponderRepository);
+
+            foreach (var reservation in reservationsToValidate)
+            {
+                ValidateReservation(reservation, knownTransponderIds);
+            }
         }
     }
 }

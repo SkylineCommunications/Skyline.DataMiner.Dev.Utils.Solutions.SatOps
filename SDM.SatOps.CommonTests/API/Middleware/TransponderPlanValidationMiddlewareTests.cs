@@ -554,6 +554,32 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             return new TransponderPlanValidationMiddleware(CreateTransponderRepository(new Transponder()), CreatePlanRepository(Enumerable.Empty<TransponderPlan>()));
         }
 
+        [TestMethod]
+        public void OnCreateBulk_PlansOnSameTransponder_ReadsTransponderAndExistingPlansOnlyOnce()
+        {
+            var transponderId = Guid.NewGuid();
+
+            var transponderRepository = new Mock<ITransponderRepository>();
+            transponderRepository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => ids.Select(CreateTransponderWithId).ToList());
+
+            var planRepository = new Mock<ITransponderPlanRepository>();
+            planRepository.Setup(r => r.ReadByTransponder(It.IsAny<Guid>())).Returns(Enumerable.Empty<TransponderPlan>());
+
+            var sut = new TransponderPlanValidationMiddleware(transponderRepository.Object, planRepository.Object);
+
+            var plans = new List<TransponderPlan> { CreateValidPlan(), CreateValidPlan(), CreateValidPlan() };
+            foreach (var plan in plans)
+                plan.Transponder = transponderId;
+
+            sut.OnCreate((IEnumerable<TransponderPlan>)plans, p => p.ToList());
+
+            // The transponder existence check is batched and the persisted plans are read once per distinct transponder.
+            transponderRepository.Verify(r => r.Read(It.IsAny<IEnumerable<Guid>>()), Times.Once);
+            transponderRepository.Verify(r => r.Read(It.IsAny<Guid>()), Times.Never);
+            planRepository.Verify(r => r.ReadByTransponder(transponderId), Times.Once);
+        }
+
         private static TransponderPlanValidationMiddleware CreateSut(IEnumerable<TransponderPlan> existingPlans)
         {
             return new TransponderPlanValidationMiddleware(CreateTransponderRepository(new Transponder()), CreatePlanRepository(existingPlans));
@@ -563,7 +589,26 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var repository = new Mock<ITransponderRepository>();
             repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(transponder);
+
+            // The bulk paths resolve every referenced transponder with a single batch read, so the requested
+            // identifiers are echoed back as existing transponders.
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => transponder != null
+                    ? ids.Select(CreateTransponderWithId).ToList()
+                    : new List<Transponder>());
+
             return repository.Object;
+        }
+
+        private static Transponder CreateTransponderWithId(Guid id)
+        {
+            var domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(id) { ModuleId = DomModel.SlcSatellite_ManagementIds.ModuleId },
+                DomDefinitionId = DomModel.SlcSatellite_ManagementIds.Definitions.Transponders,
+            };
+
+            return Transponder.FromInstance(new DomModel.TranspondersInstance(domInstance));
         }
 
         private static ITransponderPlanRepository CreatePlanRepository(IEnumerable<TransponderPlan> existingPlans)

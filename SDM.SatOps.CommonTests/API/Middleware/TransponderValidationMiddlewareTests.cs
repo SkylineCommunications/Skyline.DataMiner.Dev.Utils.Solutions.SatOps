@@ -8,12 +8,15 @@
 
     using Moq;
 
+    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using SLDataGateway.API.Types.Querying;
+
+    using DomModel = Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
 
     /// <summary>
     /// Tests for the <c>TransponderValidationMiddleware</c>.
@@ -530,7 +533,26 @@
         {
             var repository = new Mock<ISatelliteRepository>();
             repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(satellite);
+
+            // The bulk paths resolve every referenced satellite with a single batch read, so the requested
+            // identifiers are echoed back as existing satellites.
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => satellite != null
+                    ? ids.Select(CreateSatelliteWithId).ToList()
+                    : new List<Satellite>());
+
             return repository.Object;
+        }
+
+        private static Satellite CreateSatelliteWithId(Guid id)
+        {
+            var domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(id) { ModuleId = DomModel.SlcSatellite_ManagementIds.ModuleId },
+                DomDefinitionId = DomModel.SlcSatellite_ManagementIds.Definitions.Satellites,
+            };
+
+            return Satellite.FromInstance(new DomModel.SatellitesInstance(domInstance));
         }
 
         private static Transponder CreateValidTransponder()

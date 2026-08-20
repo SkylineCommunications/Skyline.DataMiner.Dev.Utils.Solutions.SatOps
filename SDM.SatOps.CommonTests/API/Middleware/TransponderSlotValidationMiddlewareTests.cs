@@ -8,12 +8,15 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 
     using Moq;
 
+    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using SLDataGateway.API.Types.Querying;
+
+    using DomModel = Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
 
     /// <summary>
     /// Tests for the <c>TransponderSlotValidationMiddleware</c>.
@@ -530,7 +533,26 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var repository = new Mock<ITransponderPlanRepository>();
             repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(plan);
+
+            // The bulk paths resolve every referenced plan with a single batch read, so the requested
+            // identifiers are echoed back as existing plans.
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => plan != null
+                    ? ids.Select(CreatePlanWithId).ToList()
+                    : new List<TransponderPlan>());
+
             return repository.Object;
+        }
+
+        private static TransponderPlan CreatePlanWithId(Guid id)
+        {
+            var domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(id) { ModuleId = DomModel.SlcSatellite_ManagementIds.ModuleId },
+                DomDefinitionId = DomModel.SlcSatellite_ManagementIds.Definitions.TransponderPlans,
+            };
+
+            return TransponderPlan.FromInstance(new DomModel.TransponderPlansInstance(domInstance));
         }
 
         private static TransponderSlot CreateValidSlot()

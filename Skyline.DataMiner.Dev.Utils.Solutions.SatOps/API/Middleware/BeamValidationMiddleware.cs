@@ -8,6 +8,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     internal sealed class BeamValidationMiddleware : IBulkRepositoryMiddleware<Beam>
     {
@@ -38,10 +39,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var beam in oToCreate)
-            {
-                ValidateBeam(beam);
-            }
+            ValidateBeams(oToCreate);
 
             return next(oToCreate);
         }
@@ -66,10 +64,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var beam in oToUpdate)
-            {
-                ValidateBeam(beam);
-            }
+            ValidateBeams(oToUpdate);
 
             return next(oToUpdate);
         }
@@ -82,10 +77,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var beam in oToCreateOrUpdate)
-            {
-                ValidateBeam(beam);
-            }
+            ValidateBeams(oToCreateOrUpdate);
 
             return next(oToCreateOrUpdate);
         }
@@ -108,10 +100,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var beam in oToDelete)
-            {
-                ValidateBeam(beam);
-            }
+            ValidateBeams(oToDelete);
 
             next(oToDelete);
         }
@@ -159,6 +148,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateBeam(Beam beam)
         {
+            ValidateBeam(beam, null);
+        }
+
+        /// <summary>
+        /// Validates a single beam.
+        /// </summary>
+        /// <param name="beam">The beam to validate.</param>
+        /// <param name="knownSatelliteIds">
+        /// The identifiers of the satellites that were already resolved for the whole batch, or <see langword="null"/>
+        /// when the beam is validated on its own and the satellite still has to be looked up.
+        /// </param>
+        private void ValidateBeam(Beam beam, ISet<Guid> knownSatelliteIds)
+        {
             if (beam == null)
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(beam));
 
@@ -166,8 +168,31 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.BeamSatelliteIsRequired, nameof(beam));
 
             var satelliteId = beam.BeamSatellite.Value;
-            if (satelliteRepository.Read(satelliteId) == null)
+            var satelliteExists = knownSatelliteIds != null
+                ? knownSatelliteIds.Contains(satelliteId)
+                : satelliteRepository.Read(satelliteId) != null;
+
+            if (!satelliteExists)
                 throw new ArgumentException(string.Format(ExceptionMessages.BeamSatelliteDoesNotExist, satelliteId), nameof(beam));
+        }
+
+        /// <summary>
+        /// Validates every beam of a batch, resolving the referenced satellites with a single repository read
+        /// instead of one read per beam.
+        /// </summary>
+        /// <remarks>
+        /// The satellites are resolved up front, but the per-beam checks keep their original order so that a batch
+        /// containing an invalid beam still reports the same error as before.
+        /// </remarks>
+        private void ValidateBeams(IEnumerable<Beam> beams)
+        {
+            var beamsToValidate = beams as IReadOnlyCollection<Beam> ?? beams.ToList();
+            var knownSatelliteIds = ReferenceValidationHelper.ReadExistingIds(beamsToValidate, beam => beam.BeamSatellite, satelliteRepository);
+
+            foreach (var beam in beamsToValidate)
+            {
+                ValidateBeam(beam, knownSatelliteIds);
+            }
         }
     }
 }

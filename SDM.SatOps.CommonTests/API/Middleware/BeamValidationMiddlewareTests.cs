@@ -8,6 +8,7 @@
 
     using Moq;
 
+    using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
 
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
@@ -15,6 +16,8 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using SLDataGateway.API.Types.Querying;
+
+    using DomModel = Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
 
     /// <summary>
     /// Tests for the <c>BeamValidationMiddleware</c> create/update validation behavior.
@@ -440,14 +443,85 @@
 
         private static BeamValidationMiddleware CreateSut(bool satelliteExists)
         {
-            return new BeamValidationMiddleware(CreateSatelliteRepository(satelliteExists ? new Satellite() : null));
+            return new BeamValidationMiddleware(CreateSatelliteRepository(satelliteExists));
         }
 
-        private static ISatelliteRepository CreateSatelliteRepository(Satellite satellite)
+        [TestMethod]
+        public void OnCreateBulk_MultipleBeams_ResolvesSatellitesWithASingleBatchRead()
         {
             var repository = new Mock<ISatelliteRepository>();
-            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(satellite);
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => ids.Select(CreateSatelliteWithId).ToList());
+
+            var sut = new BeamValidationMiddleware(repository.Object);
+            var input = new List<Beam> { CreateBeam(Guid.NewGuid()), CreateBeam(Guid.NewGuid()), CreateBeam(Guid.NewGuid()) };
+
+            sut.OnCreate((IEnumerable<Beam>)input, b => b.ToList());
+
+            repository.Verify(r => r.Read(It.IsAny<IEnumerable<Guid>>()), Times.Once);
+            repository.Verify(r => r.Read(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_BeamsSharingSatellite_RequestsThatSatelliteOnlyOnce()
+        {
+            var satelliteId = Guid.NewGuid();
+            List<Guid> requestedIds = null;
+
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) =>
+                {
+                    requestedIds = ids.ToList();
+                    return requestedIds.Select(CreateSatelliteWithId).ToList();
+                });
+
+            var sut = new BeamValidationMiddleware(repository.Object);
+            var input = new List<Beam> { CreateBeam(satelliteId), CreateBeam(satelliteId), CreateBeam(satelliteId) };
+
+            sut.OnCreate((IEnumerable<Beam>)input, b => b.ToList());
+
+            CollectionAssert.AreEqual(new[] { satelliteId }, requestedIds);
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_ValidBeam_StillUsesTheSingleRead()
+        {
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(new Satellite());
+
+            var sut = new BeamValidationMiddleware(repository.Object);
+
+            sut.OnCreate(CreateBeam(Guid.NewGuid()), b => b);
+
+            repository.Verify(r => r.Read(It.IsAny<Guid>()), Times.Once);
+            repository.Verify(r => r.Read(It.IsAny<IEnumerable<Guid>>()), Times.Never);
+        }
+
+        private static ISatelliteRepository CreateSatelliteRepository(bool satelliteExists)
+        {
+            var repository = new Mock<ISatelliteRepository>();
+            repository.Setup(r => r.Read(It.IsAny<Guid>())).Returns(satelliteExists ? new Satellite() : null);
+
+            // The bulk paths resolve every referenced satellite with a single batch read, so the requested
+            // identifiers are echoed back as existing satellites.
+            repository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => satelliteExists
+                    ? ids.Select(CreateSatelliteWithId).ToList()
+                    : new List<Satellite>());
+
             return repository.Object;
+        }
+
+        private static Satellite CreateSatelliteWithId(Guid id)
+        {
+            var domInstance = new DomInstance
+            {
+                ID = new DomInstanceId(id) { ModuleId = DomModel.SlcSatellite_ManagementIds.ModuleId },
+                DomDefinitionId = DomModel.SlcSatellite_ManagementIds.Definitions.Satellites,
+            };
+
+            return Satellite.FromInstance(new DomModel.SatellitesInstance(domInstance));
         }
 
         private static Beam CreateBeam(Guid? satelliteId)

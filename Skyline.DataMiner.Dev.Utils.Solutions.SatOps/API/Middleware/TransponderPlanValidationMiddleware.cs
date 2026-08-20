@@ -43,10 +43,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlan in oToCreate)
-            {
-                ValidateTransponderPlan(transponderPlan);
-            }
+            ValidateTransponderPlans(oToCreate);
 
             return next(oToCreate);
         }
@@ -71,10 +68,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlan in oToUpdate)
-            {
-                ValidateTransponderPlan(transponderPlan);
-            }
+            ValidateTransponderPlans(oToUpdate);
 
             return next(oToUpdate);
         }
@@ -87,10 +81,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlan in oToCreateOrUpdate)
-            {
-                ValidateTransponderPlan(transponderPlan);
-            }
+            ValidateTransponderPlans(oToCreateOrUpdate);
 
             return next(oToCreateOrUpdate);
         }
@@ -164,6 +155,23 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         private void ValidateTransponderPlan(TransponderPlan transponderPlan)
         {
+            ValidateTransponderPlan(transponderPlan, null, null);
+        }
+
+        /// <summary>
+        /// Validates a single transponder plan.
+        /// </summary>
+        /// <param name="transponderPlan">The plan to validate.</param>
+        /// <param name="knownTransponderIds">
+        /// The identifiers of the transponders that were already resolved for the whole batch, or
+        /// <see langword="null"/> when the plan is validated on its own and the transponder still has to be looked up.
+        /// </param>
+        /// <param name="planCache">
+        /// Cache of the persisted plans per transponder, shared by all plans of the same batch, or
+        /// <see langword="null"/> when the plan is validated on its own.
+        /// </param>
+        private void ValidateTransponderPlan(TransponderPlan transponderPlan, ISet<Guid> knownTransponderIds, IDictionary<Guid, IReadOnlyList<TransponderPlan>> planCache)
+        {
             if (transponderPlan == null)
                 throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderPlan));
 
@@ -180,15 +188,47 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 throw new ArgumentException(ExceptionMessages.TransponderPlanTransponderIsRequired, nameof(transponderPlan));
 
             var transponderId = transponderPlan.Transponder.Value;
-            if (transponderRepository.Read(transponderId) == null)
+            var transponderExists = knownTransponderIds != null
+                ? knownTransponderIds.Contains(transponderId)
+                : transponderRepository.Read(transponderId) != null;
+
+            if (!transponderExists)
                 throw new ArgumentException(string.Format(ExceptionMessages.TransponderWithIdDoesNotExist, transponderId), nameof(transponderPlan));
 
-            ValidatePlanConstraints(transponderPlan, transponderId);
+            ValidatePlanConstraints(transponderPlan, transponderId, planCache);
         }
 
-        private void ValidatePlanConstraints(TransponderPlan transponderPlan, Guid transponderId)
+        /// <summary>
+        /// Validates every plan of a batch, resolving the referenced transponders with a single repository read and
+        /// reading the persisted plans once per distinct transponder instead of once per submitted plan.
+        /// </summary>
+        /// <remarks>
+        /// The transponders are resolved up front, but the per-plan checks keep their original order so that a batch
+        /// containing an invalid plan still reports the same error as before.
+        /// </remarks>
+        private void ValidateTransponderPlans(IEnumerable<TransponderPlan> transponderPlans)
         {
-            var existingPlans = (transponderPlanRepository.ReadByTransponder(transponderId) ?? Enumerable.Empty<TransponderPlan>())
+            var plansToValidate = transponderPlans as IReadOnlyCollection<TransponderPlan> ?? transponderPlans.ToList();
+            var knownTransponderIds = ReferenceValidationHelper.ReadExistingIds(plansToValidate, plan => plan.Transponder, transponderRepository);
+            var planCache = new Dictionary<Guid, IReadOnlyList<TransponderPlan>>();
+
+            foreach (var transponderPlan in plansToValidate)
+            {
+                ValidateTransponderPlan(transponderPlan, knownTransponderIds, planCache);
+            }
+        }
+
+        /// <summary>
+        /// Returns the persisted plans of a transponder, reusing the batch cache when one is available.
+        /// </summary>
+        private IReadOnlyList<TransponderPlan> ReadPlansByTransponder(Guid transponderId, IDictionary<Guid, IReadOnlyList<TransponderPlan>> planCache)
+        {
+            return ReferenceValidationHelper.ReadCached(transponderId, planCache, transponderPlanRepository.ReadByTransponder);
+        }
+
+        private void ValidatePlanConstraints(TransponderPlan transponderPlan, Guid transponderId, IDictionary<Guid, IReadOnlyList<TransponderPlan>> planCache)
+        {
+            var existingPlans = ReadPlansByTransponder(transponderId, planCache)
                 .Where(plan => plan != null && plan.Status != InstanceStatus.Deprecated && plan.Id != transponderPlan.Id)
                 .ToList();
 
