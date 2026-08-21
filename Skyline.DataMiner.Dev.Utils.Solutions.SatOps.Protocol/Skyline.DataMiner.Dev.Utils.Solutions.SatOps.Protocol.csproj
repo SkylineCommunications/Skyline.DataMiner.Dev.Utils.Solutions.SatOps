@@ -20,7 +20,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>SatOps SDM NuGet Package for protocols.</Description>
-		<Version>0.2.4</Version>
+		<Version>0.2.5</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
