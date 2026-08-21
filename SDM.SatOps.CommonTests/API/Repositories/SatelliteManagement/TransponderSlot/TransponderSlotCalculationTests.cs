@@ -75,6 +75,55 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             Assert.AreEqual(72d, slots[0].Stop);
         }
 
+        [TestMethod]
+        public void CalculateSlots_PlanWithMultipleBandwidthRows_TilesTheTransponderPerBandwidth()
+        {
+            // A 36 MHz transponder with three rows: 4, 6 and 12 MHz. Every row tiles the full transponder,
+            // so the rows deliberately cover the same frequency range.
+            var slots = CalculateSlotsForRows(
+                transponderBandwidth: 36d,
+                rows: new[]
+                {
+                    new PlanRow(bandwidth: 4d, step: 4d, offset: 0d, limit: 36d),
+                    new PlanRow(bandwidth: 6d, step: 6d, offset: 0d, limit: 36d),
+                    new PlanRow(bandwidth: 12d, step: 12d, offset: 0d, limit: 36d),
+                });
+
+            Assert.AreEqual(9 + 6 + 3, slots.Count);
+            CollectionAssert.AreEqual(
+                new[] { "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4" },
+                slots.Where(s => s.Bandwidth == 4d).Select(s => s.Name).ToArray());
+            CollectionAssert.AreEqual(
+                new[] { "A6", "B6", "C6", "D6", "E6", "F6" },
+                slots.Where(s => s.Bandwidth == 6d).Select(s => s.Name).ToArray());
+            CollectionAssert.AreEqual(
+                new[] { "A12", "B12", "C12" },
+                slots.Where(s => s.Bandwidth == 12d).Select(s => s.Name).ToArray());
+        }
+
+        [TestMethod]
+        public void CalculateSlots_PlanWithMultipleBandwidthRows_SlotsPassOverlapValidation()
+        {
+            var calculated = CalculateSlotsForRows(
+                transponderBandwidth: 36d,
+                rows: new[]
+                {
+                    new PlanRow(bandwidth: 4d, step: 4d, offset: 0d, limit: 36d),
+                    new PlanRow(bandwidth: 6d, step: 6d, offset: 0d, limit: 36d),
+                    new PlanRow(bandwidth: 12d, step: 12d, offset: 0d, limit: 36d),
+                });
+
+            var slots = calculated.Select(ToSlot).ToList();
+
+            var repository = new Mock<ITransponderSlotRepository>();
+            repository.Setup(r => r.ReadByTransponderPlan(It.IsAny<Guid>())).Returns(Enumerable.Empty<TransponderSlot>());
+            var sut = new SlotOverlapValidationMiddleware(repository.Object);
+
+            var result = sut.OnCreate(slots, s => s.ToList());
+
+            Assert.AreEqual(18, result.Count);
+        }
+
         private static TransponderSlot ToSlot(CalculatedSlot calculated)
         {
             var slot = new TransponderSlot();
@@ -82,8 +131,16 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             slot.Name = calculated.Name;
             slot.SlotStartFrequency = calculated.Start;
             slot.SlotEndFrequency = calculated.Stop;
+            slot.Bandwidth = calculated.Bandwidth;
 
             return slot;
+        }
+
+        private static IReadOnlyList<CalculatedSlot> CalculateSlotsForRows(double transponderBandwidth, IEnumerable<PlanRow> rows)
+        {
+            return rows
+                .SelectMany(row => CalculateSlots(transponderBandwidth, row.Offset, row.Step, row.Bandwidth, row.Limit))
+                .ToList();
         }
 
         private static IReadOnlyList<CalculatedSlot> CalculateSlots(double transponderBandwidth, double offset, double step, double bandwidth, double limit)
@@ -95,7 +152,26 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
                 null,
                 new object[] { transponderBandwidth, 0d, 0d, offset, step, bandwidth, limit });
 
-            return calculations.Cast<object>().Select(CalculatedSlot.FromCalculation).ToList();
+            return calculations.Cast<object>().Select(c => CalculatedSlot.FromCalculation(c, bandwidth)).ToList();
+        }
+
+        private sealed class PlanRow
+        {
+            public PlanRow(double bandwidth, double step, double offset, double limit)
+            {
+                Bandwidth = bandwidth;
+                Step = step;
+                Offset = offset;
+                Limit = limit;
+            }
+
+            public double Bandwidth { get; }
+
+            public double Step { get; }
+
+            public double Offset { get; }
+
+            public double Limit { get; }
         }
 
         private sealed class CalculatedSlot
@@ -106,7 +182,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             public double Stop { get; private set; }
 
-            public static CalculatedSlot FromCalculation(object calculation)
+            public double Bandwidth { get; private set; }
+
+            public static CalculatedSlot FromCalculation(object calculation, double bandwidth)
             {
                 var type = calculation.GetType();
 
@@ -115,6 +193,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
                     Name = (string)type.GetProperty("SlotName").GetValue(calculation),
                     Start = (double)type.GetProperty("StartFrequency").GetValue(calculation),
                     Stop = (double)type.GetProperty("StopFrequency").GetValue(calculation),
+                    Bandwidth = bandwidth,
                 };
             }
         }

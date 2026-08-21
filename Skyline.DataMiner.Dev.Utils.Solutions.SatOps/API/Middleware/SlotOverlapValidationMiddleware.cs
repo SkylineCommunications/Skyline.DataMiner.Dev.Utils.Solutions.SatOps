@@ -20,10 +20,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     /// excluding the slots that are part of the submission itself) and the resulting set is validated as a whole.
     /// Conflicts that only exist between already persisted slots are ignored, so pre-existing data cannot
     /// block an unrelated create or update.
+    /// <para>
+    /// A transponder plan holds one plan row per bandwidth, and every row tiles the same transponder
+    /// independently. Slots of different bandwidths therefore deliberately cover the same frequency range
+    /// (a 36 MHz transponder is for example sliced into 4, 6 and 12 MHz slots at the same time), so overlaps
+    /// are only validated between slots that have the same bandwidth. Slot names remain unique across the
+    /// whole plan.
+    /// </para>
     /// </remarks>
     internal sealed class SlotOverlapValidationMiddleware : IBulkRepositoryMiddleware<TransponderSlot>
     {
         private const double OverlapTolerance = 1e-9;
+        private const int BandwidthPrecision = 9;
 
         private readonly ITransponderSlotRepository slotRepository;
 
@@ -170,7 +178,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
         /// <summary>
         /// Validates all slots of a single transponder plan: the submitted ones combined with the persisted ones
-        /// that are not part of the submission.
+        /// that are not part of the submission. Names are unique across the whole plan, while overlaps are only
+        /// validated between slots of the same bandwidth, because every bandwidth tiles the transponder on its own.
         /// </summary>
         private void ValidatePlan(Guid planId, IReadOnlyCollection<TransponderSlot> submitted, string parameterName)
         {
@@ -180,24 +189,59 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 .Where(s => HasValidatableRange(s) && !submittedIds.Contains(s.Id))
                 .Select(s => new SlotCandidate(s, isSubmitted: false));
 
-            var sorted = submitted
+            var candidates = submitted
                 .Select(s => new SlotCandidate(s, isSubmitted: true))
                 .Concat(persisted)
-                .OrderBy(c => c.Start)
                 .ToList();
 
+            ValidateNames(candidates, parameterName);
+
+            foreach (var bandwidthLayer in candidates.GroupBy(c => GetBandwidthKey(c.Slot)))
+            {
+                ValidateBandwidthLayer(bandwidthLayer, parameterName);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that no two slots of the same plan share a name. Collisions between two persisted slots
+        /// are ignored.
+        /// </summary>
+        private static void ValidateNames(IEnumerable<SlotCandidate> candidates, string parameterName)
+        {
             var namesSeen = new Dictionary<string, SlotCandidate>(StringComparer.OrdinalIgnoreCase);
+            foreach (var current in candidates)
+            {
+                ValidateName(current, namesSeen, parameterName);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that the slots of a single bandwidth do not overlap each other.
+        /// </summary>
+        private static void ValidateBandwidthLayer(IEnumerable<SlotCandidate> candidates, string parameterName)
+        {
+            var sorted = candidates.OrderBy(c => c.Start).ToList();
             var overlapping = new List<SlotCandidate>();
 
             foreach (var current in sorted)
             {
-                ValidateName(current, namesSeen, parameterName);
-
                 overlapping.RemoveAll(c => !SlotsOverlap(c.Start, c.End, current.Start, current.End));
                 ValidateOverlap(current, overlapping, parameterName);
 
                 overlapping.Add(current);
             }
+        }
+
+        /// <summary>
+        /// Returns the key that groups slots into the bandwidth layer they belong to. Slots without a bandwidth
+        /// are all validated against each other.
+        /// </summary>
+        private static double? GetBandwidthKey(TransponderSlot slot)
+        {
+            if (!slot.Bandwidth.HasValue)
+                return null;
+
+            return Math.Round(slot.Bandwidth.Value, BandwidthPrecision, MidpointRounding.AwayFromZero);
         }
 
         /// <summary>

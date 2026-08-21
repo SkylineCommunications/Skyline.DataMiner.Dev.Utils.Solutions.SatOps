@@ -673,6 +673,70 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 (Func<IQuery<TransponderSlot>, int, IEnumerable<IPagedResult<TransponderSlot>>>)null));
         }
 
+        [TestMethod]
+        public void OnCreateBulk_OverlappingSlotsWithDifferentBandwidths_CallsNext()
+        {
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
+            var slots = new[]
+            {
+                CreateSlot("A4", 0, 4, PlanId, 4d),
+                CreateSlot("A6", 0, 6, PlanId, 6d),
+                CreateSlot("A12", 0, 12, PlanId, 12d),
+            };
+
+            var result = sut.OnCreate(slots, s => s.ToList());
+
+            Assert.AreEqual(3, result.Count);
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_OverlappingSlotsWithSameBandwidth_ThrowsArgumentException()
+        {
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
+            var slots = new[]
+            {
+                CreateSlot("A4", 0, 4, PlanId, 4d),
+                CreateSlot("B4", 2, 6, PlanId, 4d),
+            };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_OverlappingPersistedSlotWithDifferentBandwidth_CallsNext()
+        {
+            var existing = CreateSlot("A12", 0, 12, PlanId, 12d);
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
+            var slot = CreateSlot("A4", 0, 4, PlanId, 4d);
+
+            var result = sut.OnCreate(slot, s => s);
+
+            Assert.AreSame(slot, result);
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_OverlappingPersistedSlotWithSameBandwidth_ThrowsArgumentException()
+        {
+            var existing = CreateSlot("B4", 2, 6, PlanId, 4d);
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
+            var slot = CreateSlot("A4", 0, 4, PlanId, 4d);
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_DuplicateNamesAcrossBandwidths_ThrowsArgumentException()
+        {
+            var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => Enumerable.Empty<TransponderSlot>()));
+            var slots = new[]
+            {
+                CreateSlot("A", 0, 4, PlanId, 4d),
+                CreateSlot("A", 100, 112, PlanId, 12d),
+            };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+        }
+
         private static ITransponderSlotRepository CreateRepository(Func<Guid, IEnumerable<TransponderSlot>> existingSlotsResolver)
         {
             var repository = new Mock<ITransponderSlotRepository>();
@@ -687,6 +751,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             slot.SlotStartFrequency = start;
             slot.SlotEndFrequency = end;
             slot.TransponderPlan = planId;
+            return slot;
+        }
+
+        private static TransponderSlot CreateSlot(string name, double? start, double? end, Guid? planId, double? bandwidth)
+        {
+            var slot = CreateSlot(name, start, end, planId);
+            slot.Bandwidth = bandwidth;
             return slot;
         }
     }
