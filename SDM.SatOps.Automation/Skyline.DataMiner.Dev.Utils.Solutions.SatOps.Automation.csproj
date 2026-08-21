@@ -21,7 +21,7 @@
 		<Authors>SkylineCommunications</Authors>
 		<Company>Skyline Communications</Company>
 		<Description>DevPack for the SatOps Solution</Description>
-		<Version>0.2.3</Version>
+		<Version>0.2.4</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
