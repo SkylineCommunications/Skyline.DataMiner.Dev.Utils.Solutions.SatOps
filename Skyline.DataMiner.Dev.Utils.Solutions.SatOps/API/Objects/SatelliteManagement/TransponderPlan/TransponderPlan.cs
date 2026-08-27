@@ -80,6 +80,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         /// <summary>
         /// Gets or sets the plan start time.
         /// </summary>
+        /// <remarks>
+        /// When the plan is permanent, this value is set to <see cref="DateTime.MinValue"/> while the plan is created or updated.
+        /// </remarks>
         public DateTime? StartTime
         {
             get => updatedInstance.TransponderPlan?.StartTime;
@@ -89,6 +92,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         /// <summary>
         /// Gets or sets the plan end time.
         /// </summary>
+        /// <remarks>
+        /// When the plan is permanent, this value is set to <see cref="DateTime.MaxValue"/> while the plan is created or updated.
+        /// </remarks>
         public DateTime? EndTime
         {
             get => updatedInstance.TransponderPlan?.EndTime;
@@ -98,6 +104,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         /// <summary>
         /// Gets or sets a value indicating whether the plan is permanent.
         /// </summary>
+        /// <remarks>
+        /// A permanent plan covers the entire timeline: creating or updating it through the API forces
+        /// <see cref="StartTime"/> to <see cref="DateTime.MinValue"/> and <see cref="EndTime"/> to <see cref="DateTime.MaxValue"/>.
+        /// </remarks>
         public bool? IsPermanent
         {
             get => updatedInstance.TransponderPlan?.IsPermanent;

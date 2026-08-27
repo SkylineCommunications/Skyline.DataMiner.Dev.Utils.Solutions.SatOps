@@ -31,6 +31,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
+            NormalizePermanentPlan(oToCreate);
             ValidateTransponderPlan(oToCreate);
             return next(oToCreate);
         }
@@ -43,9 +44,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateTransponderPlans(oToCreate);
+            var plansToCreate = Materialize(oToCreate);
+            ValidateTransponderPlans(plansToCreate);
 
-            return next(oToCreate);
+            return next(plansToCreate);
         }
 
         public TransponderPlan OnUpdate(TransponderPlan oToUpdate, Func<TransponderPlan, TransponderPlan> next)
@@ -56,6 +58,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
+            NormalizePermanentPlan(oToUpdate);
             ValidateTransponderPlan(oToUpdate);
             return next(oToUpdate);
         }
@@ -68,9 +71,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateTransponderPlans(oToUpdate);
+            var plansToUpdate = Materialize(oToUpdate);
+            ValidateTransponderPlans(plansToUpdate);
 
-            return next(oToUpdate);
+            return next(plansToUpdate);
         }
 
         public IReadOnlyCollection<TransponderPlan> OnCreateOrUpdate(IEnumerable<TransponderPlan> oToCreateOrUpdate, Func<IEnumerable<TransponderPlan>, IReadOnlyCollection<TransponderPlan>> next)
@@ -81,9 +85,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateTransponderPlans(oToCreateOrUpdate);
+            var plansToCreateOrUpdate = Materialize(oToCreateOrUpdate);
+            ValidateTransponderPlans(plansToCreateOrUpdate);
 
-            return next(oToCreateOrUpdate);
+            return next(plansToCreateOrUpdate);
         }
 
         public long OnCount(FilterElement<TransponderPlan> filter, Func<FilterElement<TransponderPlan>, long> next)
@@ -206,9 +211,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         /// The transponders are resolved up front, but the per-plan checks keep their original order so that a batch
         /// containing an invalid plan still reports the same error as before.
         /// </remarks>
-        private void ValidateTransponderPlans(IEnumerable<TransponderPlan> transponderPlans)
+        private void ValidateTransponderPlans(IReadOnlyCollection<TransponderPlan> plansToValidate)
         {
-            var plansToValidate = transponderPlans as IReadOnlyCollection<TransponderPlan> ?? transponderPlans.ToList();
+            foreach (var transponderPlan in plansToValidate)
+            {
+                NormalizePermanentPlan(transponderPlan);
+            }
+
             var knownTransponderIds = ReferenceValidationHelper.ReadExistingIds(plansToValidate, plan => plan.Transponder, transponderRepository);
             var planCache = new Dictionary<Guid, IReadOnlyList<TransponderPlan>>();
 
@@ -216,6 +225,30 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             {
                 ValidateTransponderPlan(transponderPlan, knownTransponderIds, planCache);
             }
+        }
+
+        /// <summary>
+        /// Materializes the submitted sequence so that the plans that are normalized and validated are the exact
+        /// instances that are handed over to the next middleware.
+        /// </summary>
+        private static IReadOnlyCollection<TransponderPlan> Materialize(IEnumerable<TransponderPlan> transponderPlans)
+        {
+            return transponderPlans as IReadOnlyCollection<TransponderPlan> ?? transponderPlans.ToList();
+        }
+
+        /// <summary>
+        /// Aligns the time window of a permanent plan with the convention used across the solution: a permanent plan
+        /// covers the entire timeline, so its start and end time are set to <see cref="DateTime.MinValue"/> and
+        /// <see cref="DateTime.MaxValue"/>.
+        /// </summary>
+        /// <param name="transponderPlan">The plan to normalize. Non-permanent and <see langword="null"/> plans are left untouched.</param>
+        private static void NormalizePermanentPlan(TransponderPlan transponderPlan)
+        {
+            if (transponderPlan == null || !transponderPlan.IsPermanent.GetValueOrDefault())
+                return;
+
+            transponderPlan.StartTime = DateTime.MinValue;
+            transponderPlan.EndTime = DateTime.MaxValue;
         }
 
         /// <summary>

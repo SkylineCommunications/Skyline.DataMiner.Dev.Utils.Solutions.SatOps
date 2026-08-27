@@ -152,6 +152,122 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         }
 
         [TestMethod]
+        public void OnCreateSingle_PermanentPlan_SetsFullTimeWindow()
+        {
+            var plan = CreateValidPlan();
+            plan.IsPermanent = true;
+            plan.StartTime = null;
+            plan.EndTime = null;
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            TransponderPlan persisted = null;
+            sut.OnCreate(plan, p =>
+            {
+                persisted = p;
+                return p;
+            });
+
+            Assert.AreEqual(DateTime.MinValue, persisted.StartTime);
+            Assert.AreEqual(DateTime.MaxValue, persisted.EndTime);
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_PermanentPlanWithCustomTimeWindow_OverwritesTimeWindow()
+        {
+            var plan = CreateValidPlan();
+            plan.IsPermanent = true;
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            sut.OnCreate(plan, p => p);
+
+            Assert.AreEqual(DateTime.MinValue, plan.StartTime);
+            Assert.AreEqual(DateTime.MaxValue, plan.EndTime);
+        }
+
+        [TestMethod]
+        public void OnCreateSingle_NonPermanentPlan_KeepsTimeWindow()
+        {
+            var plan = CreateValidPlan();
+            plan.IsPermanent = false;
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            sut.OnCreate(plan, p => p);
+
+            Assert.AreEqual(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), plan.StartTime);
+            Assert.AreEqual(new DateTime(2024, 2, 1, 0, 0, 0, DateTimeKind.Utc), plan.EndTime);
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_PermanentPlan_SetsFullTimeWindow()
+        {
+            var permanentPlan = CreateValidPlan();
+            permanentPlan.IsPermanent = true;
+            permanentPlan.StartTime = null;
+            permanentPlan.EndTime = null;
+
+            var nonPermanentPlan = CreateValidPlan();
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            sut.OnCreate(new[] { permanentPlan, nonPermanentPlan }, p => p.ToList());
+
+            Assert.AreEqual(DateTime.MinValue, permanentPlan.StartTime);
+            Assert.AreEqual(DateTime.MaxValue, permanentPlan.EndTime);
+            Assert.AreEqual(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), nonPermanentPlan.StartTime);
+            Assert.AreEqual(new DateTime(2024, 2, 1, 0, 0, 0, DateTimeKind.Utc), nonPermanentPlan.EndTime);
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_LazySequenceWithPermanentPlan_ForwardsNormalizedPlans()
+        {
+            var plan = CreateValidPlan();
+            plan.IsPermanent = true;
+            plan.StartTime = null;
+            plan.EndTime = null;
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            var result = sut.OnCreate(new[] { plan }.Select(p => p), p => p.ToList());
+
+            var persisted = result.Single();
+            Assert.AreEqual(DateTime.MinValue, persisted.StartTime);
+            Assert.AreEqual(DateTime.MaxValue, persisted.EndTime);
+        }
+
+        [TestMethod]
+        public void OnUpdateSingle_PermanentPlan_SetsFullTimeWindow()
+        {
+            var plan = CreateValidPlan();
+            plan.IsPermanent = true;
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            sut.OnUpdate(plan, p => p);
+
+            Assert.AreEqual(DateTime.MinValue, plan.StartTime);
+            Assert.AreEqual(DateTime.MaxValue, plan.EndTime);
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_PermanentPlan_SetsFullTimeWindow()
+        {
+            var plan = CreateValidPlan();
+            plan.IsPermanent = true;
+            plan.StartTime = null;
+            plan.EndTime = null;
+
+            var sut = CreateSut(Enumerable.Empty<TransponderPlan>());
+
+            sut.OnCreateOrUpdate(new[] { plan }, p => p.ToList());
+
+            Assert.AreEqual(DateTime.MinValue, plan.StartTime);
+            Assert.AreEqual(DateTime.MaxValue, plan.EndTime);
+        }
+
+        [TestMethod]
         public void OnCreateSingle_PermanentPlanWithExistingPermanent_ThrowsArgumentException()
         {
             var plan = CreateValidPlan();
