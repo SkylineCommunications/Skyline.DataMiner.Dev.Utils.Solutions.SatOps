@@ -65,7 +65,7 @@
                             exposer,
                             comparer,
                             value,
-                            a => UniversalComparer.Compare(exposer.internalFunc(a), value) > 0);
+                            a => UniversalComparer.Compare(exposer.internalFunc(a), value) >= 0);
                     }
 
                 case Comparer.LT:

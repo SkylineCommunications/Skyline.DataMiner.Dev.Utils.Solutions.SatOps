@@ -32,7 +32,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateAgainstExisting(oToCreate, Guid.Empty);
+            ValidateReservations(new[] { oToCreate }, false);
             return next(oToCreate);
         }
 
@@ -44,8 +44,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateBatch(oToCreate);
-            return next(oToCreate);
+            var reservations = oToCreate as IReadOnlyCollection<TransponderRangeReservation> ?? oToCreate.ToList();
+            ValidateReservations(reservations, false);
+            return next(reservations);
         }
 
         public TransponderRangeReservation OnUpdate(TransponderRangeReservation oToUpdate, Func<TransponderRangeReservation, TransponderRangeReservation> next)
@@ -56,7 +57,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateAgainstExisting(oToUpdate, oToUpdate.Id);
+            ValidateReservations(new[] { oToUpdate }, true);
             return next(oToUpdate);
         }
 
@@ -68,8 +69,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateBatch(oToUpdate);
-            return next(oToUpdate);
+            var reservations = oToUpdate as IReadOnlyCollection<TransponderRangeReservation> ?? oToUpdate.ToList();
+            ValidateReservations(reservations, true);
+            return next(reservations);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> OnCreateOrUpdate(IEnumerable<TransponderRangeReservation> oToCreateOrUpdate, Func<IEnumerable<TransponderRangeReservation>, IReadOnlyCollection<TransponderRangeReservation>> next)
@@ -80,8 +82,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            ValidateBatch(oToCreateOrUpdate);
-            return next(oToCreateOrUpdate);
+            var reservations = oToCreateOrUpdate as IReadOnlyCollection<TransponderRangeReservation> ?? oToCreateOrUpdate.ToList();
+            ValidateReservations(reservations, true);
+            return next(reservations);
         }
 
         public long OnCount(FilterElement<TransponderRangeReservation> filter, Func<FilterElement<TransponderRangeReservation>, long> next)
@@ -134,44 +137,29 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             return next(query, pageSize);
         }
 
-        private void ValidateAgainstExisting(TransponderRangeReservation reservation, Guid excludeId)
+        private void ValidateReservations(IReadOnlyCollection<TransponderRangeReservation> reservations, bool excludeIncomingIds)
         {
-            if (!HasRequiredRanges(reservation))
-            {
-                return;
-            }
-
-            var existingReservations = (reservationRepository.ReadByTransponder(reservation.Transponder.Value) ?? Enumerable.Empty<TransponderRangeReservation>())
-                .Where(existing => existing != null
-                    && existing.Id != excludeId
-                    && HasRequiredRanges(existing));
-
-            var overlappingReservation = existingReservations
-                .FirstOrDefault(existingReservation => ReservationsOverlap(reservation, existingReservation));
-
-            if (overlappingReservation != null)
-            {
-                throw new ArgumentException(
-                    string.Format(ExceptionMessages.ReservationOverlapDetected, reservation.Name, overlappingReservation.Name),
-                    nameof(reservation));
-            }
-        }
-
-        private static void ValidateBatch(IEnumerable<TransponderRangeReservation> reservations)
-        {
-            var validReservations = reservations.Where(HasRequiredRanges).ToList();
-            var groups = validReservations.GroupBy(reservation => reservation.Transponder.Value);
+            var excludedIds = excludeIncomingIds
+                ? new HashSet<Guid>(reservations.Where(reservation => reservation != null).Select(reservation => reservation.Id))
+                : new HashSet<Guid> { Guid.Empty };
+            var groups = reservations.Where(HasRequiredRanges).GroupBy(reservation => reservation.Transponder.Value);
             foreach (var group in groups)
             {
-                var sorted = group.OrderBy(reservation => reservation.StartTime.Value).ToList();
-                for (var index = 0; index < sorted.Count - 1; index++)
-                {
-                    var current = sorted[index];
-                    var next = sorted[index + 1];
+                var incomingReservations = group.ToList();
+                var existingReservations = (reservationRepository.ReadByTransponder(group.Key) ?? Enumerable.Empty<TransponderRangeReservation>())
+                    .Where(existing => HasRequiredRanges(existing) && !excludedIds.Contains(existing.Id))
+                    .ToList();
 
-                    if (ReservationsOverlap(current, next))
+                for (var index = 0; index < incomingReservations.Count; index++)
+                {
+                    var reservation = incomingReservations[index];
+                    var overlappingReservation = existingReservations
+                        .Concat(incomingReservations.Skip(index + 1))
+                        .FirstOrDefault(candidate => ReservationsOverlap(reservation, candidate));
+
+                    if (overlappingReservation != null)
                     {
-                        throw new ArgumentException(string.Format(ExceptionMessages.ReservationOverlapDetected, current.Name, next.Name));
+                        throw new ArgumentException(string.Format(ExceptionMessages.ReservationOverlapDetected, reservation.Name, overlappingReservation.Name), nameof(reservation));
                     }
                 }
             }

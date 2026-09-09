@@ -240,6 +240,16 @@
         }
 
         [TestMethod]
+        public void OnCreateBulk_OverlappingStoredReservation_ThrowsArgumentException()
+        {
+            var existing = CreateReservation("Existing", 1, 4, 150, 300);
+            var sut = CreateSut(id => new[] { existing });
+            var reservations = new[] { CreateReservation("New", 0, 2, 100, 200) };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
         public void OnCreateBulk_TouchingBoundaries_CallsNext()
         {
             var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
@@ -380,6 +390,204 @@
             };
 
             Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_StoredReservationWithSameId_ThrowsArgumentException()
+        {
+            var existing = CreateReservation("Existing", 0, 2, 100, 200);
+            var sut = CreateSut(id => new[] { existing });
+            var reservations = new[] { CreateReservation("New", 0, 2, 100, 200, existing.Id) };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnUpdateBulk_OverlappingStoredReservation_ThrowsArgumentException()
+        {
+            var existing = CreateReservation("Existing", 1, 4, 150, 300);
+            var sut = CreateSut(id => new[] { existing });
+            var reservations = new[] { CreateReservation("Updated", 0, 2, 100, 200) };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_OverlappingStoredReservation_ThrowsArgumentException()
+        {
+            var existing = CreateReservation("Existing", 1, 4, 150, 300);
+            var sut = CreateSut(id => new[] { existing });
+            var reservations = new[] { CreateReservation("New", 0, 2, 100, 200) };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnUpdateBulk_UnchangedReservation_CallsNext()
+        {
+            var reservation = CreateReservation("Existing", 0, 2, 100, 200);
+            var sut = CreateSut(id => new[] { reservation });
+
+            var result = sut.OnUpdate(new[] { reservation }, r => r.ToList());
+
+            CollectionAssert.AreEqual(new[] { reservation }, result.ToList());
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_UnchangedReservation_CallsNext()
+        {
+            var reservation = CreateReservation("Existing", 0, 2, 100, 200);
+            var sut = CreateSut(id => new[] { reservation });
+
+            var result = sut.OnCreateOrUpdate(new[] { reservation }, r => r.ToList());
+
+            CollectionAssert.AreEqual(new[] { reservation }, result.ToList());
+        }
+
+        [TestMethod]
+        public void OnUpdateBulk_SwappedTimeRanges_ExcludesAllReplacedReservations()
+        {
+            var first = CreateReservation("First", 0, 2, 100, 200);
+            var second = CreateReservation("Second", 2, 4, 100, 200);
+            var sut = CreateSut(id => new[] { first, second });
+            var reservations = new[]
+            {
+                CreateReservation("First", 2, 4, 100, 200, first.Id),
+                CreateReservation("Second", 0, 2, 100, 200, second.Id),
+            };
+
+            var result = sut.OnUpdate(reservations, r => r.ToList());
+
+            CollectionAssert.AreEqual(reservations, result.ToList());
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_NewReservationUsesReplacedRange_CallsNext()
+        {
+            var existing = CreateReservation("Existing", 0, 2, 100, 200);
+            var sut = CreateSut(id => new[] { existing });
+            var reservations = new[]
+            {
+                CreateReservation("Updated", 2, 4, 100, 200, existing.Id),
+                CreateReservation("New", 0, 2, 100, 200),
+            };
+
+            var result = sut.OnCreateOrUpdate(reservations, r => r.ToList());
+
+            CollectionAssert.AreEqual(reservations, result.ToList());
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_NonAdjacentOverlap_ThrowsArgumentException()
+        {
+            var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
+            var reservations = new[]
+            {
+                CreateReservation("A", 0, 3, 100, 200),
+                CreateReservation("B", 1, 2, 200, 300),
+                CreateReservation("C", 2, 4, 100, 200),
+            };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnUpdateBulk_NonAdjacentOverlap_ThrowsArgumentException()
+        {
+            var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
+            var reservations = new[]
+            {
+                CreateReservation("A", 0, 3, 100, 200),
+                CreateReservation("B", 1, 2, 200, 300),
+                CreateReservation("C", 2, 4, 100, 200),
+            };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_NonAdjacentOverlap_ThrowsArgumentException()
+        {
+            var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
+            var reservations = new[]
+            {
+                CreateReservation("A", 0, 3, 100, 200),
+                CreateReservation("B", 1, 2, 200, 300),
+                CreateReservation("C", 2, 4, 100, 200),
+            };
+
+            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(reservations, r => r.ToList()));
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_LazyInput_EnumeratesInputOnce()
+        {
+            var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
+            var enumeratedItems = 0;
+            var reservations = new[] { CreateReservation("New", 0, 2, 100, 200) }.Select(reservation =>
+            {
+                enumeratedItems++;
+                return reservation;
+            });
+
+            sut.OnCreate(reservations, r => r.ToList());
+
+            Assert.AreEqual(1, enumeratedItems);
+        }
+
+        [TestMethod]
+        public void OnUpdateBulk_LazyInput_EnumeratesInputOnce()
+        {
+            var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
+            var enumeratedItems = 0;
+            var reservations = new[] { CreateReservation("Updated", 0, 2, 100, 200) }.Select(reservation =>
+            {
+                enumeratedItems++;
+                return reservation;
+            });
+
+            sut.OnUpdate(reservations, r => r.ToList());
+
+            Assert.AreEqual(1, enumeratedItems);
+        }
+
+        [TestMethod]
+        public void OnCreateOrUpdate_LazyInput_EnumeratesInputOnce()
+        {
+            var sut = CreateSut(id => Enumerable.Empty<TransponderRangeReservation>());
+            var enumeratedItems = 0;
+            var reservations = new[] { CreateReservation("New", 0, 2, 100, 200) }.Select(reservation =>
+            {
+                enumeratedItems++;
+                return reservation;
+            });
+
+            sut.OnCreateOrUpdate(reservations, r => r.ToList());
+
+            Assert.AreEqual(1, enumeratedItems);
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_MultipleReservations_ReadsOncePerTransponder()
+        {
+            var queriedTransponders = new List<Guid>();
+            var sut = CreateSut(id =>
+            {
+                queriedTransponders.Add(id);
+                return Enumerable.Empty<TransponderRangeReservation>();
+            });
+            var other = CreateReservation("Other", 0, 2, 100, 200);
+            other.Transponder = Guid.NewGuid();
+            var reservations = new[]
+            {
+                CreateReservation("A", 0, 2, 100, 200),
+                CreateReservation("B", 2, 4, 100, 200),
+                other,
+            };
+
+            sut.OnCreate(reservations, r => r.ToList());
+
+            CollectionAssert.AreEquivalent(new[] { TransponderId, other.Transponder.Value }, queriedTransponders);
         }
 
         [TestMethod]
