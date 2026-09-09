@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<PlatformTarget>x86</PlatformTarget>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<IsPackable>false</IsPackable>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests</AssemblyName>
+		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Common.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Moq" />
+		<PackageReference Include="MSTest.TestAdapter" />
+		<PackageReference Include="MSTest.TestFramework" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Skyline.DataMiner.Dev.Utils.Solutions.SatOps\Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.csproj" />
+	</ItemGroup>
+</Project>

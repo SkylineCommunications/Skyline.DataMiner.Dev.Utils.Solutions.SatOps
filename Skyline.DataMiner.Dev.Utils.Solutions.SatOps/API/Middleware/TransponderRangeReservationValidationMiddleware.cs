@@ -1,0 +1,215 @@
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
+{
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.SDM;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
+    using SLDataGateway.API.Types.Querying;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
+    internal sealed class TransponderRangeReservationValidationMiddleware : IBulkRepositoryMiddleware<TransponderRangeReservation>
+    {
+        private readonly ITransponderRepository transponderRepository;
+
+        public TransponderRangeReservationValidationMiddleware(ITransponderRepository transponderRepository)
+        {
+            this.transponderRepository = transponderRepository ?? throw new ArgumentNullException(nameof(transponderRepository));
+        }
+
+        public TransponderRangeReservation OnCreate(TransponderRangeReservation oToCreate, Func<TransponderRangeReservation, TransponderRangeReservation> next)
+        {
+            if (oToCreate == null)
+                throw new ArgumentNullException(nameof(oToCreate));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            ValidateReservation(oToCreate);
+            return next(oToCreate);
+        }
+
+        public IReadOnlyCollection<TransponderRangeReservation> OnCreate(IEnumerable<TransponderRangeReservation> oToCreate, Func<IEnumerable<TransponderRangeReservation>, IReadOnlyCollection<TransponderRangeReservation>> next)
+        {
+            if (oToCreate == null)
+                throw new ArgumentNullException(nameof(oToCreate));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            ValidateReservations(oToCreate);
+
+            return next(oToCreate);
+        }
+
+        public TransponderRangeReservation OnUpdate(TransponderRangeReservation oToUpdate, Func<TransponderRangeReservation, TransponderRangeReservation> next)
+        {
+            if (oToUpdate == null)
+                throw new ArgumentNullException(nameof(oToUpdate));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            ValidateReservation(oToUpdate);
+            return next(oToUpdate);
+        }
+
+        public IReadOnlyCollection<TransponderRangeReservation> OnUpdate(IEnumerable<TransponderRangeReservation> oToUpdate, Func<IEnumerable<TransponderRangeReservation>, IReadOnlyCollection<TransponderRangeReservation>> next)
+        {
+            if (oToUpdate == null)
+                throw new ArgumentNullException(nameof(oToUpdate));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            ValidateReservations(oToUpdate);
+
+            return next(oToUpdate);
+        }
+
+        public IReadOnlyCollection<TransponderRangeReservation> OnCreateOrUpdate(IEnumerable<TransponderRangeReservation> oToCreateOrUpdate, Func<IEnumerable<TransponderRangeReservation>, IReadOnlyCollection<TransponderRangeReservation>> next)
+        {
+            if (oToCreateOrUpdate == null)
+                throw new ArgumentNullException(nameof(oToCreateOrUpdate));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            ValidateReservations(oToCreateOrUpdate);
+
+            return next(oToCreateOrUpdate);
+        }
+
+        public long OnCount(FilterElement<TransponderRangeReservation> filter, Func<FilterElement<TransponderRangeReservation>, long> next)
+        {
+            return next(filter);
+        }
+
+        public long OnCount(IQuery<TransponderRangeReservation> query, Func<IQuery<TransponderRangeReservation>, long> next)
+        {
+            return next(query);
+        }
+
+        public void OnDelete(IEnumerable<TransponderRangeReservation> oToDelete, Action<IEnumerable<TransponderRangeReservation>> next)
+        {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            next(oToDelete);
+        }
+
+        public void OnDelete(TransponderRangeReservation oToDelete, Action<TransponderRangeReservation> next)
+        {
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            if (next == null)
+                throw new ArgumentNullException(nameof(next));
+
+            next(oToDelete);
+        }
+
+        public IEnumerable<TransponderRangeReservation> OnRead(FilterElement<TransponderRangeReservation> filter, Func<FilterElement<TransponderRangeReservation>, IEnumerable<TransponderRangeReservation>> next)
+        {
+            return next(filter);
+        }
+
+        public IEnumerable<TransponderRangeReservation> OnRead(IQuery<TransponderRangeReservation> query, Func<IQuery<TransponderRangeReservation>, IEnumerable<TransponderRangeReservation>> next)
+        {
+            return next(query);
+        }
+
+        public IEnumerable<IPagedResult<TransponderRangeReservation>> OnReadPaged(FilterElement<TransponderRangeReservation> filter, Func<FilterElement<TransponderRangeReservation>, IEnumerable<IPagedResult<TransponderRangeReservation>>> next)
+        {
+            return next(filter);
+        }
+
+        public IEnumerable<IPagedResult<TransponderRangeReservation>> OnReadPaged(IQuery<TransponderRangeReservation> query, Func<IQuery<TransponderRangeReservation>, IEnumerable<IPagedResult<TransponderRangeReservation>>> next)
+        {
+            return next(query);
+        }
+
+        public IEnumerable<IPagedResult<TransponderRangeReservation>> OnReadPaged(FilterElement<TransponderRangeReservation> filter, int pageSize, Func<FilterElement<TransponderRangeReservation>, int, IEnumerable<IPagedResult<TransponderRangeReservation>>> next)
+        {
+            return next(filter, pageSize);
+        }
+
+        public IEnumerable<IPagedResult<TransponderRangeReservation>> OnReadPaged(IQuery<TransponderRangeReservation> query, int pageSize, Func<IQuery<TransponderRangeReservation>, int, IEnumerable<IPagedResult<TransponderRangeReservation>>> next)
+        {
+            return next(query, pageSize);
+        }
+
+        private void ValidateReservation(TransponderRangeReservation reservation)
+        {
+            ValidateReservation(reservation, null);
+        }
+
+        /// <summary>
+        /// Validates a single reservation.
+        /// </summary>
+        /// <param name="reservation">The reservation to validate.</param>
+        /// <param name="knownTransponderIds">
+        /// The identifiers of the transponders that were already resolved for the whole batch, or
+        /// <see langword="null"/> when the reservation is validated on its own and the transponder still has to be
+        /// looked up.
+        /// </param>
+        private void ValidateReservation(TransponderRangeReservation reservation, ISet<Guid> knownTransponderIds)
+        {
+            if (reservation == null)
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(reservation));
+
+            if (!reservation.Transponder.HasValue || reservation.Transponder.Value == Guid.Empty)
+                throw new ArgumentException("Transponder is required.", nameof(reservation));
+
+            if (!reservation.RelativeStartFrequency.HasValue)
+                throw new ArgumentException("Relative Start Frequency is required.", nameof(reservation));
+
+            if (!reservation.RelativeEndFrequency.HasValue)
+                throw new ArgumentException("Relative End Frequency is required.", nameof(reservation));
+
+            if (!reservation.StartTime.HasValue)
+                throw new ArgumentException("Start Time is required.", nameof(reservation));
+
+            if (!reservation.EndTime.HasValue)
+                throw new ArgumentException("End Time is required.", nameof(reservation));
+
+            if (reservation.RelativeStartFrequency.Value >= reservation.RelativeEndFrequency.Value)
+                throw new ArgumentException("Relative Start Frequency must be lower than Relative End Frequency.", nameof(reservation));
+
+            if (reservation.StartTime.Value >= reservation.EndTime.Value)
+                throw new ArgumentException("Start Time must be earlier than End Time.", nameof(reservation));
+
+            var transponderId = reservation.Transponder.Value;
+            var transponderExists = knownTransponderIds != null
+                ? knownTransponderIds.Contains(transponderId)
+                : transponderRepository.Read(transponderId) != null;
+
+            if (!transponderExists)
+                throw new ArgumentException($"Transponder with id '{transponderId}' does not exist.", nameof(reservation));
+        }
+
+        /// <summary>
+        /// Validates every reservation of a batch, resolving the referenced transponders with a single repository read
+        /// instead of one read per reservation.
+        /// </summary>
+        /// <remarks>
+        /// The transponders are resolved up front, but the per-reservation checks keep their original order so that a
+        /// batch containing an invalid reservation still reports the same error as before.
+        /// </remarks>
+        private void ValidateReservations(IEnumerable<TransponderRangeReservation> reservations)
+        {
+            var reservationsToValidate = reservations as IReadOnlyCollection<TransponderRangeReservation> ?? reservations.ToList();
+            var knownTransponderIds = ReferenceValidationHelper.ReadExistingIds(reservationsToValidate, reservation => reservation.Transponder, transponderRepository);
+
+            foreach (var reservation in reservationsToValidate)
+            {
+                ValidateReservation(reservation, knownTransponderIds);
+            }
+        }
+    }
+}

@@ -1,0 +1,140 @@
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using DomModel = DOM.Model;
+
+    /// <summary>
+    /// Represents a transponder slot in the SatOps API.
+    /// </summary>
+    public class TransponderSlot : ApiNamedObject
+    {
+        private readonly DomModel.TransponderSlotsInstance originalInstance;
+        private readonly DomModel.TransponderSlotsInstance updatedInstance;
+
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="TransponderSlot"/>.
+        /// The slot is not persisted until it is passed to the create method of the transponder slot repository.
+        /// </summary>
+        public TransponderSlot()
+            : this(new DomModel.TransponderSlotsInstance())
+        {
+        }
+
+        private TransponderSlot(DomModel.TransponderSlotsInstance instance)
+            : this(instance, instance.Clone())
+        {
+        }
+
+        private TransponderSlot(DomModel.TransponderSlotsInstance original, DomModel.TransponderSlotsInstance updated)
+            : base(original.ID.Id)
+        {
+            originalInstance = original;
+            updatedInstance = updated;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="TransponderSlot"/> from an existing <see cref="DomModel.TransponderSlotsInstance"/>.
+        /// </summary>
+        internal static TransponderSlot FromInstance(DomModel.TransponderSlotsInstance instance)
+        {
+            if (instance == null)
+                throw new ArgumentNullException(nameof(instance));
+
+            return new TransponderSlot(instance, instance.Clone());
+        }
+
+        /// <summary>
+        /// Gets or sets the parent transponder plan identifier.
+        /// </summary>
+        public Guid? TransponderPlan
+        {
+            get => updatedInstance.TransponderSlot?.TransponderPlan;
+            set => updatedInstance.TransponderSlot.TransponderPlan = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the slot name.
+        /// </summary>
+        public override string Name
+        {
+            get => updatedInstance.TransponderSlot?.SlotName;
+            set => updatedInstance.TransponderSlot.SlotName = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the slot start frequency.
+        /// </summary>
+        public double? SlotStartFrequency
+        {
+            get => updatedInstance.TransponderSlot?.SlotStartFrequency;
+            set => updatedInstance.TransponderSlot.SlotStartFrequency = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the slot end frequency.
+        /// </summary>
+        public double? SlotEndFrequency
+        {
+            get => updatedInstance.TransponderSlot?.SlotEndFrequency;
+            set => updatedInstance.TransponderSlot.SlotEndFrequency = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the bandwidth.
+        /// </summary>
+        public double? Bandwidth
+        {
+            get => updatedInstance.TransponderSlot?.Bandwidth;
+            set => updatedInstance.TransponderSlot.Bandwidth = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the uplink frequency.
+        /// </summary>
+        public double? UplinkFreq
+        {
+            get => updatedInstance.TransponderSlot?.UplinkFreq;
+            set => updatedInstance.TransponderSlot.UplinkFreq = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the downlink frequency.
+        /// </summary>
+        public double? DownlinkFreq
+        {
+            get => updatedInstance.TransponderSlot?.DownlinkFreq;
+            set => updatedInstance.TransponderSlot.DownlinkFreq = value;
+        }
+
+        /// <summary>
+        /// Returns the updated instance used by the repository to persist changes.
+        /// </summary>
+        internal DomModel.TransponderSlotsInstance ToUpdatedInstance() => updatedInstance;
+
+        /// <summary>
+        /// Returns the original instance used by the repository for reference comparison.
+        /// </summary>
+        internal DomModel.TransponderSlotsInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<TransponderSlot> InstantiateTransponderSlots(IEnumerable<DomModel.TransponderSlotsInstance> instances)
+        {
+            if (instances == null)
+                throw new ArgumentNullException(nameof(instances));
+            if (!instances.Any())
+                return Enumerable.Empty<TransponderSlot>();
+
+            return InstantiateTransponderSlotsIterator(instances);
+        }
+
+        private static IEnumerable<TransponderSlot> InstantiateTransponderSlotsIterator(IEnumerable<DomModel.TransponderSlotsInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new TransponderSlot(instance, instance.Clone());
+            }
+        }
+    }
+}

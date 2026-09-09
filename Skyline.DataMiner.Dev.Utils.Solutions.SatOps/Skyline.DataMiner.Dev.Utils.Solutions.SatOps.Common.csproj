@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+
+		<PackageId>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common</PackageId>
+		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common</AssemblyName>
+		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Common</RootNamespace>
+
+		<Copyright>Copyright © 2026</Copyright>
+		<PackageTags>Skyline;DataMiner</PackageTags>
+		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageIcon>Icon.png</PackageIcon>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>SkylineCommunications</Authors>
+		<Company>Skyline Communications</Company>
+		<Description>DevPack for the SatOps Solution</Description>
+		<Version>0.2.6</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="LICENSE.txt" Pack="true" PackagePath="" />
+		<None Include="nuget\Icon.png" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="Skyline.DataMiner.CICD.CSharpAnalysis.Analyzer">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Skyline.DataMiner.Dev.Utils.SDM.Abstractions" />
+		<PackageReference Include="Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan" />
+		<PackageReference Include="Skyline.DataMiner.SDM" />
+		<PackageReference Include="Skyline.DataMiner.SDM.Registration.Common" />
+		<PackageReference Include="Skyline.DataMiner.SDM.SourceGenerator.Runtime" />
+		<PackageReference Include="Skyline.DataMiner.Utils.DOM" />
+		<PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+</Project>

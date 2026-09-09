@@ -1,0 +1,278 @@
+namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite
+{
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using DomModel = DOM.Model;
+
+    /// <summary>
+    /// Represents a satellite in the SatOps API.
+    /// </summary>
+    public class Satellite : ApiNamedObject
+    {
+        private readonly DomModel.SatellitesInstance originalInstance;
+        private readonly DomModel.SatellitesInstance updatedInstance;
+
+        /// <summary>
+        /// Initializes a new, in-memory <see cref="Satellite"/>.
+        /// The satellite is not persisted until it is passed to the create method of the satellite repository.
+        /// </summary>
+        public Satellite()
+            : this(new DomModel.SatellitesInstance())
+        {
+        }
+
+        private Satellite(DomModel.SatellitesInstance instance)
+            : this(instance, instance.Clone())
+        {
+        }
+
+        private Satellite(DomModel.SatellitesInstance original, DomModel.SatellitesInstance updated)
+            : base(original.ID.Id)
+        {
+            originalInstance = original;
+            updatedInstance = updated;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Satellite"/> from an existing <see cref="DomModel.SatellitesInstance"/>.
+        /// </summary>
+        internal static Satellite FromInstance(DomModel.SatellitesInstance instance)
+        {
+            if (instance == null)
+                throw new ArgumentNullException(nameof(instance));
+
+            return new Satellite(instance, instance.Clone());
+        }
+
+        /// <summary>
+        /// Gets the current lifecycle status of the satellite.
+        /// </summary>
+        public InstanceStatus Status
+        {
+            get
+            {
+                switch (originalInstance.Status)
+                {
+                    case DomModel.SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum.Active:
+                        return InstanceStatus.Active;
+                    case DomModel.SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum.Deprecated:
+                        return InstanceStatus.Deprecated;
+                    case DomModel.SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.StatusesEnum.Error:
+                        return InstanceStatus.Error;
+                    default:
+                        return InstanceStatus.Draft;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the satellite.
+        /// </summary>
+        public override string Name
+        {
+            get => updatedInstance.General?.SatelliteName;
+            set => updatedInstance.General.SatelliteName = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the abbreviation of the satellite.
+        /// </summary>
+        public string Abbreviation
+        {
+            get => updatedInstance.General?.SatelliteAbbreviation;
+            set => updatedInstance.General.SatelliteAbbreviation = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the orbit type of the satellite.
+        /// </summary>
+        public OrbitType? Orbit
+        {
+            get
+            {
+                var domOrbit = updatedInstance.General?.Orbit;
+                if (domOrbit == null)
+                    return null;
+
+                switch (domOrbit.Value)
+                {
+                    case DomModel.SlcSatellite_ManagementIds.Enums.OrbitEnum.GEO: return OrbitType.GEO;
+                    case DomModel.SlcSatellite_ManagementIds.Enums.OrbitEnum.MEO: return OrbitType.MEO;
+                    case DomModel.SlcSatellite_ManagementIds.Enums.OrbitEnum.LEO: return OrbitType.LEO;
+                    default: return null;
+                }
+            }
+            set
+            {
+                if (value == null)
+                {
+                    updatedInstance.General.Orbit = null;
+                    return;
+                }
+
+                switch (value.Value)
+                {
+                    case OrbitType.GEO: updatedInstance.General.Orbit = DomModel.SlcSatellite_ManagementIds.Enums.OrbitEnum.GEO; break;
+                    case OrbitType.MEO: updatedInstance.General.Orbit = DomModel.SlcSatellite_ManagementIds.Enums.OrbitEnum.MEO; break;
+                    case OrbitType.LEO: updatedInstance.General.Orbit = DomModel.SlcSatellite_ManagementIds.Enums.OrbitEnum.LEO; break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the longitude for GEO orbit in degrees.
+        /// </summary>
+        public double? LongitudeForGEODegrees
+        {
+            get => updatedInstance.General?.LongitudeForGEODegrees;
+            set => updatedInstance.General.LongitudeForGEODegrees = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the inclination in degrees.
+        /// </summary>
+        public double? InclinationDegrees
+        {
+            get => updatedInstance.General?.InclinationDegrees;
+            set => updatedInstance.General.InclinationDegrees = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the operator of the satellite.
+        /// </summary>
+        public string Operator
+        {
+            get => updatedInstance.Satellite?.Operator;
+            set => updatedInstance.Satellite.Operator = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the coverage area of the satellite.
+        /// </summary>
+        public string Coverage
+        {
+            get => updatedInstance.Satellite?.Coverage;
+            set => updatedInstance.Satellite.Coverage = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the applications supported by the satellite.
+        /// </summary>
+        public string Applications
+        {
+            get => updatedInstance.Satellite?.Applications;
+            set => updatedInstance.Satellite.Applications = value;
+        }
+
+        /// <summary>
+        /// Gets or sets additional information about the satellite.
+        /// </summary>
+        public string Info
+        {
+            get => updatedInstance.Satellite?.Info;
+            set => updatedInstance.Satellite.Info = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the hemisphere of the satellite's orbital position.
+        /// </summary>
+        public HemisphereType? Hemisphere
+        {
+            get
+            {
+                var domHemisphere = updatedInstance.General?.Hemisphere;
+                if (domHemisphere == null)
+                    return null;
+
+                switch (domHemisphere.Value)
+                {
+                    case DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Western: return HemisphereType.Western;
+                    case DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Eastern: return HemisphereType.Eastern;
+                    default: return null;
+                }
+            }
+            set
+            {
+                if (value == null)
+                {
+                    updatedInstance.General.Hemisphere = null;
+                    return;
+                }
+
+                switch (value.Value)
+                {
+                    case HemisphereType.Western: updatedInstance.General.Hemisphere = DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Western; break;
+                    case HemisphereType.Eastern: updatedInstance.General.Hemisphere = DomModel.SlcSatellite_ManagementIds.Enums.HemisphereEnum.Eastern; break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the manufacturer of the satellite.
+        /// </summary>
+        public string Manufacturer
+        {
+            get => updatedInstance.Origin?.Manufacturer;
+            set => updatedInstance.Origin.Manufacturer = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the country of origin of the satellite.
+        /// </summary>
+        public string Country
+        {
+            get => updatedInstance.Origin?.Country;
+            set => updatedInstance.Origin.Country = value;
+        }
+
+        /// <summary>
+        /// Gets or sets launch information for the satellite.
+        /// </summary>
+        public string LaunchInfo
+        {
+            get => updatedInstance.LaunchInformation?.LaunchInfo;
+            set => updatedInstance.LaunchInformation.LaunchInfo = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the in-service date of the satellite launch.
+        /// </summary>
+        public DateTime? LaunchInServiceDate
+        {
+            get => updatedInstance.LaunchInformation?.LaunchInServiceDate;
+            set => updatedInstance.LaunchInformation.LaunchInServiceDate = value;
+        }
+
+        /// <summary>
+        /// Returns the updated instance used by the repository to persist changes.
+        /// </summary>
+        internal DomModel.SatellitesInstance ToUpdatedInstance() => updatedInstance;
+
+        /// <summary>
+        /// Returns the original instance used by the repository for reference comparison.
+        /// </summary>
+        internal DomModel.SatellitesInstance ToOriginalInstance() => originalInstance;
+
+        internal static IEnumerable<Satellite> InstantiateSatellites(IEnumerable<DomModel.SatellitesInstance> instances)
+        {
+            if (instances == null)
+                throw new ArgumentNullException(nameof(instances));
+            if (!instances.Any())
+                return Enumerable.Empty<Satellite>();
+
+            return InstantiateSatellitesIterator(instances);
+        }
+
+        private static IEnumerable<Satellite> InstantiateSatellitesIterator(IEnumerable<DomModel.SatellitesInstance> instances)
+        {
+            foreach (var instance in instances)
+            {
+                yield return new Satellite(instance, instance.Clone());
+            }
+        }
+    }
+}
+

@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		
+		<PackageId>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol</PackageId>
+		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol</AssemblyName>
+		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.Protocol</RootNamespace>
+		
+		<PackageTags>Skyline;DataMiner</PackageTags>
+		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageIcon>Icon.png</PackageIcon>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>SkylineCommunications</Authors>
+		<Company>Skyline Communications</Company>
+		<Description>SatOps SDM NuGet Package for protocols.</Description>
+		<Version>0.2.6</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="LICENSE.txt" Pack="true" PackagePath="" />
+		<None Include="nuget\Icon.png" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Skyline.DataMiner.Dev.Protocol"/>
+		<PackageReference Include="Skyline.DataMiner.CICD.CSharpAnalysis.Analyzer">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Skyline.DataMiner.Dev.Utils.Solutions.SatOps\Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.csproj" />
+	</ItemGroup>
+</Project>
