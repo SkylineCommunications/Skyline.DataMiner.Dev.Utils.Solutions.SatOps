@@ -200,6 +200,15 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return Read(TransponderSlotExposers.TransponderPlan.Equal(transponderPlanId));
         }
 
+        public IEnumerable<TransponderSlot> ReadByTransponderPlans(IEnumerable<Guid> transponderPlanIds)
+        {
+            return RelationshipReadHelper.ReadByIds<TransponderSlot>(
+                transponderPlanIds,
+                nameof(transponderPlanIds),
+                id => TransponderSlotExposers.TransponderPlan.Equal(id),
+                filter => Read(filter));
+        }
+
         public void DeleteSlotsByTransponderPlan(Guid transponderPlanId)
         {
             if (transponderPlanId == Guid.Empty)

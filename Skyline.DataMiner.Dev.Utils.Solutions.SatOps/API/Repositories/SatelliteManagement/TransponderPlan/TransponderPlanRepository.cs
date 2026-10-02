@@ -107,6 +107,15 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return Read(TransponderPlanExposers.Transponder.Equal(transponderId));
         }
 
+        public IEnumerable<TransponderPlan> ReadByTransponders(IEnumerable<Guid> transponderIds)
+        {
+            return RelationshipReadHelper.ReadByIds<TransponderPlan>(
+                transponderIds,
+                nameof(transponderIds),
+                id => TransponderPlanExposers.Transponder.Equal(id),
+                filter => Read(filter));
+        }
+
         public TransponderPlan Read(Guid id)
         {
             if (id == Guid.Empty)
@@ -145,7 +154,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<TransponderPlan> Read()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+            return DomHelper.DomInstances.Read(DomInstanceExposers.DomDefinitionId.Equal(SlcSatellite_ManagementIds.Definitions.TransponderPlans.Id))
                 .Where(IsTransponderPlanInstance)
                 .Select(di => TransponderPlan.FromInstance(new TransponderPlansInstance(di)));
         }

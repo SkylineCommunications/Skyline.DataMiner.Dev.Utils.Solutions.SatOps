@@ -54,7 +54,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
 
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
 
-        private static string ConvertBand(TransponderBandType bandType)
+        internal static string ConvertBand(TransponderBandType bandType)
         {
             switch (bandType)
             {
@@ -75,7 +75,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
             }
         }
 
-        private static string ConvertPolarization(TransponderPolarizationType polarizationType)
+        internal static string ConvertPolarization(TransponderPolarizationType polarizationType)
         {
             switch (polarizationType)
             {

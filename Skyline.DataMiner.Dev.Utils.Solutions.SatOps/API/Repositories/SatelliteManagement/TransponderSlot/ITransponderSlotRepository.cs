@@ -29,6 +29,14 @@
         IEnumerable<TransponderSlot> ReadByTransponderPlan(Guid transponderPlanId);
 
         /// <summary>
+        /// Reads slots for the supplied plans using bounded server-side filters.
+        /// Missing identifiers contribute no results.
+        /// </summary>
+        /// <param name="transponderPlanIds">The plan identifiers to match.</param>
+        /// <returns>The matching slots, or an empty sequence for an empty collection.</returns>
+        IEnumerable<TransponderSlot> ReadByTransponderPlans(IEnumerable<Guid> transponderPlanIds);
+
+        /// <summary>
         /// Deletes all slots that belong to the specified transponder plan.
         /// </summary>
         /// <param name="transponderPlanId">The unique identifier of the transponder plan.</param>

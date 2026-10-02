@@ -65,7 +65,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
             }
         }
 
-        private static string ConvertHemisphere(HemisphereType hemisphereType)
+        internal static string ConvertHemisphere(HemisphereType hemisphereType)
         {
             switch (hemisphereType)
             {

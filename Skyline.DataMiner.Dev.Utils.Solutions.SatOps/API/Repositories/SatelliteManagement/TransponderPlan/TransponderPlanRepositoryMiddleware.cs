@@ -125,6 +125,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return inner.ReadByTransponder(transponderId);
         }
 
+        public IEnumerable<TransponderPlan> ReadByTransponders(IEnumerable<Guid> transponderIds)
+        {
+            return inner.ReadByTransponders(transponderIds);
+        }
+
         public IEnumerable<TransponderPlan> Read(FilterElement<TransponderPlan> filter)
         {
             if (middleware is IReadableMiddleware<TransponderPlan> readableMiddleware)

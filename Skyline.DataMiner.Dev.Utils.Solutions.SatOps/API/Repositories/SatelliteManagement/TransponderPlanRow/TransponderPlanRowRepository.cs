@@ -11,6 +11,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
+    using Skyline.DataMiner.Utils.DOM.Extensions;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -39,7 +40,35 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IReadOnlyCollection<TransponderPlanRow> Create(IEnumerable<TransponderPlanRow> oToCreate)
         {
-            return oToCreate.Select(Create).ToList();
+            if (oToCreate == null)
+                throw new ArgumentNullException(nameof(oToCreate));
+
+            var rows = oToCreate.ToList();
+            if (rows.Any(row => row == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToCreate));
+
+            var ids = rows.Select(row => row.Id).ToList();
+            if (ids.Count != ids.Distinct().Count())
+                throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingTransponderPlanRow);
+
+            for (var i = 0; i < ids.Count; i += 100)
+            {
+                var filter = DomInstanceFilterHelper.BuildIdOrFilter(ids.Skip(i).Take(100), SlcSatellite_ManagementIds.ModuleId);
+                if (DomHelper.DomInstances.Read(filter).Any())
+                    throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingTransponderPlanRow);
+            }
+
+            if (rows.Count == 0)
+                return rows;
+
+            var result = DomHelper.DomInstances.CreateOrUpdateInBatches(
+                rows.Select(row => row.ToUpdatedInstance().ToInstance()));
+            if (result.UnsuccessfulIds.Count != 0 || result.SuccessfulItems.Count != rows.Count)
+                throw new InvalidOperationException(
+                    $"Could not create all transponder plan rows. Succeeded: {result.SuccessfulItems.Count}; failed IDs: {string.Join(", ", result.UnsuccessfulIds)}. {FormatFailureDetails(result.TraceDataPerItem)}");
+
+            var byId = result.SuccessfulItems.ToDictionary(instance => instance.ID.Id);
+            return ids.Select(id => TransponderPlanRow.FromInstance(new TransponderPlanRowsInstance(byId[id]))).ToList();
         }
 
         public TransponderPlanRow Create(TransponderPlanRow oToCreate)
@@ -78,21 +107,27 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (apiObjectIds == null)
                 throw new ArgumentNullException(nameof(apiObjectIds));
 
-            foreach (var id in apiObjectIds)
-            {
-                if (id == Guid.Empty)
-                    throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(apiObjectIds));
+            var ids = apiObjectIds.ToList();
+            if (ids.Any(id => id == Guid.Empty))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainEmptyGuidValues, nameof(apiObjectIds));
 
-                Delete(id);
-            }
+            var rows = new List<TransponderPlanRow>();
+            for (var i = 0; i < ids.Count; i += 100)
+                rows.AddRange(Read(ids.Skip(i).Take(100)));
+
+            DeleteInstances(rows.Select(row => row.ToOriginalInstance().ToInstance()));
         }
 
         public void Delete(IEnumerable<TransponderPlanRow> oToDelete)
         {
-            foreach (var transponderPlanRow in oToDelete)
-            {
-                Delete(transponderPlanRow);
-            }
+            if (oToDelete == null)
+                throw new ArgumentNullException(nameof(oToDelete));
+
+            var rows = oToDelete.ToList();
+            if (rows.Any(row => row == null))
+                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(oToDelete));
+
+            DeleteInstances(rows.Select(row => row.ToOriginalInstance().ToInstance()));
         }
 
         public void Delete(TransponderPlanRow oToDelete)
@@ -102,9 +137,17 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<TransponderPlanRow> Read()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+            return DomHelper.DomInstances.Read(DomInstanceExposers.DomDefinitionId.Equal(SlcSatellite_ManagementIds.Definitions.TransponderPlanRows.Id))
                 .Where(IsTransponderPlanRowInstance)
                 .Select(di => TransponderPlanRow.FromInstance(new TransponderPlanRowsInstance(di)));
+        }
+
+        public IEnumerable<TransponderPlanRow> ReadByTransponderPlan(Guid transponderPlanId)
+        {
+            if (transponderPlanId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
+
+            return Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId));
         }
 
         public TransponderPlanRow Read(Guid id)
@@ -262,6 +305,25 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             var updatedInstance = transponderPlanRow.ToUpdatedInstance();
             var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
             return TransponderPlanRow.FromInstance(new TransponderPlanRowsInstance(updatedDomInstance));
+        }
+
+        private void DeleteInstances(IEnumerable<DomInstance> instances)
+        {
+            var items = instances.GroupBy(instance => instance.ID.Id).Select(group => group.First()).ToList();
+            if (items.Count == 0)
+                return;
+
+            var result = DomHelper.DomInstances.DeleteInBatches(items);
+            if (result.UnsuccessfulIds.Count != 0 || result.SuccessfulIds.Count != items.Count)
+                throw new InvalidOperationException(
+                    $"Could not delete all transponder plan rows. Succeeded: {result.SuccessfulIds.Count}; failed IDs: {string.Join(", ", result.UnsuccessfulIds)}. {FormatFailureDetails(result.TraceDataPerItem)}");
+        }
+
+        private static string FormatFailureDetails<TKey>(IDictionary<TKey, Skyline.DataMiner.Net.TraceData> traceData)
+        {
+            return traceData == null
+                ? string.Empty
+                : string.Join("; ", traceData.Select(entry => $"{entry.Key}: {entry.Value}"));
         }
     }
 }

@@ -32,10 +32,14 @@
 
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
 
-        private static string ConvertLinkType(BeamLinkType linkType)
+        internal static string ConvertLinkType(BeamLinkType linkType)
         {
             switch (linkType)
             {
+                case BeamLinkType.Feeder:
+                    return SlcSatellite_ManagementIds.Enums.Linktype.Feeder;
+                case BeamLinkType.User:
+                    return SlcSatellite_ManagementIds.Enums.Linktype.User;
                 case BeamLinkType.Downlink:
                     return SlcSatellite_ManagementIds.Enums.Linktype.Downlink;
                 case BeamLinkType.Uplink:
@@ -45,7 +49,7 @@
             }
         }
 
-        private static string ConvertTransmissionType(BeamTransmissionType transmissionType)
+        internal static string ConvertTransmissionType(BeamTransmissionType transmissionType)
         {
             switch (transmissionType)
             {

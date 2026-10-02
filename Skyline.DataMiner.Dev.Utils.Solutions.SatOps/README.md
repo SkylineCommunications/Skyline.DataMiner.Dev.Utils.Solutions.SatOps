@@ -33,13 +33,30 @@ var count = api.Transponders.Count();
 **Filter with exposers:**
 
 ```csharp
-using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
-
-var kuBandTransponders = api.Transponders.Read(
-    TransponderExposers.TransponderBand.Equal(TransponderBandType.Ku));
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot;
 
 var wideSlots = api.TransponderSlots.Read(
     TransponderSlotExposers.Bandwidth.GreaterThan(36.0));
+```
+
+Enum exposers such as `TransponderBand` and `SatelliteHemisphere` have DOM translators, but
+`.Equal(enum)` can fail to compile (`CS0315`) with older query SDK references. Status has no
+query exposer. Use the typed `ReadFiltered` methods to filter these fields on the DOM server,
+optionally combining them with a regular name or relationship filter:
+
+```csharp
+var activeKu = api.Transponders.ReadFiltered(
+    status: InstanceStatus.Active,
+    band: TransponderBandType.Ku,
+    filter: TransponderExposers.TransponderSatellite.Equal(satelliteId));
+
+var easternSatellites = api.Satellites.ReadFiltered(
+    status: InstanceStatus.Active,
+    hemisphere: HemisphereType.Eastern);
+
+var feederBeams = api.Beams.ReadFiltered(
+    transmissionType: BeamTransmissionType.TX,
+    linkType: BeamLinkType.Feeder);
 ```
 
 Every exposer class also exposes the entity's own id (`SatelliteId`, `BeamId`, `TransponderId`, `PlanId`,
@@ -88,8 +105,14 @@ A `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `Transponder
 
 ```csharp
 var transponders = api.Transponders.ReadBySatellite(satellite.Id);
+var beams = api.Beams.ReadBySatellite(satellite.Id);
 var plans = api.TransponderPlans.ReadByTransponder(transponder.Id);
+var rows = api.TransponderPlanRows.ReadByTransponderPlan(plan.Id);
 var slots = api.TransponderSlots.ReadByTransponderPlan(plan.Id);
+
+// Batch related reads into bounded server-side queries; missing IDs yield no results.
+var relatedPlans = api.TransponderPlans.ReadByTransponders(transponders.Select(t => t.Id));
+var relatedSlots = api.TransponderSlots.ReadByTransponderPlans(relatedPlans.Select(p => p.Id));
 ```
 
 **Generate slots from a transponder plan (there is no `Update` for slots):**

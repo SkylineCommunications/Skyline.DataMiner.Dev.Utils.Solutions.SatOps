@@ -4,6 +4,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam;
@@ -120,9 +121,57 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<Beam> Read()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+            return DomHelper.DomInstances.Read(DomInstanceExposers.DomDefinitionId.Equal(SlcSatellite_ManagementIds.Definitions.Beams.Id))
                 .Where(IsBeamInstance)
                 .Select(di => Beam.FromInstance(new BeamsInstance(di)));
+        }
+
+        public IEnumerable<Beam> ReadBySatellite(Guid satelliteId)
+        {
+            if (satelliteId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(satelliteId));
+
+            return Read(BeamExposers.BeamSatellite.Equal(satelliteId));
+        }
+
+        public IEnumerable<Beam> ReadFiltered(InstanceStatus? status = null, BeamTransmissionType? transmissionType = null, BeamLinkType? linkType = null, FilterElement<Beam> filter = null)
+        {
+            if (filter is FALSEFilterElement<Beam> || (filter != null && filter.isEmpty()))
+                return Enumerable.Empty<Beam>();
+
+            if (!status.HasValue && !transmissionType.HasValue && !linkType.HasValue && filter == null)
+                return Read();
+
+            return Beam.InstantiateBeams(SatOpsApi.SlcSatelliteManagementHelper.GetBeams(BuildReadFilter(status, transmissionType, linkType, filter)));
+        }
+
+        internal FilterElement<DomInstance> BuildReadFilter(InstanceStatus? status, BeamTransmissionType? transmissionType, BeamLinkType? linkType, FilterElement<Beam> filter)
+        {
+            var domFilter = filterTranslator.Translate(filter ?? new TRUEFilterElement<Beam>());
+            if (status.HasValue)
+            {
+                var statusId = InstanceStatusFilterHelper.ToStatusId(
+                    status.Value,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Draft,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Active,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Deprecated,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Error);
+                domFilter = domFilter.AND(DomInstanceExposers.StatusId.Equal(statusId));
+            }
+
+            if (transmissionType.HasValue)
+            {
+                var transmissionValue = BeamFilterTranslator.ConvertTransmissionType(transmissionType.Value);
+                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.TransmissionType).Equal(transmissionValue));
+            }
+
+            if (linkType.HasValue)
+            {
+                var linkValue = BeamFilterTranslator.ConvertLinkType(linkType.Value);
+                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.LinkType).Equal(linkValue));
+            }
+
+            return domFilter;
         }
 
         public Beam Read(Guid id)

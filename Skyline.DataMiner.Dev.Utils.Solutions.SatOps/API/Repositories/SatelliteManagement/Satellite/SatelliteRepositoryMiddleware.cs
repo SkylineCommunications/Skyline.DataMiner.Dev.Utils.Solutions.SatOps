@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using SLDataGateway.API.Types.Querying;
@@ -118,6 +119,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         public IEnumerable<Satellite> Read()
         {
             return inner.Read();
+        }
+
+        public IEnumerable<Satellite> ReadFiltered(InstanceStatus? status = null, HemisphereType? hemisphere = null, FilterElement<Satellite> filter = null)
+        {
+            return inner.ReadFiltered(status, hemisphere, filter);
         }
 
         public IEnumerable<Satellite> Read(FilterElement<Satellite> filter)

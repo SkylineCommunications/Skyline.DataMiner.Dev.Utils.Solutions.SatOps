@@ -4,6 +4,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
@@ -167,9 +168,49 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<Transponder> Read()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+            return DomHelper.DomInstances.Read(DomInstanceExposers.DomDefinitionId.Equal(SlcSatellite_ManagementIds.Definitions.Transponders.Id))
                 .Where(IsTransponderInstance)
                 .Select(di => Transponder.FromInstance(new TranspondersInstance(di)));
+        }
+
+        public IEnumerable<Transponder> ReadFiltered(InstanceStatus? status = null, TransponderPolarizationType? polarization = null, TransponderBandType? band = null, FilterElement<Transponder> filter = null)
+        {
+            if (filter is FALSEFilterElement<Transponder> || (filter != null && filter.isEmpty()))
+                return Enumerable.Empty<Transponder>();
+
+            if (!status.HasValue && !polarization.HasValue && !band.HasValue && filter == null)
+                return Read();
+
+            return Transponder.InstantiateTransponders(SatOpsApi.SlcSatelliteManagementHelper.GetTransponders(BuildReadFilter(status, polarization, band, filter)));
+        }
+
+        internal FilterElement<DomInstance> BuildReadFilter(InstanceStatus? status, TransponderPolarizationType? polarization, TransponderBandType? band, FilterElement<Transponder> filter)
+        {
+            var domFilter = filterTranslator.Translate(filter ?? new TRUEFilterElement<Transponder>());
+            if (status.HasValue)
+            {
+                var statusId = InstanceStatusFilterHelper.ToStatusId(
+                    status.Value,
+                    SlcSatellite_ManagementIds.Behaviors.TranspondersBehavior.Statuses.Draft,
+                    SlcSatellite_ManagementIds.Behaviors.TranspondersBehavior.Statuses.Active,
+                    SlcSatellite_ManagementIds.Behaviors.TranspondersBehavior.Statuses.Deprecated,
+                    SlcSatellite_ManagementIds.Behaviors.TranspondersBehavior.Statuses.Error);
+                domFilter = domFilter.AND(DomInstanceExposers.StatusId.Equal(statusId));
+            }
+
+            if (polarization.HasValue)
+            {
+                var polarizationValue = TransponderFilterTranslator.ConvertPolarization(polarization.Value);
+                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Transponder.Polarization).Equal(polarizationValue));
+            }
+
+            if (band.HasValue)
+            {
+                var bandValue = TransponderFilterTranslator.ConvertBand(band.Value);
+                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Transponder.Band).Equal(bandValue));
+            }
+
+            return domFilter;
         }
 
         public Transponder Update(Transponder oToUpdate)
