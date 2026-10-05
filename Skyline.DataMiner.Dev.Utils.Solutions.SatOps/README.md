@@ -145,6 +145,10 @@ var reservations = api.TransponderRangeReservations.ReadByTransponderAndTimeWind
 api.TransponderRangeReservations.ReserveRange(reservation.Id, startFrequency: 10.0, endFrequency: 12.0);
 ```
 
+Time-window reads filter jobs by start and end time in MediaOps.Plan before resolving reservation details.
+Creating or updating a reservation checks overlaps only for the selected transponder and the incoming time
+window. Slot-name lookups filter property values by reservation ID instead of loading all property values.
+
 **Enable logging (optional):**
 
 Provide an `ILogger` implementation to surface diagnostics from the middleware pipeline. By default the API

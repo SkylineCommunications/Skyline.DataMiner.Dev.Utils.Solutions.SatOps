@@ -146,7 +146,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             foreach (var group in groups)
             {
                 var incomingReservations = group.ToList();
-                var existingReservations = (reservationRepository.ReadByTransponder(group.Key) ?? Enumerable.Empty<TransponderRangeReservation>())
+                var windowStart = incomingReservations.Min(reservation => reservation.StartTime.Value);
+                var windowEnd = incomingReservations.Max(reservation => reservation.EndTime.Value);
+                var existingReservations = (reservationRepository.ReadByTransponderAndTimeWindow(group.Key, windowStart, windowEnd) ?? Enumerable.Empty<TransponderRangeReservation>())
                     .Where(existing => HasRequiredRanges(existing) && !excludedIds.Contains(existing.Id))
                     .ToList();
 
@@ -188,6 +190,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 && reservation.Transponder.Value != Guid.Empty
                 && reservation.StartTime.HasValue
                 && reservation.EndTime.HasValue
+                && reservation.StartTime.Value < reservation.EndTime.Value
                 && reservation.RelativeStartFrequency.HasValue
                 && reservation.RelativeEndFrequency.HasValue;
         }

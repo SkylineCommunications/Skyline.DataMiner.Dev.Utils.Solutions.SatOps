@@ -195,8 +195,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         {
             ValidateTimeWindow(startTimeUtc, endTimeUtc);
 
-            return ReadAllReservationJobs()
-                .Where(pair => OverlapsWindow(pair.Job, startTimeUtc, endTimeUtc))
+            return ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
+                .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
+                .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
+                .Where(pair => pair.IsReservation)
                 .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
@@ -215,8 +217,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return Enumerable.Empty<TransponderRangeReservation>();
             }
 
-            return ReadAllReservationJobs()
-                .Where(pair => pair.Node.ResourceId == resourceId.Value && OverlapsWindow(pair.Job, startTimeUtc, endTimeUtc))
+            return ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
+                .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
+                .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
+                .Where(pair => pair.IsReservation && pair.Node.ResourceId == resourceId.Value)
                 .Select(pair => ToReservation(pair.Job, pair.Node));
         }
 
@@ -227,15 +231,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentNullException(nameof(oToUpdate));
             }
 
-            Job existing;
-            try
-            {
-                existing = Jobs.Read(oToUpdate.Id);
-            }
-            catch
-            {
-                existing = null;
-            }
+            var existing = Jobs.Read(oToUpdate.Id);
 
             if (existing == null || !IsReservationJob(existing, out _))
             {
@@ -304,15 +300,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(id));
             }
 
-            Job job;
-            try
-            {
-                job = Jobs.Read(id);
-            }
-            catch
-            {
-                return null;
-            }
+            var job = Jobs.Read(id);
 
             if (job == null || !IsReservationJob(job, out var node))
             {
@@ -418,6 +406,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             var jobStart = job.Start.UtcDateTime;
             var jobEnd = job.End.UtcDateTime;
             return jobStart < endTimeUtc && jobEnd > startTimeUtc;
+        }
+
+        private IEnumerable<Job> ReadJobsOverlappingWindow(DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            var start = new DateTimeOffset(DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc));
+            var end = new DateTimeOffset(DateTime.SpecifyKind(endTimeUtc, DateTimeKind.Utc));
+            return Jobs.Read(JobExposers.Start.LessThan(end).AND(JobExposers.End.GreaterThan(start)));
         }
 
         private static bool IsReservationJob(Job job, out JobResourceNode resourceNode)
@@ -915,7 +910,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         {
             var matches = propertiesHelper.DomInstances
                 .Read(DomInstanceExposers.DomDefinitionId
-                    .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id))
+                    .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id)
+                    .AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcPropertiesIds.Sections.PropertyValueInfo.LinkedObjectID)
+                        .Equal(reservationIdString)))
                 .Select(di => new PropertyValuesInstance(di))
                 .Where(pvi => pvi.PropertyValueInfo.LinkedObjectID == reservationIdString
                     && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName))
