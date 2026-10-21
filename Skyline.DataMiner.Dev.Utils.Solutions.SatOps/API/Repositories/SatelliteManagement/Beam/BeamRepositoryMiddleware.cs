@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Beam
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using SLDataGateway.API.Types.Querying;
@@ -188,6 +189,16 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         public IEnumerable<Beam> Read()
         {
             return inner.Read();
+        }
+
+        public IEnumerable<Beam> ReadFiltered(InstanceStatus? status = null, BeamTransmissionType? transmissionType = null, BeamLinkType? linkType = null, FilterElement<Beam> filter = null)
+        {
+            return inner.ReadFiltered(status, transmissionType, linkType, filter);
+        }
+
+        public IEnumerable<Beam> ReadBySatellite(Guid satelliteId)
+        {
+            return inner.ReadBySatellite(satelliteId);
         }
 
         public IReadOnlyCollection<Beam> Update(IEnumerable<Beam> oToUpdate)

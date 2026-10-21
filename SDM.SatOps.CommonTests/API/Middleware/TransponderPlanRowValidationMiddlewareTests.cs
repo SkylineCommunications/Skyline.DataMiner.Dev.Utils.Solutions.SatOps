@@ -485,6 +485,31 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             rowRepository.Verify(r => r.Read(It.IsAny<FilterElement<TransponderPlanRow>>()), Times.Once);
         }
 
+        [TestMethod]
+        public void OnDeleteBatch_RowsOnSamePlan_AreEnumeratedAndValidatedOnce()
+        {
+            var planRepository = new Mock<ITransponderPlanRepository>();
+            planRepository.Setup(r => r.Read(It.IsAny<IEnumerable<Guid>>()))
+                .Returns((IEnumerable<Guid> ids) => ids.Select(CreatePlanWithId).ToList());
+
+            var rowRepository = new Mock<ITransponderPlanRowRepository>();
+            rowRepository.Setup(r => r.Read(It.IsAny<FilterElement<TransponderPlanRow>>())).Returns(Enumerable.Empty<TransponderPlanRow>());
+
+            var sut = new TransponderPlanRowValidationMiddleware(planRepository.Object, rowRepository.Object);
+            var enumerated = 0;
+            var rows = new[] { CreateValidRow(10d), CreateValidRow(20d) }.Select(row =>
+            {
+                enumerated++;
+                return row;
+            });
+
+            sut.OnDelete(rows, batch => Assert.AreEqual(2, batch.Count()));
+
+            Assert.AreEqual(2, enumerated);
+            planRepository.Verify(r => r.Read(It.IsAny<IEnumerable<Guid>>()), Times.Once);
+            rowRepository.Verify(r => r.Read(It.IsAny<FilterElement<TransponderPlanRow>>()), Times.Once);
+        }
+
         private static ITransponderPlanRepository CreatePlanRepository(TransponderPlan plan)
         {
             var repository = new Mock<ITransponderPlanRepository>();

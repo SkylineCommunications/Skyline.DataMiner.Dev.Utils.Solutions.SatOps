@@ -110,12 +110,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
 
-            foreach (var transponderPlanRow in oToDelete)
-            {
-                ValidateTransponderPlanRow(transponderPlanRow);
-            }
-
-            next(oToDelete);
+            var rowsToDelete = oToDelete.ToList();
+            ValidateTransponderPlanRows(rowsToDelete);
+            next(rowsToDelete);
         }
 
         public void OnDelete(TransponderPlanRow oToDelete, Action<TransponderPlanRow> next)

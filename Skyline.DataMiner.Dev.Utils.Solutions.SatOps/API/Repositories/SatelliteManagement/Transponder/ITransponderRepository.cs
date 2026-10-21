@@ -1,5 +1,7 @@
 ﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder
 {
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
     using System;
@@ -10,6 +12,16 @@
     /// </summary>
     public interface ITransponderRepository : IRepository<Transponder>
     {
+        /// <summary>
+        /// Reads transponders with optional server-side status, polarization and band filters.
+        /// </summary>
+        /// <param name="status">The lifecycle status, or null to include every status.</param>
+        /// <param name="polarization">The polarization, or null to include every polarization.</param>
+        /// <param name="band">The band, or null to include every band.</param>
+        /// <param name="filter">An additional API filter, such as a name or satellite filter.</param>
+        /// <returns>The matching transponders.</returns>
+        IEnumerable<Transponder> ReadFiltered(InstanceStatus? status = null, TransponderPolarizationType? polarization = null, TransponderBandType? band = null, FilterElement<Transponder> filter = null);
+
         /// <summary>
         /// Reads all transponders that belong to the specified satellite.
         /// </summary>

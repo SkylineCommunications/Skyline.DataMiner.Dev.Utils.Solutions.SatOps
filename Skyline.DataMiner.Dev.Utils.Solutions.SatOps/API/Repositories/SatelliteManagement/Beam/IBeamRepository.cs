@@ -1,5 +1,7 @@
 ﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Beam
 {
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
     using System;
@@ -10,6 +12,23 @@
     /// </summary>
     public interface IBeamRepository : IRepository<Beam>
     {
+        /// <summary>
+        /// Reads beams with optional server-side status, transmission and link filters.
+        /// </summary>
+        /// <param name="status">The lifecycle status, or null to include every status.</param>
+        /// <param name="transmissionType">The transmission type, or null to include all types.</param>
+        /// <param name="linkType">The link type, or null to include all types.</param>
+        /// <param name="filter">An additional API filter, such as a satellite or name filter.</param>
+        /// <returns>The matching beams.</returns>
+        IEnumerable<Beam> ReadFiltered(InstanceStatus? status = null, BeamTransmissionType? transmissionType = null, BeamLinkType? linkType = null, FilterElement<Beam> filter = null);
+
+        /// <summary>
+        /// Reads the beams belonging to a satellite.
+        /// </summary>
+        /// <param name="satelliteId">The satellite identifier.</param>
+        /// <returns>The matching beams, or an empty sequence if the satellite does not exist.</returns>
+        IEnumerable<Beam> ReadBySatellite(Guid satelliteId);
+
         /// <summary>
         /// Activates a beam by its unique identifier.
         /// </summary>

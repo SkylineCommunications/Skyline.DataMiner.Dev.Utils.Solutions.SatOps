@@ -1,5 +1,7 @@
 ﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite
 {
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories;
     using System;
@@ -10,6 +12,15 @@
     /// </summary>
     public interface ISatelliteRepository : IRepository<Satellite>
     {
+        /// <summary>
+        /// Reads satellites with optional server-side status and hemisphere filters.
+        /// </summary>
+        /// <param name="status">The lifecycle status, or null to include every status.</param>
+        /// <param name="hemisphere">The hemisphere, or null to include both hemispheres.</param>
+        /// <param name="filter">An additional API filter, such as a name filter.</param>
+        /// <returns>The matching satellites.</returns>
+        IEnumerable<Satellite> ReadFiltered(InstanceStatus? status = null, HemisphereType? hemisphere = null, FilterElement<Satellite> filter = null);
+
         /// <summary>
         /// Transitions a satellite from Draft to Active.
         /// </summary>

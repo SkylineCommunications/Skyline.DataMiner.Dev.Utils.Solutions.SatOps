@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using SLDataGateway.API.Types.Querying;
@@ -219,6 +220,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         public IEnumerable<Transponder> Read()
         {
             return inner.Read();
+        }
+
+        public IEnumerable<Transponder> ReadFiltered(InstanceStatus? status = null, TransponderPolarizationType? polarization = null, TransponderBandType? band = null, FilterElement<Transponder> filter = null)
+        {
+            return inner.ReadFiltered(status, polarization, band, filter);
         }
 
         public IReadOnlyCollection<Transponder> Update(IEnumerable<Transponder> oToUpdate)

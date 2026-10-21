@@ -73,6 +73,37 @@
         }
 
         [TestMethod]
+        public void OnCreateSingle_ReadsOnlyTheIncomingTimeWindow()
+        {
+            var repository = new Mock<ITransponderRangeReservationRepository>();
+            var incoming = CreateReservation("New", 1, 3, 100, 200);
+            var sut = new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
+
+            sut.OnCreate(incoming, reservation => reservation);
+
+            repository.Verify(r => r.ReadByTransponderAndTimeWindow(
+                TransponderId, BaseTime.AddHours(1), BaseTime.AddHours(3)), Times.Once);
+            repository.Verify(r => r.ReadByTransponder(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void OnCreateBulk_ReadsTheBoundingTimeWindowOnce()
+        {
+            var repository = new Mock<ITransponderRangeReservationRepository>();
+            var incoming = new[]
+            {
+                CreateReservation("First", 1, 2, 100, 200),
+                CreateReservation("Second", 4, 5, 200, 300),
+            };
+            var sut = new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
+
+            sut.OnCreate(incoming, reservations => reservations.ToList());
+
+            repository.Verify(r => r.ReadByTransponderAndTimeWindow(
+                TransponderId, BaseTime.AddHours(1), BaseTime.AddHours(5)), Times.Once);
+        }
+
+        [TestMethod]
         public void OnCreateSingle_TimeOverlapButNoFrequencyOverlap_CallsNext()
         {
             var existing = CreateReservation("Existing", 0, 4, 200, 300);
@@ -797,7 +828,8 @@
         private static TransponderRangeReservationOverlapValidationMiddleware CreateSut(Func<Guid, IEnumerable<TransponderRangeReservation>> resolver)
         {
             var repository = new Mock<ITransponderRangeReservationRepository>();
-            repository.Setup(r => r.ReadByTransponder(It.IsAny<Guid>())).Returns(resolver);
+            repository.Setup(r => r.ReadByTransponderAndTimeWindow(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+                .Returns((Guid id, DateTime start, DateTime end) => resolver(id));
 
             return new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
         }

@@ -4,6 +4,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite;
@@ -102,9 +103,43 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<Satellite> Read()
         {
-            return DomHelper.DomInstances.Read(new TRUEFilterElement<DomInstance>())
+            return DomHelper.DomInstances.Read(DomInstanceExposers.DomDefinitionId.Equal(SlcSatellite_ManagementIds.Definitions.Satellites.Id))
                 .Where(IsSatelliteInstance)
                 .Select(di => Satellite.FromInstance(new SatellitesInstance(di)));
+        }
+
+        public IEnumerable<Satellite> ReadFiltered(InstanceStatus? status = null, HemisphereType? hemisphere = null, FilterElement<Satellite> filter = null)
+        {
+            if (filter is FALSEFilterElement<Satellite> || (filter != null && filter.isEmpty()))
+                return Enumerable.Empty<Satellite>();
+
+            if (!status.HasValue && !hemisphere.HasValue && filter == null)
+                return Read();
+
+            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(BuildReadFilter(status, hemisphere, filter)));
+        }
+
+        internal FilterElement<DomInstance> BuildReadFilter(InstanceStatus? status, HemisphereType? hemisphere, FilterElement<Satellite> filter)
+        {
+            var domFilter = filterTranslator.Translate(filter ?? new TRUEFilterElement<Satellite>());
+            if (status.HasValue)
+            {
+                var statusId = InstanceStatusFilterHelper.ToStatusId(
+                    status.Value,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Draft,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Active,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Deprecated,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Error);
+                domFilter = domFilter.AND(DomInstanceExposers.StatusId.Equal(statusId));
+            }
+
+            if (hemisphere.HasValue)
+            {
+                var hemisphereValue = SatelliteFilterTranslator.ConvertHemisphere(hemisphere.Value);
+                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.General.Hemisphere).Equal(hemisphereValue));
+            }
+
+            return domFilter;
         }
 
         public Satellite Read(Guid id)
@@ -395,4 +430,3 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         }
     }
 }
-

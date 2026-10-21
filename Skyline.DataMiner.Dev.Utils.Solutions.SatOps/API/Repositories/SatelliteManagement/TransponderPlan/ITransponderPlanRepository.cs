@@ -18,6 +18,14 @@
         IEnumerable<TransponderPlan> ReadByTransponder(Guid transponderId);
 
         /// <summary>
+        /// Reads plans for the supplied transponders using bounded server-side filters.
+        /// Missing identifiers contribute no results.
+        /// </summary>
+        /// <param name="transponderIds">The transponder identifiers to match.</param>
+        /// <returns>The matching transponder plans, or an empty sequence for an empty collection.</returns>
+        IEnumerable<TransponderPlan> ReadByTransponders(IEnumerable<Guid> transponderIds);
+
+        /// <summary>
         /// Activates a transponder plan by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the transponder plan to activate.</param>

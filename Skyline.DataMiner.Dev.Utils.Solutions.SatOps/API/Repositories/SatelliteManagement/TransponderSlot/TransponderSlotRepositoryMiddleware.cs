@@ -241,6 +241,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return inner.ReadByTransponderPlan(transponderPlanId);
         }
 
+        public IEnumerable<TransponderSlot> ReadByTransponderPlans(IEnumerable<Guid> transponderPlanIds)
+        {
+            return inner.ReadByTransponderPlans(transponderPlanIds);
+        }
+
         public void DeleteSlotsByTransponderPlan(Guid transponderPlanId)
         {
             inner.DeleteSlotsByTransponderPlan(transponderPlanId);
