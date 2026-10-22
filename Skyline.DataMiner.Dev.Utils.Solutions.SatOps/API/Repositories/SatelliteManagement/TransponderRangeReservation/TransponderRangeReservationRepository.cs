@@ -119,6 +119,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             }
 
             EnsureJobIsMutable(existing);
+            if (existing.State == JobState.Tentative || existing.State == JobState.Confirmed)
+            {
+                Jobs.Cancel(apiObjectId);
+            }
+
             Jobs.Delete(apiObjectId);
         }
 
