@@ -122,6 +122,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (existing.State == JobState.Tentative || existing.State == JobState.Confirmed)
             {
                 Jobs.Cancel(apiObjectId);
+                var canceled = Jobs.Read(apiObjectId);
+                if (canceled == null || canceled.State != JobState.Canceled)
+                {
+                    throw new InvalidOperationException($"Reservation job {apiObjectId} did not reach Canceled state after cancellation (state: {canceled?.State.ToString() ?? "missing"}). Deletion was not attempted.");
+                }
             }
 
             Jobs.Delete(apiObjectId);
