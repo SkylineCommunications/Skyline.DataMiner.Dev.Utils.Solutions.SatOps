@@ -24,6 +24,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var sequence = new MockSequence();
             jobs.InSequence(sequence).Setup(repository => repository.Read(job.Id)).Returns(job);
             jobs.InSequence(sequence).Setup(repository => repository.Cancel(job.Id)).Returns(job);
+            var canceled = CreateJob(JobState.Canceled, job.Id);
+            jobs.InSequence(sequence).Setup(repository => repository.Read(job.Id)).Returns(canceled);
             jobs.InSequence(sequence).Setup(repository => repository.Delete(job.Id));
 
             CreateRepository(jobs.Object).Delete(job.Id);
@@ -76,6 +78,22 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             jobs.Verify(repository => repository.Delete(It.IsAny<Guid>()), Times.Never);
         }
 
+        [DataTestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Delete_CancelDoesNotPersistCanceledState_DoesNotAttemptDelete(bool missing)
+        {
+            var job = CreateJob(JobState.Tentative);
+            var jobs = new Mock<IJobsRepository>();
+            jobs.SetupSequence(repository => repository.Read(job.Id)).Returns(job).Returns(missing ? null : job);
+            jobs.Setup(repository => repository.Cancel(job.Id)).Returns(job);
+
+            var exception = Assert.ThrowsException<InvalidOperationException>(() => CreateRepository(jobs.Object).Delete(job.Id));
+
+            StringAssert.Contains(exception.Message, "did not reach Canceled state");
+            jobs.Verify(repository => repository.Delete(It.IsAny<Guid>()), Times.Never);
+        }
+
         [TestMethod]
         public void Delete_MissingOrUnrelatedJob_DoesNotCancelOrDelete()
         {
@@ -91,9 +109,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             jobs.Verify(value => value.Delete(It.IsAny<Guid>()), Times.Never);
         }
 
-        private static Job CreateJob(JobState state)
+        private static Job CreateJob(JobState state, Guid? id = null)
         {
-            var job = new Job();
+            var job = new Job(id ?? Guid.NewGuid());
             typeof(Job).GetProperty(nameof(Job.State)).SetValue(job, state);
             job.NodeGraph.Add(new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, Guid.NewGuid()));
             return job;
