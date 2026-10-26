@@ -31,7 +31,7 @@ At Skyline Communications, we deal in world-class solutions that are deployed by
 
 ## Architecture
 
-`SatOpsApi` is the single entry point of the core library. Given a DataMiner `IConnection`, it exposes one repository per satellite-operations entity (`Satellites`, `Beams`, `Transponders`, `TransponderPlans`, `TransponderPlanRows`, `TransponderSlots`), each created lazily on first use.
+`SatOpsApi` is the single entry point of the core library. Given a DataMiner `IConnection`, it exposes one repository per satellite-operations entity (`Satellites`, `Beams`, `Transponders`, `TransponderPlans`, `TransponderPlanRows`, `TransponderSlots` and `TransponderRangeReservations`), each created lazily on first use.
 
 The `SDM.SatOps.GQI`, `SDM.SatOps.Automation` and `SatOps.Protocol` packages are thin DevPacks that build on top of the core library rather than talking to DOM directly: automation scripts consume `SDM.SatOps.Automation`, low-code apps/dashboards consume `SDM.SatOps.GQI` as a data source, and connectors consume `SatOps.Protocol`. `SDM.SatOps.CommonTests` provides MSTest coverage for the core library.
 
@@ -39,7 +39,7 @@ The `SDM.SatOps.GQI`, `SDM.SatOps.Automation` and `SatOps.Protocol` packages are
 
 Every repository is built as a small pipeline: the public interface (e.g. `IBeamRepository`) is implemented by a repository-specific **decorator middleware** (e.g. `BeamRepositoryMiddleware`), which optionally forwards the call to a **validation middleware** (e.g. `BeamValidationMiddleware`) before reaching the actual **repository** (e.g. `BeamRepository`) that talks to DataMiner DOM instances through `DomHelper`. This keeps validation/business rules decoupled from persistence, and lets new cross-cutting behavior be added without touching the storage code.
 
-The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
+The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s and `TransponderRangeReservation`s, and each `TransponderPlan` owns `TransponderPlanRow`s and derived `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
 
 `TransponderSlot`s are the one exception to the full CRUD surface: they are derived data, calculated from the plan rows and the transponder of their `TransponderPlan`. `ITransponderSlotRepository` therefore only inherits the creatable, deletable, pageable and countable repository interfaces — there is no update method, and regenerating the slots of a plan is done by calling `Create` with the transponder plan id, which recalculates the slots and replaces the ones currently stored for that plan.
 

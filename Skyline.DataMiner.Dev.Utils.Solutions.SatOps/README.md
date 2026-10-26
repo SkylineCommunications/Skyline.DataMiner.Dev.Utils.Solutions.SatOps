@@ -39,16 +39,27 @@ var wideSlots = api.TransponderSlots.Read(
     TransponderSlotExposers.Bandwidth.GreaterThan(36.0));
 ```
 
-Enum exposers such as `TransponderBand` and `SatelliteHemisphere` have DOM translators, but
-`.Equal(enum)` can fail to compile (`CS0315`) with older query SDK references. Status has no
-query exposer. Use the typed `ReadFiltered` methods to filter these fields on the DOM server,
-optionally combining them with a regular name or relationship filter:
+Filter exposers translate API filters to DOM filters on the server. Lifecycle status is available
+as a typed `Status` exposer on satellites, beams, transponders and transponder plans. Other
+repository-specific filters (such as hemisphere, band and polarization) are also available through
+the typed `ReadFiltered` methods:
 
 ```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
+
+var activeSatellites = api.Satellites.Read(
+    SatelliteExposers.Status.Equal(InstanceStatus.Active));
+
 var activeKu = api.Transponders.ReadFiltered(
     status: InstanceStatus.Active,
     band: TransponderBandType.Ku,
-    filter: TransponderExposers.TransponderSatellite.Equal(satelliteId));
+    filter: TransponderExposers.Satellite.Equal(satelliteId));
 
 var easternSatellites = api.Satellites.ReadFiltered(
     status: InstanceStatus.Active,
@@ -59,15 +70,15 @@ var feederBeams = api.Beams.ReadFiltered(
     linkType: BeamLinkType.Feeder);
 ```
 
-Every exposer class also exposes the entity's own id (`SatelliteId`, `BeamId`, `TransponderId`, `PlanId`,
-`PlanRowId`, `SlotId` and `ReservationId`), which is the only way to read a single transponder slot
-(`ITransponderSlotRepository` has no `Read(Guid)`).
+Each exposer class exposes the entity's ID through its `Guid` exposer. The transponder-slot
+repository has no `Read(Guid)` overload, so filter by `TransponderSlotExposers.Guid` to find a
+single slot:
 
 ```csharp
 using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot;
 
 var slot = api.TransponderSlots
-    .Read(TransponderSlotExposers.SlotId.Equal(slotId))
+    .Read(TransponderSlotExposers.Guid.Equal(slotId))
     .FirstOrDefault();
 ```
 
