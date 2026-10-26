@@ -30,8 +30,8 @@
             // Arrange
             var translator = new SatelliteFilterTranslator();
             var filter = new ANDFilterElement<Satellite>(
-                SatelliteExposers.SatelliteAbbreviation.Equal("A"),
-                SatelliteExposers.SatelliteOperator.Equal("B"));
+                SatelliteExposers.Abbreviation.Equal("A"),
+                SatelliteExposers.Operator.Equal("B"));
 
             // Act
             var result = translator.Translate(filter);
@@ -48,8 +48,8 @@
             // Arrange
             var translator = new SatelliteFilterTranslator();
             var filter = new ORFilterElement<Satellite>(
-                SatelliteExposers.SatelliteAbbreviation.Equal("A"),
-                SatelliteExposers.SatelliteOperator.Equal("B"));
+                SatelliteExposers.Abbreviation.Equal("A"),
+                SatelliteExposers.Operator.Equal("B"));
 
             // Act
             var result = translator.Translate(filter);
@@ -99,7 +99,7 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act
-            var result = translator.Translate(SatelliteExposers.SatelliteAbbreviation.Equal("ABC"));
+            var result = translator.Translate(SatelliteExposers.Abbreviation.Equal("ABC"));
 
             // Assert
             Assert.IsNotNull(result);

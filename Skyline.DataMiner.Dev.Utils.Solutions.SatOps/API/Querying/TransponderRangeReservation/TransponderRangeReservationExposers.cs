@@ -10,14 +10,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderRang
     public static class TransponderRangeReservationExposers
     {
         /// <summary>
-        /// Exposes the <see cref="TransponderRangeReservation.Id"/> property for querying as "ReservationId".
+        /// Exposes the <see cref="ApiObject.Id"/> property for querying as "ReservationId".
         /// </summary>
-        public static readonly Exposer<TransponderRangeReservation, Guid> ReservationId = new Exposer<TransponderRangeReservation, Guid>((obj) => obj.Id, "ReservationId");
+        public static readonly Exposer<TransponderRangeReservation, Guid> Guid = new Exposer<TransponderRangeReservation, Guid>((obj) => obj.Id, "Guid");
 
         /// <summary>
-        /// Exposes the <see cref="TransponderRangeReservation.Name"/> property for querying as "ReservationName".
+        /// Exposes the <see cref="TransponderRangeReservation.Name"/> property for querying as "Name".
         /// </summary>
-        public static readonly Exposer<TransponderRangeReservation, string> ReservationName = new Exposer<TransponderRangeReservation, string>((obj) => obj.Name, "ReservationName");
+        public static readonly Exposer<TransponderRangeReservation, string> Name = new Exposer<TransponderRangeReservation, string>((obj) => obj.Name, "Name");
 
         /// <summary>
         /// Exposes the <see cref="TransponderRangeReservation.Transponder"/> property for querying.

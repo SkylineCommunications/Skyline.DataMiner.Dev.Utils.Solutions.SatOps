@@ -15,38 +15,38 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
-            [TransponderExposers.TransponderId.fieldName] = HandleGuid,
-            [TransponderExposers.TransponderName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.Guid.fieldName] = HandleGuid,
+            [TransponderExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.TransponderName), comparer, (string)value),
-            [TransponderExposers.TransponderSatellite.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.Satellite.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.TransponderSatellite), comparer, (Guid)value),
-            [TransponderExposers.TransponderBeam.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.Beam.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Beam), comparer, (Guid)value),
-            [TransponderExposers.TransponderBand.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.Band.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Band), comparer, ConvertBand((TransponderBandType)value)),
-            [TransponderExposers.TransponderBandwidth.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.Bandwidth.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Bandwidth), comparer, (double)value),
-            [TransponderExposers.TransponderStartFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.StartFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.StartFrequency), comparer, (double)value),
-            [TransponderExposers.TransponderStopFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.StopFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.StopFrequency), comparer, (double)value),
-            [TransponderExposers.TransponderPolarization.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.Polarization.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Polarization), comparer, ConvertPolarization((TransponderPolarizationType)value)),
-            [TransponderExposers.TransponderDownlinkStartFreq.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.DownlinkStartFreq.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DownlinkStartFreq), comparer, (double)value),
-            [TransponderExposers.TransponderDownlinkEndFreq.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.DownlinkEndFreq.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DownlinkEndFreq), comparer, (double)value),
-            [TransponderExposers.TransponderRollingWindow.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.RollingWindow.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.RollingWindow), comparer, (double)value),
-            [TransponderExposers.TransponderHardEndDate.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.HardEndDate.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.HardEndDate), comparer, (DateTime)value),
-            [TransponderExposers.TransponderPhoneNumber.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.PhoneNumber.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.PhoneNumber), comparer, (string)value),
-            [TransponderExposers.TransponderUplinkPolarization.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.UplinkPolarization.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.UplinkPolarization), comparer, ConvertUplinkPolarization((TransponderUplinkPolarizationType)value)),
-            [TransponderExposers.TransponderDownlinkPolarization.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.DownlinkPolarization.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DownlinkPolarization), comparer, ConvertDownlinkPolarization((TransponderDownlinkPolarizationType)value)),
-            [TransponderExposers.TransponderDOMResource.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderExposers.DOMResource.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DOMResource), comparer, (Guid)value),
         };
 

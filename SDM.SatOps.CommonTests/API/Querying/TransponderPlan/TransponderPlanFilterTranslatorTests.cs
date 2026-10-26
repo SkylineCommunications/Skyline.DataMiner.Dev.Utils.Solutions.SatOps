@@ -32,7 +32,7 @@
             var translator = new TransponderPlanFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderPlanExposers.PlanName.Equal("plan"));
+            var result = translator.Translate(TransponderPlanExposers.Name.Equal("plan"));
 
             // Assert
             AssertTranslated(result);
@@ -68,7 +68,7 @@
             var translator = new TransponderPlanFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderPlanExposers.PlanId.Equal(Guid.NewGuid()));
+            var result = translator.Translate(TransponderPlanExposers.Guid.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);

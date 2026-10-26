@@ -13,29 +13,29 @@
     public static class BeamExposers
     {
         /// <summary>
-        /// Exposes the <see cref="Beam.Id"/> property for querying as "BeamId".
+        /// Exposes the <see cref="ApiObject.Id"/> property for querying as "Guid".
         /// </summary>
-        public static readonly Exposer<Beam, Guid> BeamId = new Exposer<Beam, Guid>((obj) => obj.Id, "BeamId");
+        public static readonly Exposer<Beam, Guid> Guid = new Exposer<Beam, Guid>((obj) => obj.Id, "Guid");
 
         /// <summary>
-        /// Exposes the <see cref="Beam.Name"/> property for querying as "BeamName".
+        /// Exposes the <see cref="Beam.Name"/> property for querying as "Name".
         /// </summary>
-        public static readonly Exposer<Beam, string> BeamName = new Exposer<Beam, string>((obj) => obj.Name, "BeamName");
+        public static readonly Exposer<Beam, string> Name = new Exposer<Beam, string>((obj) => obj.Name, "Name");
 
         /// <summary>
         /// Exposes the <see cref="Beam.BeamSatellite"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Beam, Guid> BeamSatellite = new Exposer<Beam, Guid>((obj) => obj.BeamSatellite.Value, "BeamSatellite");
+        public static readonly Exposer<Beam, Guid> Satellite = new Exposer<Beam, Guid>((obj) => obj.BeamSatellite.Value, "Satellite");
 
         /// <summary>
         /// Exposes the <see cref="Beam.LinkType"/> property for querying as "LinkType".
         /// </summary>
-        public static readonly Exposer<Beam, BeamLinkType> BeamLinkType = new Exposer<Beam, BeamLinkType>((obj) => obj.LinkType.Value, "LinkType");
+        public static readonly Exposer<Beam, BeamLinkType> LinkType = new Exposer<Beam, BeamLinkType>((obj) => obj.LinkType.Value, "LinkType");
 
         /// <summary>
         /// Exposes the <see cref="Beam.TransmissionType"/> property for querying as "TransmissionType".
         /// </summary>
-        public static readonly Exposer<Beam, BeamTransmissionType> BeamTransmissionType = new Exposer<Beam, BeamTransmissionType>((obj) => obj.TransmissionType.Value, "TransmissionType");
+        public static readonly Exposer<Beam, BeamTransmissionType> TransmissionType = new Exposer<Beam, BeamTransmissionType>((obj) => obj.TransmissionType.Value, "TransmissionType");
 
         /// <summary>
         /// Exposes the <see cref="Beam.FootprintFile"/> property for querying.

@@ -13,78 +13,78 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
     public static class SatelliteExposers
     {
         /// <summary>
-        /// Exposes the <see cref="Satellite.Id"/> property for querying as "SatelliteId".
+        /// Exposes the <see cref="ApiObject.Id"/> property for querying as "Guid".
         /// </summary>
-        public static readonly Exposer<Satellite, Guid> SatelliteId = new Exposer<Satellite, Guid>((obj) => obj.Id, "SatelliteId");
+        public static readonly Exposer<Satellite, Guid> Guid = new Exposer<Satellite, Guid>((obj) => obj.Id, "Guid");
 
         /// <summary>
-        /// Exposes the <see cref="Satellite.Name"/> property for querying as "SatelliteName".
+        /// Exposes the <see cref="Satellite.Name"/> property for querying as "Name".
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteName = new Exposer<Satellite, string>((obj) => obj.Name, "SatelliteName");
+        public static readonly Exposer<Satellite, string> Name = new Exposer<Satellite, string>((obj) => obj.Name, "Name");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Abbreviation"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteAbbreviation = new Exposer<Satellite, string>((obj) => obj.Abbreviation, "SatelliteAbbreviation");
+        public static readonly Exposer<Satellite, string> Abbreviation = new Exposer<Satellite, string>((obj) => obj.Abbreviation, "Abbreviation");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Orbit"/> property for querying as "Orbit".
         /// </summary>
-        public static readonly Exposer<Satellite, OrbitType> SatelliteOrbit = new Exposer<Satellite, OrbitType>((obj) => obj.Orbit.Value, "Orbit");
+        public static readonly Exposer<Satellite, OrbitType> Orbit = new Exposer<Satellite, OrbitType>((obj) => obj.Orbit.Value, "Orbit");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.LongitudeForGEODegrees"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, double> SatelliteLongitudeForGEODegrees = new Exposer<Satellite, double>((obj) => obj.LongitudeForGEODegrees.Value, "LongitudeForGEODegrees");
+        public static readonly Exposer<Satellite, double> LongitudeForGeoDegrees = new Exposer<Satellite, double>((obj) => obj.LongitudeForGEODegrees.Value, "LongitudeForGEODegrees");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.InclinationDegrees"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, double> SatelliteInclinationDegrees = new Exposer<Satellite, double>((obj) => obj.InclinationDegrees.Value, "InclinationDegrees");
+        public static readonly Exposer<Satellite, double> InclinationDegrees = new Exposer<Satellite, double>((obj) => obj.InclinationDegrees.Value, "InclinationDegrees");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Hemisphere"/> property for querying as "Hemisphere".
         /// </summary>
-        public static readonly Exposer<Satellite, HemisphereType> SatelliteHemisphere = new Exposer<Satellite, HemisphereType>((obj) => obj.Hemisphere.Value, "Hemisphere");
+        public static readonly Exposer<Satellite, HemisphereType> Hemisphere = new Exposer<Satellite, HemisphereType>((obj) => obj.Hemisphere.Value, "Hemisphere");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Operator"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteOperator = new Exposer<Satellite, string>((obj) => obj.Operator, "Operator");
+        public static readonly Exposer<Satellite, string> Operator = new Exposer<Satellite, string>((obj) => obj.Operator, "Operator");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Coverage"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteCoverage = new Exposer<Satellite, string>((obj) => obj.Coverage, "Coverage");
+        public static readonly Exposer<Satellite, string> Coverage = new Exposer<Satellite, string>((obj) => obj.Coverage, "Coverage");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Applications"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteApplications = new Exposer<Satellite, string>((obj) => obj.Applications, "Applications");
+        public static readonly Exposer<Satellite, string> Applications = new Exposer<Satellite, string>((obj) => obj.Applications, "Applications");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Info"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteInfo = new Exposer<Satellite, string>((obj) => obj.Info, "Info");
+        public static readonly Exposer<Satellite, string> Info = new Exposer<Satellite, string>((obj) => obj.Info, "Info");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Manufacturer"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteManufacturer = new Exposer<Satellite, string>((obj) => obj.Manufacturer, "Manufacturer");
+        public static readonly Exposer<Satellite, string> Manufacturer = new Exposer<Satellite, string>((obj) => obj.Manufacturer, "Manufacturer");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Country"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteCountry = new Exposer<Satellite, string>((obj) => obj.Country, "Country");
+        public static readonly Exposer<Satellite, string> Country = new Exposer<Satellite, string>((obj) => obj.Country, "Country");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.LaunchInfo"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, string> SatelliteLaunchInfo = new Exposer<Satellite, string>((obj) => obj.LaunchInfo, "LaunchInfo");
+        public static readonly Exposer<Satellite, string> LaunchInfo = new Exposer<Satellite, string>((obj) => obj.LaunchInfo, "LaunchInfo");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.LaunchInServiceDate"/> property for querying.
         /// </summary>
-        public static readonly Exposer<Satellite, DateTime> SatelliteLaunchInServiceDate = new Exposer<Satellite, DateTime>((obj) => obj.LaunchInServiceDate.Value, "LaunchInServiceDate");
+        public static readonly Exposer<Satellite, DateTime> LaunchInServiceDate = new Exposer<Satellite, DateTime>((obj) => obj.LaunchInServiceDate.Value, "LaunchInServiceDate");
     }
 }

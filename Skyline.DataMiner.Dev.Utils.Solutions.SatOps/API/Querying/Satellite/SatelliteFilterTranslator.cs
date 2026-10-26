@@ -15,34 +15,34 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
-            [SatelliteExposers.SatelliteId.fieldName] = HandleGuid,
-            [SatelliteExposers.SatelliteName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Guid.fieldName] = HandleGuid,
+            [SatelliteExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.SatelliteName), comparer, (string)value),
-            [SatelliteExposers.SatelliteAbbreviation.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Abbreviation.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.SatelliteAbbreviation), comparer, (string)value),
-            [SatelliteExposers.SatelliteOrbit.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Orbit.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.Orbit), comparer, ConvertOrbit((OrbitType)value)),
-            [SatelliteExposers.SatelliteLongitudeForGEODegrees.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.LongitudeForGeoDegrees.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.LongitudeForGEODegrees), comparer, (double)value),
-            [SatelliteExposers.SatelliteInclinationDegrees.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.InclinationDegrees.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.InclinationDegrees), comparer, (double)value),
-            [SatelliteExposers.SatelliteHemisphere.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Hemisphere.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.General.Hemisphere), comparer, ConvertHemisphere((HemisphereType)value)),
-            [SatelliteExposers.SatelliteOperator.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Operator.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Operator), comparer, (string)value),
-            [SatelliteExposers.SatelliteCoverage.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Coverage.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Coverage), comparer, (string)value),
-            [SatelliteExposers.SatelliteApplications.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Applications.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Applications), comparer, (string)value),
-            [SatelliteExposers.SatelliteInfo.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Info.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Info), comparer, (string)value),
-            [SatelliteExposers.SatelliteManufacturer.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Manufacturer.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Origin.Manufacturer), comparer, (string)value),
-            [SatelliteExposers.SatelliteCountry.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.Country.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.Origin.Country), comparer, (string)value),
-            [SatelliteExposers.SatelliteLaunchInfo.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.LaunchInfo.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.LaunchInformation.LaunchInfo), comparer, (string)value),
-            [SatelliteExposers.SatelliteLaunchInServiceDate.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [SatelliteExposers.LaunchInServiceDate.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.LaunchInformation.LaunchInServiceDate), comparer, (DateTime)value),
         };
 

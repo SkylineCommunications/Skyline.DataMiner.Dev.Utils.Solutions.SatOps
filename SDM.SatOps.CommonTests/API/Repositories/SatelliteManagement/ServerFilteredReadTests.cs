@@ -47,7 +47,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var filter = new SatelliteRepository(CreateApi()).BuildReadFilter(
                 InstanceStatus.Active,
                 HemisphereType.Eastern,
-                SatelliteExposers.SatelliteName.Equal("Sat A"));
+                SatelliteExposers.Name.Equal("Sat A"));
             var values = Values(filter);
 
             CollectionAssert.IsSubsetOf(
@@ -94,7 +94,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
                 InstanceStatus.Active,
                 BeamTransmissionType.TX,
                 BeamLinkType.Feeder,
-                BeamExposers.BeamSatellite.Equal(satelliteId));
+                BeamExposers.Satellite.Equal(satelliteId));
 
             CollectionAssert.IsSubsetOf(
                 new object[] { Model.SlcSatellite_ManagementIds.Definitions.Beams.Id, "active", "TX", "Feeder", satelliteId },
@@ -122,7 +122,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
                 InstanceStatus.Deprecated,
                 TransponderPolarizationType.Circular,
                 TransponderBandType.Ku,
-                TransponderExposers.TransponderName.Equal("Ku 1"));
+                TransponderExposers.Name.Equal("Ku 1"));
 
             CollectionAssert.IsSubsetOf(
                 new object[] { Model.SlcSatellite_ManagementIds.Definitions.Transponders.Id, "deprecated", Model.SlcSatellite_ManagementIds.Enums.Polarization.Circular, "Ku", "Ku 1" },

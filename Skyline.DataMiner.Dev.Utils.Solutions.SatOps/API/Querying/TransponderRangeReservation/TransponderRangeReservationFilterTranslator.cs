@@ -17,8 +17,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderRang
         private static readonly Dictionary<string, Func<TransponderRangeReservation, Comparer, object, bool>> Predicates =
             new Dictionary<string, Func<TransponderRangeReservation, Comparer, object, bool>>
             {
-                [TransponderRangeReservationExposers.ReservationId.fieldName] = (r, c, v) => CompareGuid(r.Id, c, (Guid)v),
-                [TransponderRangeReservationExposers.ReservationName.fieldName] = (r, c, v) => CompareString(r.Name, c, (string)v),
+                [TransponderRangeReservationExposers.Guid.fieldName] = (r, c, v) => CompareGuid(r.Id, c, (Guid)v),
+                [TransponderRangeReservationExposers.Name.fieldName] = (r, c, v) => CompareString(r.Name, c, (string)v),
                 [TransponderRangeReservationExposers.Transponder.fieldName] = (r, c, v) => CompareGuid(r.Transponder, c, (Guid)v),
                 [TransponderRangeReservationExposers.RelativeStartFrequency.fieldName] = (r, c, v) => CompareDouble(r.RelativeStartFrequency, c, (double)v),
                 [TransponderRangeReservationExposers.RelativeEndFrequency.fieldName] = (r, c, v) => CompareDouble(r.RelativeEndFrequency, c, (double)v),

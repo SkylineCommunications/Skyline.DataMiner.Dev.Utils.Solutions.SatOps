@@ -15,14 +15,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
-            [TransponderSlotExposers.SlotId.fieldName] = HandleGuid,
+            [TransponderSlotExposers.Guid.fieldName] = HandleGuid,
             [TransponderSlotExposers.TransponderPlan.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan), comparer, (Guid)value),
-            [TransponderSlotExposers.SlotName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderSlotExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotName), comparer, (string)value),
-            [TransponderSlotExposers.SlotStartFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderSlotExposers.StartFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotStartFrequency), comparer, (double)value),
-            [TransponderSlotExposers.SlotEndFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderSlotExposers.EndFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotEndFrequency), comparer, (double)value),
             [TransponderSlotExposers.Bandwidth.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.Bandwidth), comparer, (double)value),

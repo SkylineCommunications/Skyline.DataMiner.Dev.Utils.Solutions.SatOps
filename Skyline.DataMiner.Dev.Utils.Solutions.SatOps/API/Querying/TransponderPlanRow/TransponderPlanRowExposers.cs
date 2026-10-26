@@ -13,9 +13,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
     public static class TransponderPlanRowExposers
     {
         /// <summary>
-        /// Exposes the <see cref="TransponderPlanRow.Id"/> property for querying as "PlanRowId".
+        /// Exposes the <see cref="ApiObject.Id"/> property for querying as "Guid".
         /// </summary>
-        public static readonly Exposer<TransponderPlanRow, Guid> PlanRowId = new Exposer<TransponderPlanRow, Guid>((obj) => obj.Id, "PlanRowId");
+        public static readonly Exposer<TransponderPlanRow, Guid> Guid = new Exposer<TransponderPlanRow, Guid>((obj) => obj.Id, "Guid");
 
         /// <summary>
         /// Exposes the <see cref="TransponderPlanRow.TransponderPlan"/> property for querying.

@@ -523,7 +523,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             }
 
             var match = SatOpsApi.Transponders
-                .Read(TransponderExposers.TransponderDOMResource.Equal(resourceId))
+                .Read(TransponderExposers.DOMResource.Equal(resourceId))
                 .FirstOrDefault();
 
             return match?.Id;
@@ -636,7 +636,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (!satelliteId.HasValue || satelliteId.Value == Guid.Empty)
             {
                 throw new ArgumentException(
-                    $"Transponder '{transponder.Id}' has no linked satellite (TransponderSatellite is missing). " +
+                    $"Transponder '{transponder.Id}' has no linked satellite (Satellite is missing). " +
                     "A reservation cannot be created without a satellite relationship.",
                     nameof(transponder));
             }

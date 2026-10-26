@@ -102,7 +102,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             else
             {
                 // Ensure updatedInstance.Transponder is instantiated so the DOMResource getter returns null (not NRE).
-                SetNestedProperty(updated, "Transponder.TransponderName", (string)null);
+                SetNestedProperty(updated, "Transponder.Name", (string)null);
             }
 
             var transponder = FormatterServices.GetUninitializedObject(TransponderType);

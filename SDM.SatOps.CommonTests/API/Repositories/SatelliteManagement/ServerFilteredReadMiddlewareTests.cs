@@ -24,7 +24,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         [TestMethod]
         public void SatelliteReadFiltered_ForwardsAllCriteria()
         {
-            var filter = SatelliteExposers.SatelliteName.Equal("Sat A");
+            var filter = SatelliteExposers.Name.Equal("Sat A");
             var satellites = new[] { new SatelliteObject() };
             var inner = new Mock<ISatelliteRepository>();
             inner.Setup(r => r.ReadFiltered(InstanceStatus.Active, HemisphereType.Western, filter)).Returns(satellites);
@@ -38,7 +38,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         [TestMethod]
         public void BeamReadFiltered_ForwardsAllCriteria()
         {
-            var filter = BeamExposers.BeamName.Equal("Beam A");
+            var filter = BeamExposers.Name.Equal("Beam A");
             var beams = new[] { new BeamObject() };
             var inner = new Mock<IBeamRepository>();
             inner.Setup(r => r.ReadFiltered(InstanceStatus.Active, BeamTransmissionType.TX, BeamLinkType.Feeder, filter)).Returns(beams);
@@ -52,7 +52,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         [TestMethod]
         public void TransponderReadFiltered_ForwardsAllCriteria()
         {
-            var filter = TransponderExposers.TransponderName.Equal("Tp A");
+            var filter = TransponderExposers.Name.Equal("Tp A");
             var transponders = new[] { new TransponderObject() };
             var inner = new Mock<ITransponderRepository>();
             inner.Setup(r => r.ReadFiltered(InstanceStatus.Deprecated, TransponderPolarizationType.Linear, TransponderBandType.Ku, filter)).Returns(transponders);

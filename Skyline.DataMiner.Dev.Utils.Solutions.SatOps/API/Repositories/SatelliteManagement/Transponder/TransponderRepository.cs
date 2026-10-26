@@ -105,7 +105,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (satelliteId == Guid.Empty)
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(satelliteId));
 
-            return Read(TransponderExposers.TransponderSatellite.Equal(satelliteId));
+            return Read(TransponderExposers.Satellite.Equal(satelliteId));
         }
 
         public IEnumerable<Transponder> ReadByNames(IEnumerable<string> names)
@@ -121,7 +121,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return Enumerable.Empty<Transponder>();
 
             var nameFilters = wantedNames
-                .Select(name => (FilterElement<Transponder>)TransponderExposers.TransponderName.Equal(name))
+                .Select(name => (FilterElement<Transponder>)TransponderExposers.Name.Equal(name))
                 .ToArray();
 
             var filter = nameFilters.Length == 1 ? nameFilters[0] : new ORFilterElement<Transponder>(nameFilters);

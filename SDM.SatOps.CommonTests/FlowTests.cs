@@ -54,7 +54,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var beam = CreateApiObject(
                 beamType,
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance",
-                dom => SetNestedProperty(dom, "Beam.BeamSatellite", (Guid?)Guid.NewGuid()));
+                dom => SetNestedProperty(dom, "Beam.Satellite", (Guid?)Guid.NewGuid()));
 
             var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildSatelliteRepository(null) }, null);
 
@@ -79,8 +79,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "Transponder.TransponderName", null);
-                    SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "Transponder.Name", null);
+                    SetNestedProperty(dom, "Transponder.Satellite", (Guid?)Guid.NewGuid());
                     SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
                     SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
@@ -113,8 +113,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "Transponder.TransponderName", "TP-1");
-                    SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "Transponder.Name", "TP-1");
+                    SetNestedProperty(dom, "Transponder.Satellite", (Guid?)Guid.NewGuid());
                     SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
                     SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
@@ -223,7 +223,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", null);
+                    SetNestedProperty(dom, "TransponderPlan.Name", null);
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                 });
@@ -249,7 +249,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                 });
@@ -275,7 +275,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)0.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)false);
@@ -307,7 +307,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)true);
@@ -319,7 +319,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-Existing");
+                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-Existing");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)true);
@@ -353,7 +353,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)false);
@@ -367,7 +367,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-Existing");
+                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-Existing");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)false);
@@ -532,9 +532,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
-                    SetNestedProperty(dom, "TransponderSlot.SlotName", null);
-                    SetNestedProperty(dom, "TransponderSlot.SlotStartFrequency", (double?)1.0);
-                    SetNestedProperty(dom, "TransponderSlot.SlotEndFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "TransponderSlot.Name", null);
+                    SetNestedProperty(dom, "TransponderSlot.StartFrequency", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.EndFrequency", (double?)2.0);
                     SetNestedProperty(dom, "TransponderSlot.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "TransponderSlot.UplinkFreq", (double?)14.0);
                     SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
@@ -563,9 +563,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
-                    SetNestedProperty(dom, "TransponderSlot.SlotName", "Slot-1");
-                    SetNestedProperty(dom, "TransponderSlot.SlotStartFrequency", (double?)1.0);
-                    SetNestedProperty(dom, "TransponderSlot.SlotEndFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "TransponderSlot.Name", "Slot-1");
+                    SetNestedProperty(dom, "TransponderSlot.StartFrequency", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.EndFrequency", (double?)2.0);
                     SetNestedProperty(dom, "TransponderSlot.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "TransponderSlot.UplinkFreq", (double?)14.0);
                     SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
@@ -652,7 +652,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             reservationType.GetProperty("RelativeEndFrequency").SetValue(reservation, relativeEnd);
             reservationType.GetProperty("StartTime").SetValue(reservation, startTime);
             reservationType.GetProperty("EndTime").SetValue(reservation, endTime);
-            reservationType.GetProperty("SlotName")?.SetValue(reservation, "Slot-1");
+            reservationType.GetProperty("Name")?.SetValue(reservation, "Slot-1");
 
             return reservation;
         }
@@ -805,8 +805,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static void ConfigureValidTransponderDom(object dom, string name)
         {
-            SetNestedProperty(dom, "Transponder.TransponderName", name);
-            SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
+            SetNestedProperty(dom, "Transponder.Name", name);
+            SetNestedProperty(dom, "Transponder.Satellite", (Guid?)Guid.NewGuid());
             SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
             SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
             SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);

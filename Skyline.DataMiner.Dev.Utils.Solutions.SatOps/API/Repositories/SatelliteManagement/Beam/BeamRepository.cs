@@ -131,7 +131,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (satelliteId == Guid.Empty)
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(satelliteId));
 
-            return Read(BeamExposers.BeamSatellite.Equal(satelliteId));
+            return Read(BeamExposers.Satellite.Equal(satelliteId));
         }
 
         public IEnumerable<Beam> ReadFiltered(InstanceStatus? status = null, BeamTransmissionType? transmissionType = null, BeamLinkType? linkType = null, FilterElement<Beam> filter = null)
