@@ -13,6 +13,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
@@ -39,6 +40,21 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             AssertContainsStatus(new SatelliteRepository(api).BuildReadFilter(status, null, null), expectedId);
             AssertContainsStatus(new BeamRepository(api).BuildReadFilter(status, null, null, null), expectedId);
             AssertContainsStatus(new TransponderRepository(api).BuildReadFilter(status, null, null, null), expectedId);
+        }
+
+        [DataTestMethod]
+        [DataRow(InstanceStatus.Draft, "draft")]
+        [DataRow(InstanceStatus.Active, "active")]
+        [DataRow(InstanceStatus.Deprecated, "deprecated")]
+        [DataRow(InstanceStatus.Error, "error")]
+        public void ReadFilters_StatusExposer_UsesExactDomStatusId(InstanceStatus status, string expectedId)
+        {
+            var api = CreateApi();
+
+            AssertContainsStatus(new SatelliteRepository(api).BuildReadFilter(null, null, SatelliteExposers.Status.Equal(status)), expectedId);
+            AssertContainsStatus(new BeamRepository(api).BuildReadFilter(null, null, null, BeamExposers.Status.Equal(status)), expectedId);
+            AssertContainsStatus(new TransponderRepository(api).BuildReadFilter(null, null, null, TransponderExposers.Status.Equal(status)), expectedId);
+            AssertContainsStatus(new TransponderPlanFilterTranslator().Translate(TransponderPlanExposers.Status.Equal(status)), expectedId);
         }
 
         [TestMethod]
@@ -162,6 +178,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new TransponderRepository(api).ReadFiltered(band: (TransponderBandType)999));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new TransponderRepository(api).ReadFiltered(polarization: (TransponderPolarizationType)999));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new SatelliteRepository(api).ReadFiltered(status: (InstanceStatus)999));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new SatelliteRepository(api).BuildReadFilter(null, null, SatelliteExposers.Status.Equal((InstanceStatus)999)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new BeamRepository(api).BuildReadFilter(null, null, null, BeamExposers.Status.Equal((InstanceStatus)999)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new TransponderRepository(api).BuildReadFilter(null, null, null, TransponderExposers.Status.Equal((InstanceStatus)999)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new TransponderPlanFilterTranslator().Translate(TransponderPlanExposers.Status.Equal((InstanceStatus)999)));
         }
 
         private static void AssertContainsStatus(FilterElement<DomInstance> filter, string expectedId)

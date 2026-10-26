@@ -1,6 +1,7 @@
 ﻿namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using System;
 
@@ -21,6 +22,11 @@
         /// Exposes the <see cref="Beam.Name"/> property for querying as "Name".
         /// </summary>
         public static readonly Exposer<Beam, string> Name = new Exposer<Beam, string>((obj) => obj.Name, "Name");
+
+        /// <summary>
+        /// Exposes the <see cref="Beam.Status"/> property for querying as "Status".
+        /// </summary>
+        public static readonly Exposer<Beam, InstanceStatus> Status = new Exposer<Beam, InstanceStatus>((obj) => obj.Status, "Status");
 
         /// <summary>
         /// Exposes the <see cref="Beam.BeamSatellite"/> property for querying.

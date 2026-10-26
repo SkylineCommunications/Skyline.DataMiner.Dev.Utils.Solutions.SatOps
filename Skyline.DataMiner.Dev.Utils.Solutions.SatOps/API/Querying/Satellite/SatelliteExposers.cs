@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using System;
 
@@ -21,6 +22,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
         /// Exposes the <see cref="Satellite.Name"/> property for querying as "Name".
         /// </summary>
         public static readonly Exposer<Satellite, string> Name = new Exposer<Satellite, string>((obj) => obj.Name, "Name");
+
+        /// <summary>
+        /// Exposes the <see cref="Satellite.Status"/> property for querying as "Status".
+        /// </summary>
+        public static readonly Exposer<Satellite, InstanceStatus> Status = new Exposer<Satellite, InstanceStatus>((obj) => obj.Status, "Status");
 
         /// <summary>
         /// Exposes the <see cref="Satellite.Abbreviation"/> property for querying.

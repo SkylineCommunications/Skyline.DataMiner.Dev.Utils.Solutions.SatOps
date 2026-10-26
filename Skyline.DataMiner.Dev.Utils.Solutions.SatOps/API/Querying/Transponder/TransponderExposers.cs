@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using System;
 
@@ -21,6 +22,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
         /// Exposes the <see cref="Transponder.Name"/> property for querying as "Name".
         /// </summary>
         public static readonly Exposer<Transponder, string> Name = new Exposer<Transponder, string>((obj) => obj.Name, "Name");
+
+        /// <summary>
+        /// Exposes the <see cref="Transponder.Status"/> property for querying as "Status".
+        /// </summary>
+        public static readonly Exposer<Transponder, InstanceStatus> Status = new Exposer<Transponder, InstanceStatus>((obj) => obj.Status, "Status");
 
         /// <summary>
         /// Exposes the <see cref="Transponder.TransponderSatellite"/> property for querying.

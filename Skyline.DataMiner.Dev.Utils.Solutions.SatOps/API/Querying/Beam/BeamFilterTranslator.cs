@@ -2,6 +2,7 @@
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
@@ -16,6 +17,12 @@
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
             [BeamExposers.Guid.fieldName] = HandleGuid,
+            [BeamExposers.Status.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.StatusId, comparer,
+                InstanceStatusFilterHelper.ToStatusId((InstanceStatus)value,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Draft,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Active,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Deprecated,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Error)),
             [BeamExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (SlcSatellite_ManagementIds.Sections.Beam.BeamName), comparer, (string)value),
             [BeamExposers.Satellite.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
