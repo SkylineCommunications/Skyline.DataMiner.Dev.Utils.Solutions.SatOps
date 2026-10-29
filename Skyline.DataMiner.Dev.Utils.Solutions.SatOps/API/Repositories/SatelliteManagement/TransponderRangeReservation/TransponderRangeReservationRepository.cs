@@ -196,7 +196,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return Enumerable.Empty<TransponderRangeReservation>();
             }
 
-            return MaterializeReservations(ReadAllReservationJobs()
+            return MaterializeReservations(ReadAllReservationJobs(JobExposers.Resources.Contains(resourceId.Value))
                 .Where(pair => pair.Node.ResourceId == resourceId.Value));
         }
 
@@ -226,7 +226,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return Enumerable.Empty<TransponderRangeReservation>();
             }
 
-            return MaterializeReservations(ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
+            return MaterializeReservations(ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc, resourceId.Value)
                 .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
                 .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
                 .Where(pair => pair.IsReservation && pair.Node.ResourceId == resourceId.Value)
@@ -412,11 +412,17 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return jobStart < endTimeUtc && jobEnd > startTimeUtc;
         }
 
-        private IEnumerable<Job> ReadJobsOverlappingWindow(DateTime startTimeUtc, DateTime endTimeUtc)
+        private IEnumerable<Job> ReadJobsOverlappingWindow(DateTime startTimeUtc, DateTime endTimeUtc, Guid? resourceId = null)
         {
             var start = new DateTimeOffset(DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc));
             var end = new DateTimeOffset(DateTime.SpecifyKind(endTimeUtc, DateTimeKind.Utc));
-            return Jobs.Read(JobExposers.Start.LessThan(end).AND(JobExposers.End.GreaterThan(start)));
+            var filter = JobExposers.Start.LessThan(end).AND(JobExposers.End.GreaterThan(start));
+            if (resourceId.HasValue)
+            {
+                filter = filter.AND(JobExposers.Resources.Contains(resourceId.Value));
+            }
+
+            return Jobs.Read(filter);
         }
 
         private static bool IsReservationJob(Job job, out JobResourceNode resourceNode)
@@ -458,9 +464,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return true;
         }
 
-        private IEnumerable<(Job Job, JobResourceNode Node)> ReadAllReservationJobs()
+        private IEnumerable<(Job Job, JobResourceNode Node)> ReadAllReservationJobs(FilterElement<Job> filter = null)
         {
-            foreach (var job in Jobs.Read())
+            foreach (var job in filter == null ? Jobs.Read() : Jobs.Read(filter))
             {
                 if (IsReservationJob(job, out var node))
                 {

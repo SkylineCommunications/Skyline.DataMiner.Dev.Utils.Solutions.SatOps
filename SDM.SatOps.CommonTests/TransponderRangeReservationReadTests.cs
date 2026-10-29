@@ -5,16 +5,104 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using System.Linq;
     using System.Reflection;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Moq;
+    using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
+    using Skyline.DataMiner.Net.Messages;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
 
     [TestClass]
     public class TransponderRangeReservationReadTests
     {
+        [DataTestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void ReadByTransponder_FiltersBackendResourcesAndPreservesReservationChecks(bool withWindow)
+        {
+            var resourceId = Guid.NewGuid();
+            var transponder = new Transponder { DOMResource = resourceId };
+            var spanning = CreateJob(resourceId).Job;
+            var start = spanning.Start.UtcDateTime;
+            var end = spanning.End.UtcDateTime;
+            spanning.Start = spanning.Start.AddHours(-1);
+            spanning.End = spanning.End.AddHours(1);
+            var later = CreateJob(resourceId).Job;
+            later.Start = later.Start.AddHours(2);
+            later.End = later.End.AddHours(2);
+            var endsAtStart = CreateJob(resourceId).Job;
+            endsAtStart.Start = endsAtStart.Start.AddHours(-1);
+            endsAtStart.End = new DateTimeOffset(start);
+            var startsAtEnd = CreateJob(resourceId).Job;
+            startsAtEnd.Start = new DateTimeOffset(end);
+            startsAtEnd.End = startsAtEnd.End.AddHours(1);
+            var wrongResource = CreateJob(Guid.NewGuid()).Job;
+            wrongResource.NodeGraph.Add(new JobResourceNode(Guid.NewGuid(), resourceId));
+            var multipleTransponders = CreateJob(resourceId).Job;
+            multipleTransponders.NodeGraph.Add(new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, Guid.NewGuid()));
+            var wrongPool = new Job();
+            wrongPool.NodeGraph.Add(new JobResourceNode(Guid.NewGuid(), resourceId));
+            var candidates = new[] { spanning, later, endsAtStart, startsAtEnd, wrongResource, multipleTransponders, wrongPool };
+            FilterElement<Job> captured = null;
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+            jobs.Setup(value => value.Read(It.IsAny<FilterElement<Job>>()))
+                .Callback<FilterElement<Job>>(filter => captured = filter)
+                .Returns(candidates);
+            var repository = CreateRepository(jobs.Object, transponder);
+
+            var result = (withWindow
+                ? repository.ReadByTransponderAndTimeWindow(transponder.Id, start, end)
+                : repository.ReadByTransponder(transponder.Id)).ToList();
+
+            var leaves = ReadJobFilterLeaves(captured).ToList();
+            var resourceFilter = leaves.Single(leaf => leaf.getFieldName().fieldName == JobExposers.Resources.fieldName);
+            Assert.AreEqual(Comparer.Contains, resourceFilter.getComparer());
+            Assert.AreEqual(resourceId, resourceFilter.getValue());
+            Assert.AreEqual(withWindow ? 3 : 1, leaves.Count);
+            if (withWindow)
+            {
+                var startFilter = leaves.Single(leaf => leaf.getFieldName().fieldName == JobExposers.Start.fieldName);
+                var endFilter = leaves.Single(leaf => leaf.getFieldName().fieldName == JobExposers.End.fieldName);
+                Assert.AreEqual(Comparer.LT, startFilter.getComparer());
+                Assert.AreEqual(new DateTimeOffset(end), startFilter.getValue());
+                Assert.AreEqual(Comparer.GT, endFilter.getComparer());
+                Assert.AreEqual(new DateTimeOffset(start), endFilter.getValue());
+            }
+
+            CollectionAssert.AreEquivalent(
+                (withWindow ? new[] { spanning } : new[] { spanning, later, endsAtStart, startsAtEnd }).Select(job => job.Id).ToList(),
+                result.Select(reservation => reservation.Id).ToList());
+            var spanningReservation = result.Single(reservation => reservation.Id == spanning.Id);
+            Assert.AreEqual(spanning.Start.UtcDateTime, spanningReservation.StartTime);
+            Assert.AreEqual(spanning.End.UtcDateTime, spanningReservation.EndTime);
+            jobs.Verify(value => value.Read(It.IsAny<FilterElement<Job>>()), Times.Once);
+        }
+
+        [DataTestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void ReadByTransponder_BackendFailurePropagates(bool withWindow)
+        {
+            var transponder = new Transponder { DOMResource = Guid.NewGuid() };
+            var failure = new InvalidOperationException("Resource query failed");
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+            jobs.Setup(value => value.Read(It.IsAny<FilterElement<Job>>())).Throws(failure);
+            var repository = CreateRepository(jobs.Object, transponder);
+            var start = DateTime.UtcNow;
+
+            var actual = Assert.ThrowsException<InvalidOperationException>(() => (withWindow
+                ? repository.ReadByTransponderAndTimeWindow(transponder.Id, start, start.AddHours(1))
+                : repository.ReadByTransponder(transponder.Id)).ToList());
+
+            Assert.AreSame(failure, actual);
+        }
+
         [TestMethod]
         public void MaterializeReservations_BatchesPropertiesAndResolvesSharedResourceOnce()
         {
@@ -175,6 +263,35 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     }).ToList());
 
             Assert.AreSame(failure, actual);
+        }
+
+        private static TransponderRangeReservationRepository CreateRepository(IJobsRepository jobs, Transponder transponder)
+        {
+            var plan = new Mock<IMediaOpsPlanApi>();
+            plan.Setup(value => value.Jobs).Returns(jobs);
+            var transponders = new Mock<ITransponderRepository>(MockBehavior.Strict);
+            transponders.Setup(value => value.Read(transponder.Id)).Returns(transponder);
+            transponders.Setup(value => value.Read(It.IsAny<FilterElement<Transponder>>())).Returns(new[] { transponder });
+            var connection = new Mock<IConnection>(MockBehavior.Strict);
+            connection.SetupGet(value => value.IsShuttingDown).Returns(false);
+            connection.Setup(value => value.HandleMessages(It.IsAny<DMSMessage[]>()))
+                .Returns(new DMSMessage[] { new ManagerStoreCrudResponse<DomInstance>() });
+            var api = new SatOpsApi(connection.Object);
+            typeof(SatOpsApi).GetField("lazyMediaOpsPlanApi", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(api, new Lazy<IMediaOpsPlanApi>(() => plan.Object));
+            typeof(SatOpsApi).GetField("lazyTransponderRepository", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(api, new Lazy<ITransponderRepository>(() => transponders.Object));
+            return new TransponderRangeReservationRepository(api);
+        }
+
+        private static IEnumerable<ManagedFilterIdentifier> ReadJobFilterLeaves(FilterElement<Job> filter)
+        {
+            if (filter is ANDFilterElement<Job> combined)
+            {
+                return combined.subFilters.SelectMany(ReadJobFilterLeaves);
+            }
+
+            return new[] { (ManagedFilterIdentifier)filter };
         }
 
         private static (Job Job, JobResourceNode Node) CreateJob(Guid resourceId, string name = "Booking")
