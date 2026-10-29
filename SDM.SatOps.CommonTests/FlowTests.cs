@@ -11,6 +11,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -54,7 +55,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var beam = CreateApiObject(
                 beamType,
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.BeamsInstance",
-                dom => SetNestedProperty(dom, "Beam.Satellite", (Guid?)Guid.NewGuid()));
+                dom => SetNestedProperty(dom, "Beam.BeamSatellite", (Guid?)Guid.NewGuid()));
 
             var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildSatelliteRepository(null) }, null);
 
@@ -65,6 +66,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("beam", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message, string.Format(
+                ExceptionMessages.BeamSatelliteDoesNotExist,
+                ((Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam)beam).BeamSatellite));
         }
 
         [TestMethod]
@@ -79,8 +83,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "Transponder.Name", null);
-                    SetNestedProperty(dom, "Transponder.Satellite", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "Transponder.TransponderName", null);
+                    SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
                     SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
                     SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
@@ -99,6 +103,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("transponder", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message, "Transponder Name is required.");
         }
 
         [TestMethod]
@@ -113,8 +118,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "Transponder.Name", "TP-1");
-                    SetNestedProperty(dom, "Transponder.Satellite", (Guid?)Guid.NewGuid());
+                    SetNestedProperty(dom, "Transponder.TransponderName", "TP-1");
+                    SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
                     SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
                     SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
@@ -133,6 +138,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("transponder", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message,
+                $"Transponder satellite with id '{((Transponder)transponder).TransponderSatellite}' does not exist.");
         }
 
         [TestMethod]
@@ -223,7 +230,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", null);
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", null);
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                 });
@@ -235,6 +242,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, ExceptionMessages.TransponderPlanNameIsRequired);
         }
 
         [TestMethod]
@@ -249,7 +257,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                 });
@@ -261,6 +269,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, string.Format(
+                ExceptionMessages.TransponderWithIdDoesNotExist, ((TransponderPlan)transponderPlan).Transponder));
         }
 
         [TestMethod]
@@ -275,7 +285,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)0.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)Guid.NewGuid());
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)false);
@@ -290,6 +300,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, ExceptionMessages.TransponderPlanDefaultSlotSizeMustBeGreaterThanZero);
         }
 
         [TestMethod]
@@ -307,7 +318,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)true);
@@ -319,7 +330,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-Existing");
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-Existing");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)true);
@@ -336,6 +347,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, string.Format(ExceptionMessages.PermanentTransponderPlanAlreadyExists, transponderId));
         }
 
         [TestMethod]
@@ -353,7 +365,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-1");
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-1");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)false);
@@ -367,7 +379,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TransponderPlansInstance",
                 dom =>
                 {
-                    SetNestedProperty(dom, "TransponderPlan.Name", "TP-Plan-Existing");
+                    SetNestedProperty(dom, "TransponderPlan.PlanName", "TP-Plan-Existing");
                     SetNestedProperty(dom, "TransponderPlan.DefaultSlotSize", (double?)1.0);
                     SetNestedProperty(dom, "TransponderPlan.Transponder", (Guid?)transponderId);
                     SetNestedProperty(dom, "TransponderPlan.IsPermanent", (bool?)false);
@@ -386,6 +398,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, string.Format(ExceptionMessages.TransponderPlanTimeRangeOverlaps, "TP-Plan-Existing"));
         }
 
         [TestMethod]
@@ -532,9 +545,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
-                    SetNestedProperty(dom, "TransponderSlot.Name", null);
-                    SetNestedProperty(dom, "TransponderSlot.StartFrequency", (double?)1.0);
-                    SetNestedProperty(dom, "TransponderSlot.EndFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "TransponderSlot.SlotName", null);
+                    SetNestedProperty(dom, "TransponderSlot.SlotStartFrequency", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.SlotEndFrequency", (double?)2.0);
                     SetNestedProperty(dom, "TransponderSlot.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "TransponderSlot.UplinkFreq", (double?)14.0);
                     SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
@@ -563,9 +576,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 dom =>
                 {
                     SetNestedProperty(dom, "TransponderSlot.TransponderPlan", (Guid?)Guid.NewGuid());
-                    SetNestedProperty(dom, "TransponderSlot.Name", "Slot-1");
-                    SetNestedProperty(dom, "TransponderSlot.StartFrequency", (double?)1.0);
-                    SetNestedProperty(dom, "TransponderSlot.EndFrequency", (double?)2.0);
+                    SetNestedProperty(dom, "TransponderSlot.SlotName", "Slot-1");
+                    SetNestedProperty(dom, "TransponderSlot.SlotStartFrequency", (double?)1.0);
+                    SetNestedProperty(dom, "TransponderSlot.SlotEndFrequency", (double?)2.0);
                     SetNestedProperty(dom, "TransponderSlot.Bandwidth", (double?)1.0);
                     SetNestedProperty(dom, "TransponderSlot.UplinkFreq", (double?)14.0);
                     SetNestedProperty(dom, "TransponderSlot.DownlinkFreq", (double?)11.0);
@@ -665,6 +678,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var originalInstance = Activator.CreateInstance(domInstanceType);
             configureOriginalDom?.Invoke(originalInstance);
             var updatedInstance = Activator.CreateInstance(domInstanceType);
+            configureOriginalDom?.Invoke(updatedInstance);
 
             SetPrivateField(apiObject, "originalInstance", originalInstance);
             SetPrivateField(apiObject, "updatedInstance", updatedInstance);
@@ -796,8 +810,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom => ConfigureValidTransponderDom(dom, name));
 
-            // The API getters read the updated instance, so it has to carry the same values.
-            ConfigureValidTransponderDom(GetPrivateField(transponder, "updatedInstance"), name);
             SetApiObjectId(transponder, id);
 
             return transponder;
@@ -805,8 +817,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
         private static void ConfigureValidTransponderDom(object dom, string name)
         {
-            SetNestedProperty(dom, "Transponder.Name", name);
-            SetNestedProperty(dom, "Transponder.Satellite", (Guid?)Guid.NewGuid());
+            SetNestedProperty(dom, "Transponder.TransponderName", name);
+            SetNestedProperty(dom, "Transponder.TransponderSatellite", (Guid?)Guid.NewGuid());
             SetNestedProperty(dom, "Transponder.Bandwidth", (double?)1.0);
             SetNestedProperty(dom, "Transponder.StartFrequency", (double?)2.0);
             SetNestedProperty(dom, "Transponder.StopFrequency", (double?)3.0);
@@ -851,12 +863,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 Assert.Fail("Expected no exception, but got: {0}", invocationException.InnerException);
                 return null;
             }
-        }
-
-        private static object GetPrivateField(object target, string fieldName)
-        {
-            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            return field.GetValue(target);
         }
 
         /// <summary>

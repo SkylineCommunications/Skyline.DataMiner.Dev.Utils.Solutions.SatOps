@@ -158,12 +158,12 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             if (satelliteId.HasValue)
             {
-                SetNestedProperty(updated, "Transponder.Satellite", (Guid?)satelliteId.Value);
+                SetNestedProperty(updated, "Transponder.TransponderSatellite", (Guid?)satelliteId.Value);
             }
             else
             {
                 // Ensure updatedInstance.Transponder is instantiated so the property getter returns null (not NRE).
-                SetNestedProperty(updated, "Transponder.Name", (string)null);
+                SetNestedProperty(updated, "Transponder.TransponderName", (string)null);
             }
 
             var transponder = FormatterServices.GetUninitializedObject(TransponderType);
@@ -178,7 +178,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var original = Activator.CreateInstance(domInstanceType);
             var updated = Activator.CreateInstance(domInstanceType);
 
-            SetNestedProperty(updated, "General.Name", name);
+            SetNestedProperty(updated, "General.SatelliteName", name);
 
             var satellite = FormatterServices.GetUninitializedObject(SatelliteType);
             SetPrivateField(satellite, "originalInstance", original);

@@ -174,7 +174,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             {
                 var type = calculation.GetType();
                 var slot = CreateSlot(
-                    (string)type.GetProperty("Name").GetValue(calculation),
+                    (string)type.GetProperty("SlotName").GetValue(calculation),
                     (double)type.GetProperty("StartFrequency").GetValue(calculation),
                     (double)type.GetProperty("StopFrequency").GetValue(calculation),
                     bandwidth);

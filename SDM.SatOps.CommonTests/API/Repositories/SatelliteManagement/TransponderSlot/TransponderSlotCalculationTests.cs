@@ -190,7 +190,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
                 return new CalculatedSlot
                 {
-                    Name = (string)type.GetProperty("Name").GetValue(calculation),
+                    Name = (string)type.GetProperty("SlotName").GetValue(calculation),
                     Start = (double)type.GetProperty("StartFrequency").GetValue(calculation),
                     Stop = (double)type.GetProperty("StopFrequency").GetValue(calculation),
                     Bandwidth = bandwidth,
