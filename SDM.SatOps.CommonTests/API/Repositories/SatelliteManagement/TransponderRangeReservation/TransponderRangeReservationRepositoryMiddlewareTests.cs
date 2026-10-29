@@ -5,6 +5,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
     using SLDataGateway.API.Types.Querying;
     using System;
     using System.Collections.Generic;
@@ -14,6 +15,20 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     [TestClass]
     public class TransponderRangeReservationRepositoryMiddlewareTests
     {
+        [TestMethod]
+        public void ReadAllocationContextByTransponder_DelegatesWithoutAdditionalReads()
+        {
+            var transponderId = Guid.NewGuid();
+            var expected = Array.Empty<TransponderReservationAllocationContext>();
+            var inner = new Mock<ITransponderRangeReservationRepository>(MockBehavior.Strict);
+            inner.Setup(value => value.ReadAllocationContextByTransponder(transponderId)).Returns(expected);
+            var sut = new TransponderRangeReservationRepositoryMiddleware(inner.Object, null);
+
+            Assert.AreSame(expected, sut.ReadAllocationContextByTransponder(transponderId));
+            inner.Verify(value => value.ReadAllocationContextByTransponder(transponderId), Times.Once);
+            inner.VerifyNoOtherCalls();
+        }
+
         [TestMethod]
         public void Constructor_WhenInnerIsNull_ThrowsArgumentNullException()
         {

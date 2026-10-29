@@ -18,6 +18,15 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         IEnumerable<TransponderRangeReservation> ReadByTransponder(Guid transponderId);
 
         /// <summary>
+        /// Reads all reservations for a transponder with movement metadata from the same job read.
+        /// Preserves stored slot names and complete reservation windows. Jobs must contain exactly one
+        /// transponder resource node, as for <see cref="ReadByTransponder"/>.
+        /// </summary>
+        /// <param name="transponderId">The transponder identifier.</param>
+        /// <returns>The enriched reservations and their point-in-time job metadata.</returns>
+        IEnumerable<TransponderReservationAllocationContext> ReadAllocationContextByTransponder(Guid transponderId);
+
+        /// <summary>
         /// Reads all reservations that overlap the specified time window.
         /// </summary>
         /// <param name="startTimeUtc">The inclusive window start (UTC).</param>

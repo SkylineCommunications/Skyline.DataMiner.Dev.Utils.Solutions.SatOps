@@ -185,6 +185,24 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<TransponderRangeReservation> ReadByTransponder(Guid transponderId)
         {
+            return MaterializeReservations(ReadTransponderReservationJobs(transponderId));
+        }
+
+        public IEnumerable<TransponderReservationAllocationContext> ReadAllocationContextByTransponder(Guid transponderId)
+        {
+            var matches = ReadTransponderReservationJobs(transponderId);
+            var propertiesHelper = new DomHelper(SatOpsApi.Connection.HandleMessages, SlcPropertiesIds.ModuleId);
+
+            return MaterializeReservations(
+                matches,
+                filter => propertiesHelper.DomInstances.Read(filter),
+                ResolveTransponderIdFromResource,
+                duplicate => duplicate.Delete(propertiesHelper),
+                (reservation, job, node) => new TransponderReservationAllocationContext(reservation, job, node));
+        }
+
+        private IEnumerable<(Job Job, JobResourceNode Node)> ReadTransponderReservationJobs(Guid transponderId)
+        {
             if (transponderId == Guid.Empty)
             {
                 throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderId));
@@ -193,11 +211,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             var resourceId = TryGetResourceId(transponderId);
             if (!resourceId.HasValue)
             {
-                return Enumerable.Empty<TransponderRangeReservation>();
+                return Enumerable.Empty<(Job Job, JobResourceNode Node)>();
             }
 
-            return MaterializeReservations(ReadAllReservationJobs(JobExposers.Resources.Contains(resourceId.Value))
-                .Where(pair => pair.Node.ResourceId == resourceId.Value));
+            return ReadAllReservationJobs(JobExposers.Resources.Contains(resourceId.Value))
+                .Where(pair => pair.Node.ResourceId == resourceId.Value);
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTimeWindow(DateTime startTimeUtc, DateTime endTimeUtc)
@@ -511,6 +529,16 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             Func<Guid, Guid?> resolveTransponder,
             Action<PropertyValuesInstance> deleteProperty)
         {
+            return MaterializeReservations(jobs, readProperties, resolveTransponder, deleteProperty, (reservation, job, node) => reservation);
+        }
+
+        internal static IEnumerable<T> MaterializeReservations<T>(
+            IEnumerable<(Job Job, JobResourceNode Node)> jobs,
+            Func<FilterElement<DomInstance>, IEnumerable<DomInstance>> readProperties,
+            Func<Guid, Guid?> resolveTransponder,
+            Action<PropertyValuesInstance> deleteProperty,
+            Func<TransponderRangeReservation, Job, JobResourceNode, T> project)
+        {
             var matches = jobs.ToList();
             if (matches.Count == 0)
             {
@@ -530,8 +558,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                     && reservationIds.Contains(instance.PropertyValueInfo.LinkedObjectID)
                     && instance.PropertyValue.Any(value => value.PropertyName == NamingConstants.PropertyInfoName))
                 .ToLookup(instance => instance.PropertyValueInfo.LinkedObjectID, StringComparer.Ordinal);
+
             var transpondersByResource = new Dictionary<Guid, Guid?>();
             var slotNamesByJob = new Dictionary<Guid, string>();
+
             foreach (var pair in matches)
             {
                 if (!slotNamesByJob.TryGetValue(pair.Job.Id, out var slotName))
@@ -547,7 +577,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                     transpondersByResource.Add(pair.Node.ResourceId, transponderId);
                 }
 
-                yield return ToReservation(pair.Job, pair.Node, slotName, transponderId);
+                yield return project(ToReservation(pair.Job, pair.Node, slotName, transponderId), pair.Job, pair.Node);
             }
         }
 

@@ -15,6 +15,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
@@ -24,10 +25,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     public class TransponderRangeReservationReadTests
     {
         [DataTestMethod]
-        [DataRow(false, false)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void ReadByTransponder_FiltersBackendResourcesAndPreservesReservationChecks(bool withWindow, bool occupancyOnly)
+        [DataRow(false, false, false)]
+        [DataRow(true, false, false)]
+        [DataRow(true, true, false)]
+        [DataRow(false, false, true)]
+        public void ReadByTransponder_FiltersBackendResourcesAndPreservesReservationChecks(bool withWindow, bool occupancyOnly, bool allocationContext)
         {
             var resourceId = Guid.NewGuid();
             var transponder = new Transponder { DOMResource = resourceId };
@@ -59,7 +61,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 .Returns(candidates);
             var repository = CreateRepository(jobs.Object, transponder, !occupancyOnly);
 
-            var result = (occupancyOnly
+            var result = (allocationContext
+                ? repository.ReadAllocationContextByTransponder(transponder.Id).Select(context => context.Reservation)
+                : occupancyOnly
                 ? repository.ReadOccupancyByTransponderAndTimeWindow(transponder.Id, start, end)
                 : withWindow
                 ? repository.ReadByTransponderAndTimeWindow(transponder.Id, start, end)
@@ -96,13 +100,15 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             }
 
             jobs.Verify(value => value.Read(It.IsAny<FilterElement<Job>>()), Times.Once);
+            jobs.VerifyNoOtherCalls();
         }
 
         [DataTestMethod]
-        [DataRow(false, false)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void ReadByTransponder_BackendFailurePropagates(bool withWindow, bool occupancyOnly)
+        [DataRow(false, false, false)]
+        [DataRow(true, false, false)]
+        [DataRow(true, true, false)]
+        [DataRow(false, false, true)]
+        public void ReadByTransponder_BackendFailurePropagates(bool withWindow, bool occupancyOnly, bool allocationContext)
         {
             var transponder = new Transponder { DOMResource = Guid.NewGuid() };
             var failure = new InvalidOperationException("Resource query failed");
@@ -111,13 +117,74 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var repository = CreateRepository(jobs.Object, transponder);
             var start = DateTime.UtcNow;
 
-            var actual = Assert.ThrowsException<InvalidOperationException>(() => (occupancyOnly
+            var actual = Assert.ThrowsException<InvalidOperationException>(() => (allocationContext
+                ? repository.ReadAllocationContextByTransponder(transponder.Id).Select(context => context.Reservation)
+                : occupancyOnly
                 ? repository.ReadOccupancyByTransponderAndTimeWindow(transponder.Id, start, start.AddHours(1))
                 : withWindow
                 ? repository.ReadByTransponderAndTimeWindow(transponder.Id, start, start.AddHours(1))
                 : repository.ReadByTransponder(transponder.Id)).ToList());
 
             Assert.AreSame(failure, actual);
+        }
+
+        [DataTestMethod]
+        [DataRow(JobState.Tentative)]
+        [DataRow(JobState.Confirmed)]
+        [DataRow(JobState.Running)]
+        [DataRow(JobState.Completed)]
+        public void ReadAllocationContext_ReusesJobStateAndCompleteWindowWithoutReadingJobsById(JobState state)
+        {
+            var transponder = new Transponder { DOMResource = Guid.NewGuid() };
+            var first = CreateJob(transponder.DOMResource.Value);
+            var second = CreateJob(transponder.DOMResource.Value, "Later booking");
+            typeof(Job).GetProperty(nameof(Job.State)).SetValue(first.Job, state);
+            typeof(Job).GetProperty(nameof(Job.State)).SetValue(second.Job, state);
+            second.Job.Start = second.Job.Start.AddDays(10);
+            second.Job.End = second.Job.End.AddDays(10);
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+            jobs.Setup(value => value.Read(It.IsAny<FilterElement<Job>>())).Returns(new[] { first.Job, second.Job });
+            var repository = CreateRepository(jobs.Object, transponder);
+
+            var result = repository.ReadAllocationContextByTransponder(transponder.Id).ToList();
+
+            Assert.AreEqual(2, result.Count);
+            foreach (var pair in new[] { first, second })
+            {
+                var context = result.Single(item => item.Reservation.Id == pair.Job.Id);
+                Assert.AreEqual(state, context.JobState);
+                Assert.AreEqual(pair.Job.Start.UtcDateTime, context.JobStartTimeUtc);
+                Assert.AreEqual(pair.Job.End.UtcDateTime, context.JobEndTimeUtc);
+                Assert.AreEqual(pair.Node.Id, context.NodeId);
+                Assert.AreEqual(pair.Node.ResourceId, context.ResourceId);
+                Assert.AreEqual(pair.Node.ResourcePoolId, context.ResourcePoolId);
+                Assert.AreEqual(transponder.Id, context.Reservation.Transponder);
+                Assert.AreEqual(5d, context.Reservation.RelativeStartFrequency);
+                Assert.AreEqual(9d, context.Reservation.RelativeEndFrequency);
+            }
+
+            jobs.Verify(value => value.Read(It.IsAny<FilterElement<Job>>()), Times.Once);
+            jobs.VerifyNoOtherCalls();
+        }
+
+        [TestMethod]
+        public void MaterializeAllocationContext_PreservesStoredSlotNamesAlongsideJobMetadata()
+        {
+            var pair = CreateJob(Guid.NewGuid());
+            typeof(Job).GetProperty(nameof(Job.State)).SetValue(pair.Job, JobState.Confirmed);
+            var property = CreateProperty(pair.Job.Id, "Stored slot");
+
+            var result = TransponderRangeReservationRepository.MaterializeReservations(
+                new[] { pair },
+                _ => new[] { property.ToInstance() },
+                _ => Guid.NewGuid(),
+                _ => Assert.Fail("No duplicate should be deleted."),
+                (reservation, job, node) => new TransponderReservationAllocationContext(reservation, job, node)).Single();
+
+            Assert.AreEqual("Stored slot", result.Reservation.SlotName);
+            Assert.AreEqual(pair.Job.Id, result.Reservation.Id);
+            Assert.AreEqual(JobState.Confirmed, result.JobState);
+            Assert.AreEqual(pair.Node.Id, result.NodeId);
         }
 
         [TestMethod]
