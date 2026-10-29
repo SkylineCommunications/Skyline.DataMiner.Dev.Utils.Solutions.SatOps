@@ -13,18 +13,21 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
+    using Reservation = Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation;
 
     [TestClass]
     public class TransponderRangeReservationReadTests
     {
         [DataTestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void ReadByTransponder_FiltersBackendResourcesAndPreservesReservationChecks(bool withWindow)
+        [DataRow(false, false)]
+        [DataRow(true, false)]
+        [DataRow(true, true)]
+        public void ReadByTransponder_FiltersBackendResourcesAndPreservesReservationChecks(bool withWindow, bool occupancyOnly)
         {
             var resourceId = Guid.NewGuid();
             var transponder = new Transponder { DOMResource = resourceId };
@@ -54,9 +57,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             jobs.Setup(value => value.Read(It.IsAny<FilterElement<Job>>()))
                 .Callback<FilterElement<Job>>(filter => captured = filter)
                 .Returns(candidates);
-            var repository = CreateRepository(jobs.Object, transponder);
+            var repository = CreateRepository(jobs.Object, transponder, !occupancyOnly);
 
-            var result = (withWindow
+            var result = (occupancyOnly
+                ? repository.ReadOccupancyByTransponderAndTimeWindow(transponder.Id, start, end)
+                : withWindow
                 ? repository.ReadByTransponderAndTimeWindow(transponder.Id, start, end)
                 : repository.ReadByTransponder(transponder.Id)).ToList();
 
@@ -81,13 +86,23 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var spanningReservation = result.Single(reservation => reservation.Id == spanning.Id);
             Assert.AreEqual(spanning.Start.UtcDateTime, spanningReservation.StartTime);
             Assert.AreEqual(spanning.End.UtcDateTime, spanningReservation.EndTime);
+            Assert.AreEqual(transponder.Id, spanningReservation.Transponder);
+            Assert.AreEqual(spanning.Name, spanningReservation.Name);
+            Assert.AreEqual(5d, spanningReservation.RelativeStartFrequency);
+            Assert.AreEqual(9d, spanningReservation.RelativeEndFrequency);
+            if (occupancyOnly)
+            {
+                Assert.IsNull(spanningReservation.SlotName);
+            }
+
             jobs.Verify(value => value.Read(It.IsAny<FilterElement<Job>>()), Times.Once);
         }
 
         [DataTestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void ReadByTransponder_BackendFailurePropagates(bool withWindow)
+        [DataRow(false, false)]
+        [DataRow(true, false)]
+        [DataRow(true, true)]
+        public void ReadByTransponder_BackendFailurePropagates(bool withWindow, bool occupancyOnly)
         {
             var transponder = new Transponder { DOMResource = Guid.NewGuid() };
             var failure = new InvalidOperationException("Resource query failed");
@@ -96,7 +111,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var repository = CreateRepository(jobs.Object, transponder);
             var start = DateTime.UtcNow;
 
-            var actual = Assert.ThrowsException<InvalidOperationException>(() => (withWindow
+            var actual = Assert.ThrowsException<InvalidOperationException>(() => (occupancyOnly
+                ? repository.ReadOccupancyByTransponderAndTimeWindow(transponder.Id, start, start.AddHours(1))
+                : withWindow
                 ? repository.ReadByTransponderAndTimeWindow(transponder.Id, start, start.AddHours(1))
                 : repository.ReadByTransponder(transponder.Id)).ToList());
 
@@ -265,17 +282,61 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.AreSame(failure, actual);
         }
 
-        private static TransponderRangeReservationRepository CreateRepository(IJobsRepository jobs, Transponder transponder)
+        [DataTestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void OccupancyRead_OverlapValidationNeverReadsPropertiesOrReverseMappings(bool overlaps)
+        {
+            var transponder = new Transponder { DOMResource = Guid.NewGuid() };
+            var existing = CreateJob(transponder.DOMResource.Value).Job;
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+            jobs.Setup(value => value.Read(It.IsAny<FilterElement<Job>>())).Returns(new[] { existing });
+            var repository = CreateRepository(jobs.Object, transponder, false);
+            var middleware = new TransponderRangeReservationOverlapValidationMiddleware(
+                repository.ReadOccupancyByTransponderAndTimeWindow);
+            var incoming = new Reservation
+            {
+                Name = "Incoming",
+                Transponder = transponder.Id,
+                StartTime = existing.Start.UtcDateTime,
+                EndTime = existing.End.UtcDateTime,
+                RelativeStartFrequency = overlaps ? 6d : 9d,
+                RelativeEndFrequency = overlaps ? 8d : 13d,
+            };
+            var called = false;
+            Func<Reservation, Reservation> next = reservation =>
+            {
+                called = true;
+                return reservation;
+            };
+
+            if (overlaps)
+            {
+                var exception = Assert.ThrowsException<ArgumentException>(() => middleware.OnCreate(incoming, next));
+                StringAssert.Contains(exception.Message, existing.Name);
+                Assert.IsFalse(called);
+            }
+            else
+            {
+                Assert.AreSame(incoming, middleware.OnCreate(incoming, next));
+                Assert.IsTrue(called);
+            }
+        }
+
+        private static TransponderRangeReservationRepository CreateRepository(IJobsRepository jobs, Transponder transponder, bool allowEnrichment = true)
         {
             var plan = new Mock<IMediaOpsPlanApi>();
             plan.Setup(value => value.Jobs).Returns(jobs);
             var transponders = new Mock<ITransponderRepository>(MockBehavior.Strict);
             transponders.Setup(value => value.Read(transponder.Id)).Returns(transponder);
-            transponders.Setup(value => value.Read(It.IsAny<FilterElement<Transponder>>())).Returns(new[] { transponder });
             var connection = new Mock<IConnection>(MockBehavior.Strict);
             connection.SetupGet(value => value.IsShuttingDown).Returns(false);
-            connection.Setup(value => value.HandleMessages(It.IsAny<DMSMessage[]>()))
-                .Returns(new DMSMessage[] { new ManagerStoreCrudResponse<DomInstance>() });
+            if (allowEnrichment)
+            {
+                transponders.Setup(value => value.Read(It.IsAny<FilterElement<Transponder>>())).Returns(new[] { transponder });
+                connection.Setup(value => value.HandleMessages(It.IsAny<DMSMessage[]>()))
+                    .Returns(new DMSMessage[] { new ManagerStoreCrudResponse<DomInstance>() });
+            }
             var api = new SatOpsApi(connection.Object);
             typeof(SatOpsApi).GetField("lazyMediaOpsPlanApi", BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(api, new Lazy<IMediaOpsPlanApi>(() => plan.Object));

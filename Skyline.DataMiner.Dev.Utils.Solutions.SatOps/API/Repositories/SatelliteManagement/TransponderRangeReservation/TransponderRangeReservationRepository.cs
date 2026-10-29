@@ -213,24 +213,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<TransponderRangeReservation> ReadByTransponderAndTimeWindow(Guid transponderId, DateTime startTimeUtc, DateTime endTimeUtc)
         {
-            if (transponderId == Guid.Empty)
-            {
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderId));
-            }
+            return MaterializeReservations(ReadTransponderJobsOverlappingWindow(transponderId, startTimeUtc, endTimeUtc));
+        }
 
-            ValidateTimeWindow(startTimeUtc, endTimeUtc);
-
-            var resourceId = TryGetResourceId(transponderId);
-            if (!resourceId.HasValue)
-            {
-                return Enumerable.Empty<TransponderRangeReservation>();
-            }
-
-            return MaterializeReservations(ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc, resourceId.Value)
-                .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
-                .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
-                .Where(pair => pair.IsReservation && pair.Node.ResourceId == resourceId.Value)
-                .Select(pair => (pair.Job, pair.Node)));
+        internal IEnumerable<TransponderRangeReservation> ReadOccupancyByTransponderAndTimeWindow(Guid transponderId, DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            // Occupancy uses the queried transponder identity and never reads or cleans slot properties.
+            return ReadTransponderJobsOverlappingWindow(transponderId, startTimeUtc, endTimeUtc)
+                .Select(pair => ToReservation(pair.Job, pair.Node, null, transponderId));
         }
 
         public TransponderRangeReservation Update(TransponderRangeReservation oToUpdate)
@@ -410,6 +400,28 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             var jobStart = job.Start.UtcDateTime;
             var jobEnd = job.End.UtcDateTime;
             return jobStart < endTimeUtc && jobEnd > startTimeUtc;
+        }
+
+        private IEnumerable<(Job Job, JobResourceNode Node)> ReadTransponderJobsOverlappingWindow(Guid transponderId, DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            if (transponderId == Guid.Empty)
+            {
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderId));
+            }
+
+            ValidateTimeWindow(startTimeUtc, endTimeUtc);
+
+            var resourceId = TryGetResourceId(transponderId);
+            if (!resourceId.HasValue)
+            {
+                return Enumerable.Empty<(Job Job, JobResourceNode Node)>();
+            }
+
+            return ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc, resourceId.Value)
+                .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
+                .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
+                .Where(pair => pair.IsReservation && pair.Node.ResourceId == resourceId.Value)
+                .Select(pair => (pair.Job, pair.Node));
         }
 
         private IEnumerable<Job> ReadJobsOverlappingWindow(DateTime startTimeUtc, DateTime endTimeUtc, Guid? resourceId = null)

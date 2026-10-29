@@ -95,7 +95,7 @@
                         var repository = new TransponderRangeReservationRepository(this);
                         return repository
                             .WithMiddleware(new TransponderRangeReservationValidationMiddleware(Transponders))
-                            .WithMiddleware(new TransponderRangeReservationOverlapValidationMiddleware(repository));
+                            .WithMiddleware(new TransponderRangeReservationOverlapValidationMiddleware(repository.ReadOccupancyByTransponderAndTimeWindow));
                     }
                 );
             lazyTransponderSlotRepository = new Lazy<ITransponderSlotRepository>

@@ -77,7 +77,7 @@
         {
             var repository = new Mock<ITransponderRangeReservationRepository>();
             var incoming = CreateReservation("New", 1, 3, 100, 200);
-            var sut = new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
+            var sut = new TransponderRangeReservationOverlapValidationMiddleware(repository.Object.ReadByTransponderAndTimeWindow);
 
             sut.OnCreate(incoming, reservation => reservation);
 
@@ -95,7 +95,7 @@
                 CreateReservation("First", 1, 2, 100, 200),
                 CreateReservation("Second", 4, 5, 200, 300),
             };
-            var sut = new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
+            var sut = new TransponderRangeReservationOverlapValidationMiddleware(repository.Object.ReadByTransponderAndTimeWindow);
 
             sut.OnCreate(incoming, reservations => reservations.ToList());
 
@@ -827,11 +827,7 @@
 
         private static TransponderRangeReservationOverlapValidationMiddleware CreateSut(Func<Guid, IEnumerable<TransponderRangeReservation>> resolver)
         {
-            var repository = new Mock<ITransponderRangeReservationRepository>();
-            repository.Setup(r => r.ReadByTransponderAndTimeWindow(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns((Guid id, DateTime start, DateTime end) => resolver(id));
-
-            return new TransponderRangeReservationOverlapValidationMiddleware(repository.Object);
+            return new TransponderRangeReservationOverlapValidationMiddleware((id, start, end) => resolver(id));
         }
 
         private static TransponderRangeReservation CreateReservation(string name, int startHour, int endHour, double startFrequency, double endFrequency, Guid? id = null)
