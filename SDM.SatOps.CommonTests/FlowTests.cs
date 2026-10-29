@@ -670,18 +670,26 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             return reservation;
         }
 
-        private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)
+        private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);
             var apiObject = FormatterServices.GetUninitializedObject(apiType);
 
             var originalInstance = Activator.CreateInstance(domInstanceType);
-            configureOriginalDom?.Invoke(originalInstance);
+            configureDom?.Invoke(originalInstance);
             var updatedInstance = Activator.CreateInstance(domInstanceType);
-            configureOriginalDom?.Invoke(updatedInstance);
+            configureDom?.Invoke(updatedInstance);
+
+            if (domInstanceType.GetProperty("Status") != null)
+            {
+                var domInstanceProperty = domInstanceType.GetProperty("domInstance", BindingFlags.Instance | BindingFlags.NonPublic);
+                SetNestedProperty(domInstanceProperty.GetValue(originalInstance), "StatusId", "active");
+                SetNestedProperty(domInstanceProperty.GetValue(updatedInstance), "StatusId", "active");
+            }
 
             SetPrivateField(apiObject, "originalInstance", originalInstance);
             SetPrivateField(apiObject, "updatedInstance", updatedInstance);
+            SetApiObjectId(apiObject, Guid.NewGuid());
 
             return apiObject;
         }
