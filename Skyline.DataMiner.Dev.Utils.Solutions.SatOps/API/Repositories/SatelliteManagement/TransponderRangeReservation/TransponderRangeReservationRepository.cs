@@ -180,7 +180,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IEnumerable<TransponderRangeReservation> Read()
         {
-            return ReadAllReservationJobs().Select(pair => ToReservation(pair.Job, pair.Node));
+            return MaterializeReservations(ReadAllReservationJobs());
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTransponder(Guid transponderId)
@@ -196,20 +196,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return Enumerable.Empty<TransponderRangeReservation>();
             }
 
-            return ReadAllReservationJobs()
-                .Where(pair => pair.Node.ResourceId == resourceId.Value)
-                .Select(pair => ToReservation(pair.Job, pair.Node));
+            return MaterializeReservations(ReadAllReservationJobs()
+                .Where(pair => pair.Node.ResourceId == resourceId.Value));
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTimeWindow(DateTime startTimeUtc, DateTime endTimeUtc)
         {
             ValidateTimeWindow(startTimeUtc, endTimeUtc);
 
-            return ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
+            return MaterializeReservations(ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
                 .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
                 .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
                 .Where(pair => pair.IsReservation)
-                .Select(pair => ToReservation(pair.Job, pair.Node));
+                .Select(pair => (pair.Job, pair.Node)));
         }
 
         public IEnumerable<TransponderRangeReservation> ReadByTransponderAndTimeWindow(Guid transponderId, DateTime startTimeUtc, DateTime endTimeUtc)
@@ -227,11 +226,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return Enumerable.Empty<TransponderRangeReservation>();
             }
 
-            return ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
+            return MaterializeReservations(ReadJobsOverlappingWindow(startTimeUtc, endTimeUtc)
                 .Where(job => OverlapsWindow(job, startTimeUtc, endTimeUtc))
                 .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
                 .Where(pair => pair.IsReservation && pair.Node.ResourceId == resourceId.Value)
-                .Select(pair => ToReservation(pair.Job, pair.Node));
+                .Select(pair => (pair.Job, pair.Node)));
         }
 
         public TransponderRangeReservation Update(TransponderRangeReservation oToUpdate)
@@ -281,14 +280,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
             var jobFilter = filterTranslator.Translate(filter);
             var matches = Jobs.Read(jobFilter).ToList();
-            var reservations = new List<TransponderRangeReservation>();
-            foreach (var job in matches)
-            {
-                if (IsReservationJob(job, out var node))
-                {
-                    reservations.Add(ToReservation(job, node));
-                }
-            }
+            var reservations = MaterializeReservations(matches
+                .Select(job => (Job: job, IsReservation: IsReservationJob(job, out var node), Node: node))
+                .Where(pair => pair.IsReservation)
+                .Select(pair => (pair.Job, pair.Node))).ToList();
 
             return filterTranslator.ApplyClientSide(filter, reservations);
         }
@@ -336,9 +331,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             }
 
             var idSet = new HashSet<Guid>(ids);
-            return ReadAllReservationJobs()
-                .Where(pair => idSet.Contains(pair.Job.Id))
-                .Select(pair => ToReservation(pair.Job, pair.Node));
+            return MaterializeReservations(ReadAllReservationJobs()
+                .Where(pair => idSet.Contains(pair.Job.Id)));
         }
 
         public IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPaged()
@@ -477,14 +471,78 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         private TransponderRangeReservation ToReservation(Job job, JobResourceNode node)
         {
+            return ToReservation(job, node, GetSlotName(job.Id), ResolveTransponderIdFromResource(node.ResourceId));
+        }
+
+        private IEnumerable<TransponderRangeReservation> MaterializeReservations(IEnumerable<(Job Job, JobResourceNode Node)> jobs)
+        {
+            var propertiesHelper = new DomHelper(SatOpsApi.Connection.HandleMessages, SlcPropertiesIds.ModuleId);
+            foreach (var reservation in MaterializeReservations(
+                jobs,
+                filter => propertiesHelper.DomInstances.Read(filter),
+                ResolveTransponderIdFromResource,
+                duplicate => duplicate.Delete(propertiesHelper)))
+            {
+                yield return reservation;
+            }
+        }
+
+        internal static IEnumerable<TransponderRangeReservation> MaterializeReservations(
+            IEnumerable<(Job Job, JobResourceNode Node)> jobs,
+            Func<FilterElement<DomInstance>, IEnumerable<DomInstance>> readProperties,
+            Func<Guid, Guid?> resolveTransponder,
+            Action<PropertyValuesInstance> deleteProperty)
+        {
+            var matches = jobs.ToList();
+            if (matches.Count == 0)
+            {
+                yield break;
+            }
+
+            var reservationIds = new HashSet<string>(matches.Select(pair => pair.Job.Id.ToString()), StringComparer.Ordinal);
+            var properties = RelationshipReadHelper.ReadByIds(
+                    matches.Select(pair => pair.Job.Id),
+                    nameof(jobs),
+                    id => DomInstanceExposers.FieldValues.DomInstanceField(SlcPropertiesIds.Sections.PropertyValueInfo.LinkedObjectID)
+                        .Equal(id.ToString()),
+                    filter => readProperties(DomInstanceExposers.DomDefinitionId
+                        .Equal(SlcPropertiesIds.Definitions.PropertyValues.Id).AND(filter)))
+                .Select(instance => new PropertyValuesInstance(instance))
+                .Where(instance => instance.PropertyValueInfo.LinkedObjectID != null
+                    && reservationIds.Contains(instance.PropertyValueInfo.LinkedObjectID)
+                    && instance.PropertyValue.Any(value => value.PropertyName == NamingConstants.PropertyInfoName))
+                .ToLookup(instance => instance.PropertyValueInfo.LinkedObjectID, StringComparer.Ordinal);
+            var transpondersByResource = new Dictionary<Guid, Guid?>();
+            var slotNamesByJob = new Dictionary<Guid, string>();
+            foreach (var pair in matches)
+            {
+                if (!slotNamesByJob.TryGetValue(pair.Job.Id, out var slotName))
+                {
+                    var canonical = SelectSlotNameProperty(properties[pair.Job.Id.ToString()].ToList(), deleteProperty);
+                    slotName = canonical?.PropertyValue.FirstOrDefault(value => value.PropertyName == NamingConstants.PropertyInfoName)?.Value;
+                    slotNamesByJob.Add(pair.Job.Id, slotName);
+                }
+
+                if (!transpondersByResource.TryGetValue(pair.Node.ResourceId, out var transponderId))
+                {
+                    transponderId = resolveTransponder(pair.Node.ResourceId);
+                    transpondersByResource.Add(pair.Node.ResourceId, transponderId);
+                }
+
+                yield return ToReservation(pair.Job, pair.Node, slotName, transponderId);
+            }
+        }
+
+        private static TransponderRangeReservation ToReservation(Job job, JobResourceNode node, string slotName, Guid? transponderId)
+        {
             var reservation = TransponderRangeReservation.CreateWithId(job.Id);
             reservation.Name = job.Name;
             reservation.StartTime = job.Start.UtcDateTime;
             reservation.EndTime = job.End.UtcDateTime;
             reservation.NodeId = node.Id;
-            reservation.SlotName = GetSlotName(job.Id);
+            reservation.SlotName = slotName;
 
-            reservation.Transponder = ResolveTransponderIdFromResource(node.ResourceId);
+            reservation.Transponder = transponderId;
 
             var rangeCapacity = node.OrchestrationSettings.Capacities
                 .OfType<RangeCapacitySetting>()
@@ -928,6 +986,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                     && pvi.PropertyValue.Any(pv => pv.PropertyName == NamingConstants.PropertyInfoName))
                 .ToList();
 
+            return SelectSlotNameProperty(matches, duplicate => duplicate.Delete(propertiesHelper));
+        }
+
+        private static PropertyValuesInstance SelectSlotNameProperty(
+            IReadOnlyList<PropertyValuesInstance> matches,
+            Action<PropertyValuesInstance> deleteProperty)
+        {
             if (matches.Count <= 1)
             {
                 return matches.FirstOrDefault();
@@ -940,7 +1005,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
             foreach (var duplicate in matches.Where(m => !ReferenceEquals(m, canonical)))
             {
-                duplicate.Delete(propertiesHelper);
+                deleteProperty(duplicate);
             }
 
             return canonical;
