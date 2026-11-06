@@ -59,6 +59,28 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => transponderDefinitionFilter;
 
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [TransponderExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [TransponderExposers.Status.fieldName] = DomInstanceExposers.StatusId,
+            [TransponderExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.TransponderName),
+            [TransponderExposers.Satellite.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.TransponderSatellite),
+            [TransponderExposers.Beam.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Beam),
+            [TransponderExposers.Band.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Band),
+            [TransponderExposers.Bandwidth.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Bandwidth),
+            [TransponderExposers.StartFrequency.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.StartFrequency),
+            [TransponderExposers.StopFrequency.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.StopFrequency),
+            [TransponderExposers.Polarization.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.Polarization),
+            [TransponderExposers.DownlinkStartFreq.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DownlinkStartFreq),
+            [TransponderExposers.DownlinkEndFreq.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DownlinkEndFreq),
+            [TransponderExposers.RollingWindow.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.RollingWindow),
+            [TransponderExposers.HardEndDate.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.HardEndDate),
+            [TransponderExposers.PhoneNumber.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.PhoneNumber),
+            [TransponderExposers.UplinkPolarization.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.UplinkPolarization),
+            [TransponderExposers.DownlinkPolarization.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DownlinkPolarization),
+            [TransponderExposers.DOMResource.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Transponder.DOMResource),
+        };
+
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
 
         internal static string ConvertBand(TransponderBandType bandType)

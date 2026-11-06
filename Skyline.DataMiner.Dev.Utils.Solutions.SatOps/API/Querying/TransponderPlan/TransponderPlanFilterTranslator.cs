@@ -39,6 +39,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => transponderPlanDefinitionFilter;
 
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [TransponderPlanExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [TransponderPlanExposers.Status.fieldName] = DomInstanceExposers.StatusId,
+            [TransponderPlanExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.PlanName),
+            [TransponderPlanExposers.StartTime.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.StartTime),
+            [TransponderPlanExposers.EndTime.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.EndTime),
+            [TransponderPlanExposers.IsPermanent.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.IsPermanent),
+            [TransponderPlanExposers.DefaultSlotSize.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.DefaultSlotSize),
+            [TransponderPlanExposers.Transponder.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.Transponder),
+        };
+
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
     }
 }

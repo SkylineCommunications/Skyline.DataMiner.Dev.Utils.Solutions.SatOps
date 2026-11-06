@@ -15,6 +15,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
+    using SLDataGateway.API.Querying;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -303,7 +304,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentNullException(nameof(query));
             }
 
-            return Read(query.Filter);
+            var reservations = query.Filter is TRUEFilterElement<TransponderRangeReservation>
+                ? Read()
+                : Read(query.Filter);
+            return query.ExecuteInMemory(reservations);
         }
 
         public TransponderRangeReservation Read(Guid id)
@@ -365,7 +369,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentNullException(nameof(query));
             }
 
-            return ReadPaged(query.Filter);
+            return ReadPaged(query, 100);
         }
 
         public IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPaged(FilterElement<TransponderRangeReservation> filter, int pageSize)
@@ -380,7 +384,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "The page size must be greater than zero.");
             }
 
-            return ReadPagedIterator(filter, pageSize);
+            return ReadPagedIterator(filter.ToQuery(), pageSize);
         }
 
         public IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPaged(IQuery<TransponderRangeReservation> query, int pageSize)
@@ -390,12 +394,17 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentNullException(nameof(query));
             }
 
-            return ReadPaged(query.Filter, pageSize);
+            if (pageSize <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize), "The page size must be greater than zero.");
+            }
+
+            return ReadPagedIterator(query, pageSize);
         }
 
-        private IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPagedIterator(FilterElement<TransponderRangeReservation> filter, int pageSize)
+        private IEnumerable<IPagedResult<TransponderRangeReservation>> ReadPagedIterator(IQuery<TransponderRangeReservation> query, int pageSize)
         {
-            var results = filter is TRUEFilterElement<TransponderRangeReservation> ? Read().ToList() : Read(filter).ToList();
+            var results = Read(query).ToList();
             var pageNumber = 0;
             for (var offset = 0; offset < results.Count; offset += pageSize)
             {

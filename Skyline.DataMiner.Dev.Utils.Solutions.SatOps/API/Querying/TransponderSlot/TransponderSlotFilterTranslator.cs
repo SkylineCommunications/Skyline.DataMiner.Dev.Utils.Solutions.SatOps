@@ -34,6 +34,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => transponderSlotDefinitionFilter;
 
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [TransponderSlotExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [TransponderSlotExposers.TransponderPlan.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan),
+            [TransponderSlotExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotName),
+            [TransponderSlotExposers.StartFrequency.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotStartFrequency),
+            [TransponderSlotExposers.EndFrequency.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotEndFrequency),
+            [TransponderSlotExposers.Bandwidth.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.Bandwidth),
+            [TransponderSlotExposers.UplinkFreq.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.UplinkFreq),
+            [TransponderSlotExposers.DownlinkFreq.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.DownlinkFreq),
+        };
+
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
     }
 }

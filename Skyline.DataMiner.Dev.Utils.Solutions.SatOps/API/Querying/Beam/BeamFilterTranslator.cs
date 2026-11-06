@@ -37,6 +37,17 @@
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => beamDefinitionFilter;
 
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [BeamExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [BeamExposers.Status.fieldName] = DomInstanceExposers.StatusId,
+            [BeamExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.BeamName),
+            [BeamExposers.Satellite.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.BeamSatellite),
+            [BeamExposers.LinkType.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.LinkType),
+            [BeamExposers.TransmissionType.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.TransmissionType),
+            [BeamExposers.FootprintFile.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.FootprintFile),
+        };
+
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
 
         internal static string ConvertLinkType(BeamLinkType linkType)

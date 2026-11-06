@@ -7,6 +7,7 @@
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Utils.DOM.Extensions;
     using SLDataGateway.API.Types.Querying;
+    using SLDataGateway.API.Querying;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -72,10 +73,57 @@
 
             InitSoftDeletedFields(domHelper);
 
-            var pages = domHelper.DomInstances.ReadPaged(query);
-            var instances = pages.SelectMany(page => page);
+            var instances = IsLimited(query)
+                ? domHelper.DomInstances.Read(query)
+                : domHelper.DomInstances.ReadPaged(query).SelectMany(page => page);
 
             return CreateInstances(instances, createInstance);
+        }
+
+        public static IEnumerable<IEnumerable<T>> ReadAndCreateInstancesPaged<T>(
+            DomHelper domHelper, IQuery<DomInstance> query, int pageSize, Func<DomInstance, T> createInstance)
+            where T : DomInstanceBase
+        {
+            if (domHelper == null)
+                throw new ArgumentNullException(nameof(domHelper));
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+            if (pageSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            if (createInstance == null)
+                throw new ArgumentNullException(nameof(createInstance));
+
+            if (query.Filter.isEmpty())
+                return Enumerable.Empty<IEnumerable<T>>();
+
+            InitSoftDeletedFields(domHelper);
+            var pages = IsLimited(query)
+                ? SplitInPages(domHelper.DomInstances.Read(query), pageSize)
+                : domHelper.DomInstances.ReadPaged(query, pageSize);
+            return CreateInstances(pages, createInstance);
+        }
+
+        private static bool IsLimited(IQuery<DomInstance> query)
+        {
+            return query.Limit != null &&
+                (query.Limit.Limit != int.MaxValue || (query.Limit is LimitBy limit && limit.Offset > 0));
+        }
+
+        private static IEnumerable<IEnumerable<DomInstance>> SplitInPages(IEnumerable<DomInstance> instances, int pageSize)
+        {
+            var page = new List<DomInstance>(pageSize);
+            foreach (var instance in instances)
+            {
+                page.Add(instance);
+                if (page.Count == pageSize)
+                {
+                    yield return page;
+                    page = new List<DomInstance>(pageSize);
+                }
+            }
+
+            if (page.Count > 0)
+                yield return page;
         }
 
         public static IEnumerable<IEnumerable<T>> CreateInstances<T>(IEnumerable<IEnumerable<DomInstance>> pages, Func<DomInstance, T> createInstance)

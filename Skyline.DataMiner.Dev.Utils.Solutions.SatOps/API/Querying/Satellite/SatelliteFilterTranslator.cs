@@ -55,6 +55,26 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => satelliteDefinitionFilter;
 
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [SatelliteExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [SatelliteExposers.Status.fieldName] = DomInstanceExposers.StatusId,
+            [SatelliteExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.General.SatelliteName),
+            [SatelliteExposers.Abbreviation.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.General.SatelliteAbbreviation),
+            [SatelliteExposers.Orbit.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.General.Orbit),
+            [SatelliteExposers.LongitudeForGeoDegrees.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.General.LongitudeForGEODegrees),
+            [SatelliteExposers.InclinationDegrees.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.General.InclinationDegrees),
+            [SatelliteExposers.Hemisphere.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.General.Hemisphere),
+            [SatelliteExposers.Operator.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Operator),
+            [SatelliteExposers.Coverage.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Coverage),
+            [SatelliteExposers.Applications.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Applications),
+            [SatelliteExposers.Info.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Satellite.Info),
+            [SatelliteExposers.Manufacturer.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Origin.Manufacturer),
+            [SatelliteExposers.Country.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.Origin.Country),
+            [SatelliteExposers.LaunchInfo.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.LaunchInformation.LaunchInfo),
+            [SatelliteExposers.LaunchInServiceDate.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.LaunchInformation.LaunchInServiceDate),
+        };
+
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
 
         private static string ConvertOrbit(OrbitType orbitType)

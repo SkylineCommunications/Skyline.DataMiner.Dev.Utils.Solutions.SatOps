@@ -16,6 +16,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using SLDataGateway.API.Types.Querying;
 
     using ExceptionMessages = Logging.ExceptionMessages;
 
@@ -24,6 +25,42 @@
         public SlcSatelliteManagementHelper(IConnection connection) : base(SlcSatellite_ManagementIds.ModuleId, connection)
         {
         }
+
+        internal IEnumerable<BeamsInstance> GetBeams(IQuery<DomInstance> query) =>
+            InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new BeamsInstance(instance));
+
+        internal IEnumerable<SatellitesInstance> GetSatellites(IQuery<DomInstance> query) =>
+            InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new SatellitesInstance(instance));
+
+        internal IEnumerable<TranspondersInstance> GetTransponders(IQuery<DomInstance> query) =>
+            InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new TranspondersInstance(instance));
+
+        internal IEnumerable<TransponderPlansInstance> GetTransponderPlans(IQuery<DomInstance> query) =>
+            InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new TransponderPlansInstance(instance));
+
+        internal IEnumerable<TransponderPlanRowsInstance> GetTransponderPlanRows(IQuery<DomInstance> query) =>
+            InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new TransponderPlanRowsInstance(instance));
+
+        internal IEnumerable<TransponderSlotsInstance> GetTransponderSlots(IQuery<DomInstance> query) =>
+            InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new TransponderSlotsInstance(instance));
+
+        internal IEnumerable<IEnumerable<BeamsInstance>> GetBeamsPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new BeamsInstance(instance));
+
+        internal IEnumerable<IEnumerable<SatellitesInstance>> GetSatellitesPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new SatellitesInstance(instance));
+
+        internal IEnumerable<IEnumerable<TranspondersInstance>> GetTranspondersPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TranspondersInstance(instance));
+
+        internal IEnumerable<IEnumerable<TransponderPlansInstance>> GetTransponderPlansPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderPlansInstance(instance));
+
+        internal IEnumerable<IEnumerable<TransponderPlanRowsInstance>> GetTransponderPlanRowsPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderPlanRowsInstance(instance));
+
+        internal IEnumerable<IEnumerable<TransponderSlotsInstance>> GetTransponderSlotsPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderSlotsInstance(instance));
 
         public long CountSatelliteManagementInstances(FilterElement<DomInstance> filter)
         {

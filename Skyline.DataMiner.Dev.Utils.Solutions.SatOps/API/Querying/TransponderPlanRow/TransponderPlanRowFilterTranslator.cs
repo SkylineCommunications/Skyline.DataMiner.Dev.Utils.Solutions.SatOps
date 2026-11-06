@@ -30,6 +30,16 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => transponderPlanRowDefinitionFilter;
 
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [TransponderPlanRowExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [TransponderPlanRowExposers.TransponderPlan.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlanRow.TransponderPlan),
+            [TransponderPlanRowExposers.Bandwidth.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlanRow.Bandwidth),
+            [TransponderPlanRowExposers.StepSize.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlanRow.StepSize),
+            [TransponderPlanRowExposers.Offset.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlanRow.Offset),
+            [TransponderPlanRowExposers.Limit.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlanRow.Limit),
+        };
+
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
     }
 }

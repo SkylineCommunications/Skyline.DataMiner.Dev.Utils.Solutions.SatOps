@@ -16,14 +16,45 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Reservation = Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation;
+    using SLDataGateway.API.Querying;
+    using SLDataGateway.API.Types.Querying;
 
     [TestClass]
     public class TransponderRangeReservationReadTests
     {
+        [TestMethod]
+        public void QueryReads_ApplyOrderingAndLimitBeforePaging()
+        {
+            var transponder = new Transponder { DOMResource = Guid.NewGuid() };
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+            var candidates = new[]
+            {
+                CreateJob(transponder.DOMResource.Value, "A").Job,
+                CreateJob(transponder.DOMResource.Value, "C").Job,
+                CreateJob(transponder.DOMResource.Value, "B").Job,
+            };
+            jobs.Setup(value => value.Read()).Returns(candidates);
+            jobs.Setup(value => value.Read(It.IsAny<FilterElement<Job>>())).Returns(candidates);
+            var repository = CreateRepository(jobs.Object, transponder);
+            var query = new TRUEFilterElement<Reservation>().ToQuery()
+                .WithOrder(OrderBy.Default.SingleConcat(OrderByElement.Default
+                    .WithFieldExposer(TransponderRangeReservationExposers.Name).WithSortOrder(SortOrder.Descending)))
+                .WithLimit(LimitBy.Default.WithLimit(2));
+
+            CollectionAssert.AreEqual(new[] { "C", "B" }, repository.Read(query).Select(value => value.Name).ToArray());
+            var pages = repository.ReadPaged(query, 1).ToArray();
+            Assert.AreEqual(2, pages.Length);
+            Assert.IsTrue(pages[0].HasNextPage);
+            Assert.IsFalse(pages[1].HasNextPage);
+            CollectionAssert.AreEqual(new[] { "C", "B" }, pages.SelectMany(page => page).Select(value => value.Name).ToArray());
+            CollectionAssert.AreEqual(new[] { "C", "B" }, repository.ReadPaged(query).SelectMany(page => page).Select(value => value.Name).ToArray());
+        }
+
         [DataTestMethod]
         [DataRow(false, false, false)]
         [DataRow(true, false, false)]

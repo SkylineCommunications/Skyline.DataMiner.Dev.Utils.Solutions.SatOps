@@ -12,6 +12,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
+    using SLDataGateway.API.Querying;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -226,7 +227,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query.Filter);
+            var domQuery = filterTranslator.TranslateQuery(query);
+            return Beam.InstantiateBeams(SatOpsApi.SlcSatelliteManagementHelper.GetBeams(domQuery));
         }
 
         public Beam Update(Beam oToUpdate)
@@ -385,7 +387,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return ReadPaged(query.Filter);
+            return ReadPaged(query, 100);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(FilterElement<Beam> filter, int pageSize)
@@ -393,7 +395,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return ReadPagedIterator(filter, pageSize);
+            return ReadPagedIterator(filter.ToQuery(), pageSize);
         }
 
         public IEnumerable<IPagedResult<Beam>> ReadPaged(IQuery<Beam> query, int pageSize)
@@ -401,7 +403,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return ReadPaged(query.Filter, pageSize);
+            return ReadPagedIterator(query, pageSize);
         }
 
         private Beam DoTransition(Guid id, string transitionId)
@@ -427,10 +429,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return Beam.FromInstance(new BeamsInstance(updatedDomInstance));
         }
 
-        private IEnumerable<IPagedResult<Beam>> ReadPagedIterator(FilterElement<Beam> filter, int pageSize)
+        private IEnumerable<IPagedResult<Beam>> ReadPagedIterator(IQuery<Beam> query, int pageSize)
         {
             var pageNumber = 0;
-            var paramFilter = filterTranslator.Translate(filter);
+            var paramFilter = filterTranslator.TranslateQuery(query);
 
             var items = SatOpsApi.SlcSatelliteManagementHelper.GetBeamsPaged(paramFilter, pageSize);
 

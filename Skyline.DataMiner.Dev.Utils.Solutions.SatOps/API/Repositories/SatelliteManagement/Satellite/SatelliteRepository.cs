@@ -12,6 +12,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
+    using SLDataGateway.API.Querying;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -370,7 +371,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query.Filter);
+            var domQuery = filterTranslator.TranslateQuery(query);
+            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(domQuery));
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged()
@@ -393,7 +395,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return ReadPaged(query.Filter);
+            return ReadPaged(query, 100);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(FilterElement<Satellite> filter, int pageSize)
@@ -401,7 +403,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return ReadPagedIterator(filter, pageSize);
+            return ReadPagedIterator(filter.ToQuery(), pageSize);
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged(IQuery<Satellite> query, int pageSize)
@@ -409,13 +411,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return ReadPaged(query.Filter, pageSize);
+            return ReadPagedIterator(query, pageSize);
         }
 
-        private IEnumerable<IPagedResult<Satellite>> ReadPagedIterator(FilterElement<Satellite> filter, int pageSize)
+        private IEnumerable<IPagedResult<Satellite>> ReadPagedIterator(IQuery<Satellite> query, int pageSize)
         {
             var pageNumber = 0;
-            var domFilter = filterTranslator.Translate(filter);
+            var domFilter = filterTranslator.TranslateQuery(query);
             var items = SatOpsApi.SlcSatelliteManagementHelper.GetSatellitesPaged(domFilter, pageSize);
 
             var enumerator = items.GetEnumerator();

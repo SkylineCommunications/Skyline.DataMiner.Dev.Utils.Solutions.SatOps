@@ -11,6 +11,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using Skyline.DataMiner.Utils.DOM.Extensions;
     using SLDataGateway.API.Types.Querying;
+    using SLDataGateway.API.Querying;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -136,7 +137,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return Read(query.Filter);
+            var domQuery = filterTranslator.TranslateQuery(query);
+            return TransponderSlot.InstantiateTransponderSlots(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderSlots(domQuery));
         }
 
         public IEnumerable<IPagedResult<TransponderSlot>> ReadPaged(FilterElement<TransponderSlot> filter)
@@ -149,7 +151,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return ReadPaged(query.Filter);
+            return ReadPaged(query, 100);
         }
 
         public IEnumerable<IPagedResult<TransponderSlot>> ReadPaged(FilterElement<TransponderSlot> filter, int pageSize)
@@ -157,7 +159,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-            return ReadPagedIterator(filter, pageSize);
+            return ReadPagedIterator(filter.ToQuery(), pageSize);
         }
 
         public IEnumerable<IPagedResult<TransponderSlot>> ReadPaged(IQuery<TransponderSlot> query, int pageSize)
@@ -165,13 +167,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            return ReadPaged(query.Filter, pageSize);
+            return ReadPagedIterator(query, pageSize);
         }
 
-        private IEnumerable<IPagedResult<TransponderSlot>> ReadPagedIterator(FilterElement<TransponderSlot> filter, int pageSize)
+        private IEnumerable<IPagedResult<TransponderSlot>> ReadPagedIterator(IQuery<TransponderSlot> query, int pageSize)
         {
             var pageNumber = 0;
-            var domFilter = filterTranslator.Translate(filter);
+            var domFilter = filterTranslator.TranslateQuery(query);
             var items = SatOpsApi.SlcSatelliteManagementHelper.GetTransponderSlotsPaged(domFilter, pageSize);
 
             var enumerator = items.GetEnumerator();
