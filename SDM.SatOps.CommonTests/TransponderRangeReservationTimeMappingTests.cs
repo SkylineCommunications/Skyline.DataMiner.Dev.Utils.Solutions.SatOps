@@ -64,13 +64,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow(0, 0, 30)]
-        [DataRow(0, -30, 0)]
-        [DataRow(0, 10, -10)]
-        [DataRow(5, 0, 30)]
-        [DataRow(5, -30, 0)]
-        [DataRow(5, 30, 30)]
-        public void SetTimeWindow_ResizingOrMoving_PreservesRollDurations(int rollMinutes, int startShiftMinutes, int endShiftMinutes)
+        [DataRow(0, 30)]
+        [DataRow(0, -15)]
+        [DataRow(5, 30)]
+        [DataRow(5, -15)]
+        public void SetTimeWindow_ResizingEnd_AlignsPostRollWithNewEnd(int rollMinutes, int endShiftMinutes)
         {
             var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
             var end = start.AddHours(1);
@@ -82,14 +80,35 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 PostRollEnd = end.AddMinutes(rollMinutes),
             };
 
-            reservation.SetTimeWindow(start.AddMinutes(startShiftMinutes), end.AddMinutes(endShiftMinutes));
+            reservation.SetTimeWindow(start, end.AddMinutes(endShiftMinutes));
             var job = new Skyline.DataMiner.Solutions.MediaOps.Plan.API.Job();
             TransponderRangeReservationRepository.ApplyReservationTimes(reservation, job);
 
-            Assert.AreEqual(new DateTimeOffset(start.AddMinutes(startShiftMinutes)), job.Start);
+            Assert.AreEqual(new DateTimeOffset(start), job.Start);
             Assert.AreEqual(new DateTimeOffset(end.AddMinutes(endShiftMinutes)), job.End);
             Assert.AreEqual(job.Start.AddMinutes(-rollMinutes), job.PreRollStart);
-            Assert.AreEqual(job.End.AddMinutes(rollMinutes), job.PostRollEnd);
+            Assert.AreEqual(job.End, job.PostRollEnd);
+        }
+
+        [DataTestMethod]
+        [DataRow(0)]
+        [DataRow(30)]
+        public void SetTimeWindow_UnchangedEnd_PreservesExistingPostRoll(int startShiftMinutes)
+        {
+            var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+            var end = start.AddHours(1);
+            var reservation = new TransponderRangeReservation
+            {
+                StartTime = start,
+                EndTime = end,
+                PreRollStart = start.AddMinutes(-5),
+                PostRollEnd = end.AddMinutes(10),
+            };
+
+            reservation.SetTimeWindow(start.AddMinutes(startShiftMinutes), end);
+
+            Assert.AreEqual(start.AddMinutes(startShiftMinutes - 5), reservation.PreRollStart);
+            Assert.AreEqual(end.AddMinutes(10), reservation.PostRollEnd);
         }
 
         [TestMethod]
@@ -125,7 +144,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             TransponderRangeReservationRepository.ApplyReservationTimes(reservation, job);
 
             Assert.IsNull(reservation.PreRollStart);
-            Assert.IsNull(reservation.PostRollEnd);
+            Assert.AreEqual(reservation.EndTime, reservation.PostRollEnd);
             Assert.AreEqual(job.Start, job.PreRollStart);
             Assert.AreEqual(job.End, job.PostRollEnd);
         }

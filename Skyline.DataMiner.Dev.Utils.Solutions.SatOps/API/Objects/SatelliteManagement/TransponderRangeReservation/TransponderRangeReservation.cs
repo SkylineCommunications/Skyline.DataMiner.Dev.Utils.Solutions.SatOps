@@ -117,8 +117,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         }
 
         /// <summary>
-        /// Sets the reservation time window (UTC), preserving the existing pre-roll and post-roll durations.
-        /// Unspecified roll boundaries remain unspecified and default to zero-length rolls on persistence.
+        /// Sets the reservation time window (UTC), preserving the existing pre-roll duration.
+        /// When the end time changes, the post-roll end is set to the new end time (zero-length post-roll).
+        /// An unchanged end time leaves the existing post-roll end untouched.
         /// This changes only the in-memory reservation; MediaOps validates lifecycle restrictions on update.
         /// </summary>
         /// <param name="startTime">The new reservation start time (UTC).</param>
@@ -126,7 +127,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         public void SetTimeWindow(DateTime startTime, DateTime endTime)
         {
             var preRollDuration = startTimeUtc - preRollStartUtc;
-            var postRollDuration = postRollEndUtc - endTimeUtc;
+            var endChanged = endTimeUtc != DateTime.SpecifyKind(endTime, DateTimeKind.Utc);
 
             StartTime = startTime;
             EndTime = endTime;
@@ -136,9 +137,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
                 PreRollStart = StartTime.Value - preRollDuration.Value;
             }
 
-            if (postRollDuration.HasValue)
+            if (endChanged)
             {
-                PostRollEnd = EndTime.Value + postRollDuration.Value;
+                PostRollEnd = EndTime;
             }
         }
 
