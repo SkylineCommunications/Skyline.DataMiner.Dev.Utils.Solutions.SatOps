@@ -117,6 +117,32 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         }
 
         /// <summary>
+        /// Sets the reservation time window (UTC), preserving the existing pre-roll and post-roll durations.
+        /// Unspecified roll boundaries remain unspecified and default to zero-length rolls on persistence.
+        /// This changes only the in-memory reservation; MediaOps validates lifecycle restrictions on update.
+        /// </summary>
+        /// <param name="startTime">The new reservation start time (UTC).</param>
+        /// <param name="endTime">The new reservation end time (UTC).</param>
+        public void SetTimeWindow(DateTime startTime, DateTime endTime)
+        {
+            var preRollDuration = startTimeUtc - preRollStartUtc;
+            var postRollDuration = postRollEndUtc - endTimeUtc;
+
+            StartTime = startTime;
+            EndTime = endTime;
+
+            if (preRollDuration.HasValue)
+            {
+                PreRollStart = StartTime.Value - preRollDuration.Value;
+            }
+
+            if (postRollDuration.HasValue)
+            {
+                PostRollEnd = EndTime.Value + postRollDuration.Value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the satellite capability value written to the reservation job node.
         /// This value is derived from the selected transponder's
         /// <see cref="SatelliteManagement.Transponder.Transponder.TransponderSatellite"/>

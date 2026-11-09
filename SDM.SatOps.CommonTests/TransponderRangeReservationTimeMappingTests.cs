@@ -2,6 +2,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using System;
     using System.Reflection;
 
@@ -59,6 +61,95 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             Assert.AreEqual(new DateTimeOffset(preRoll), jobPreRollStart);
             Assert.AreEqual(new DateTimeOffset(postRoll), jobPostRollEnd);
+        }
+
+        [DataTestMethod]
+        [DataRow(0, 0, 30)]
+        [DataRow(0, -30, 0)]
+        [DataRow(0, 10, -10)]
+        [DataRow(5, 0, 30)]
+        [DataRow(5, -30, 0)]
+        [DataRow(5, 30, 30)]
+        public void SetTimeWindow_ResizingOrMoving_PreservesRollDurations(int rollMinutes, int startShiftMinutes, int endShiftMinutes)
+        {
+            var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+            var end = start.AddHours(1);
+            var reservation = new TransponderRangeReservation
+            {
+                StartTime = start,
+                EndTime = end,
+                PreRollStart = start.AddMinutes(-rollMinutes),
+                PostRollEnd = end.AddMinutes(rollMinutes),
+            };
+
+            reservation.SetTimeWindow(start.AddMinutes(startShiftMinutes), end.AddMinutes(endShiftMinutes));
+            var job = new Skyline.DataMiner.Solutions.MediaOps.Plan.API.Job();
+            TransponderRangeReservationRepository.ApplyReservationTimes(reservation, job);
+
+            Assert.AreEqual(new DateTimeOffset(start.AddMinutes(startShiftMinutes)), job.Start);
+            Assert.AreEqual(new DateTimeOffset(end.AddMinutes(endShiftMinutes)), job.End);
+            Assert.AreEqual(job.Start.AddMinutes(-rollMinutes), job.PreRollStart);
+            Assert.AreEqual(job.End.AddMinutes(rollMinutes), job.PostRollEnd);
+        }
+
+        [TestMethod]
+        public void SetTimeWindow_ShortenThenExpand_DoesNotCreateUnintendedRolls()
+        {
+            var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+            var end = start.AddHours(1);
+            var reservation = new TransponderRangeReservation
+            {
+                StartTime = start,
+                EndTime = end,
+                PreRollStart = start,
+                PostRollEnd = end,
+            };
+
+            reservation.SetTimeWindow(start.AddMinutes(10), end.AddMinutes(-10));
+            Assert.AreEqual(reservation.StartTime, reservation.PreRollStart);
+            Assert.AreEqual(reservation.EndTime, reservation.PostRollEnd);
+
+            reservation.SetTimeWindow(start.AddMinutes(-10), end.AddMinutes(10));
+            Assert.AreEqual(reservation.StartTime, reservation.PreRollStart);
+            Assert.AreEqual(reservation.EndTime, reservation.PostRollEnd);
+        }
+
+        [TestMethod]
+        public void SetTimeWindow_UnspecifiedRolls_StillDefaultToZeroOnPersistence()
+        {
+            var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+            var reservation = new TransponderRangeReservation();
+
+            reservation.SetTimeWindow(start, start.AddHours(1));
+            var job = new Skyline.DataMiner.Solutions.MediaOps.Plan.API.Job();
+            TransponderRangeReservationRepository.ApplyReservationTimes(reservation, job);
+
+            Assert.IsNull(reservation.PreRollStart);
+            Assert.IsNull(reservation.PostRollEnd);
+            Assert.AreEqual(job.Start, job.PreRollStart);
+            Assert.AreEqual(job.End, job.PostRollEnd);
+        }
+
+        [TestMethod]
+        public void SetTimeWindow_ExplicitRollOverridesAfterResizing_ArePreservedOnPersistence()
+        {
+            var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+            var reservation = new TransponderRangeReservation
+            {
+                StartTime = start,
+                EndTime = start.AddHours(1),
+                PreRollStart = start.AddMinutes(-5),
+                PostRollEnd = start.AddHours(1).AddMinutes(5),
+            };
+
+            reservation.SetTimeWindow(start.AddHours(1), start.AddHours(2));
+            reservation.PreRollStart = reservation.StartTime.Value.AddMinutes(-10);
+            reservation.PostRollEnd = reservation.EndTime.Value.AddMinutes(20);
+            var job = new Skyline.DataMiner.Solutions.MediaOps.Plan.API.Job();
+            TransponderRangeReservationRepository.ApplyReservationTimes(reservation, job);
+
+            Assert.AreEqual(job.Start.AddMinutes(-10), job.PreRollStart);
+            Assert.AreEqual(job.End.AddMinutes(20), job.PostRollEnd);
         }
 
         private static object CreateReservation(Type reservationType, DateTime start, DateTime end, DateTime? preRoll, DateTime? postRoll)

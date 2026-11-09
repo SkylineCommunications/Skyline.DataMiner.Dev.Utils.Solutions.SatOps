@@ -150,6 +150,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [DataRow("End")]
         [DataRow("PreRollStart")]
         [DataRow("PostRollEnd")]
+        [DataRow("TimeWindow")]
         public void Update_ActiveNonAllocationChanges_AreDelegatedToMediaOps(string field)
         {
             var fixture = new Fixture();
@@ -165,6 +166,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 case "End": reservation.EndTime = reservation.EndTime.Value.AddMinutes(1); break;
                 case "PreRollStart": reservation.PreRollStart = reservation.PreRollStart.Value.AddMinutes(1); break;
                 case "PostRollEnd": reservation.PostRollEnd = reservation.PostRollEnd.Value.AddMinutes(1); break;
+                case "TimeWindow": reservation.SetTimeWindow(reservation.StartTime.Value, reservation.EndTime.Value.AddMinutes(10)); break;
             }
 
             var result = fixture.Repository.Update(reservation);
