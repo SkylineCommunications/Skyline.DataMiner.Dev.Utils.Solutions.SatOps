@@ -47,7 +47,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         /// Reserves a new frequency range on the reservation's job node.
         /// Equivalent of the classic <c>RangeReservationHelper.ReserveRange(jobId, nodeId, start, end)</c>:
         /// preserves the existing satellite value on the node and updates the bandwidth range.
-        /// Throws when the underlying job is in <c>Running</c> or <c>Completed</c> state.
+        /// Changes to the frequency range or bandwidth are rejected while the booking is Active.
+        /// Unchanged values and other lifecycle states are evaluated by MediaOps.
         /// </summary>
         /// <param name="reservationId">The reservation (job) identifier.</param>
         /// <param name="startFrequency">The relative start frequency to reserve.</param>
@@ -58,12 +59,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         /// Reserves a new frequency range and (re)assigns the satellite capability.
         /// Equivalent of the classic <c>RangeReservationHelper.ReserveRange(jobId, nodeId, start, end, satelliteName)</c>,
         /// used immediately after a resource swap when the node has no pre-existing settings.
-        /// Throws when the underlying job is in <c>Running</c> or <c>Completed</c> state.
+        /// Changes to the frequency range, bandwidth or satellite capability are rejected while
+        /// the booking is Active. Other lifecycle restrictions are evaluated by MediaOps.
         /// </summary>
         /// <param name="reservationId">The reservation (job) identifier.</param>
         /// <param name="startFrequency">The relative start frequency to reserve.</param>
         /// <param name="endFrequency">The relative end frequency to reserve.</param>
-        /// <param name="satelliteName">The satellite capability discrete value to set, or <c>null</c> to skip.</param>
+        /// <param name="satelliteName">The satellite capability discrete value to set, or <c>null</c> to remove it.</param>
         void ReserveRange(Guid reservationId, double startFrequency, double endFrequency, string satelliteName);
 
         /// <summary>

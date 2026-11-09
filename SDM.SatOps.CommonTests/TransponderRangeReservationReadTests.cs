@@ -160,11 +160,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         }
 
         [DataTestMethod]
-        [DataRow(JobState.Tentative)]
-        [DataRow(JobState.Confirmed)]
-        [DataRow(JobState.Running)]
-        [DataRow(JobState.Completed)]
-        public void ReadAllocationContext_ReusesJobStateAndCompleteWindowWithoutReadingJobsById(JobState state)
+        [DataRow(JobState.Draft, TransponderReservationState.Draft)]
+        [DataRow(JobState.Tentative, TransponderReservationState.Tentative)]
+        [DataRow(JobState.Confirmed, TransponderReservationState.Confirmed)]
+        [DataRow(JobState.Running, TransponderReservationState.Active)]
+        [DataRow(JobState.Completed, TransponderReservationState.Completed)]
+        [DataRow(JobState.Canceled, TransponderReservationState.Canceled)]
+        public void ReadAllocationContext_ReusesJobStateAndCompleteWindowWithoutReadingJobsById(JobState state, TransponderReservationState expectedState)
         {
             var transponder = new Transponder { DOMResource = Guid.NewGuid() };
             var first = CreateJob(transponder.DOMResource.Value);
@@ -184,6 +186,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             {
                 var context = result.Single(item => item.Reservation.Id == pair.Job.Id);
                 Assert.AreEqual(state, context.JobState);
+                Assert.AreEqual(expectedState, context.State);
+                Assert.AreEqual(expectedState, context.Reservation.State);
+                Assert.AreEqual(pair.Job.PreRollStart.UtcDateTime, context.Reservation.PreRollStart);
+                Assert.AreEqual(pair.Job.PostRollEnd.UtcDateTime, context.Reservation.PostRollEnd);
                 Assert.AreEqual(pair.Job.Start.UtcDateTime, context.JobStartTimeUtc);
                 Assert.AreEqual(pair.Job.End.UtcDateTime, context.JobEndTimeUtc);
                 Assert.AreEqual(pair.Node.Id, context.NodeId);
@@ -457,6 +463,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         {
             var start = new DateTimeOffset(2026, 10, 29, 15, 0, 0, TimeSpan.Zero);
             var job = new Job(Guid.NewGuid()) { Name = name, Start = start, End = start.AddHours(1) };
+            job.PreRollStart = start.AddMinutes(-5);
+            job.PostRollEnd = job.End.AddMinutes(5);
             var node = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
             job.NodeGraph.Add(node);
             typeof(TransponderRangeReservationRepository)

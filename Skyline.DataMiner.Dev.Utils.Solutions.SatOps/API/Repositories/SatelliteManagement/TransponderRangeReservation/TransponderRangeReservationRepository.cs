@@ -4,8 +4,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.MediaOps.Plan.Exceptions;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
@@ -81,12 +83,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             var job = BuildJob(oToCreate, existingJob: null);
             var createdJob = Jobs.Create(job);
 
-            // Jobs.Create persists the job in the Draft state, which does not reserve any
-            // resources. Drive it to Tentative so the MediaOps.Plan scheduling engine reserves
-            // the transponder slot (mirrors the old CreateJobAction setting DesiredJobStatus = Tentative).
-            var reservedJob = Jobs.SaveAsTentative(createdJob.Id);
+            // MediaOps requires Tentative as an intermediate state before confirmation.
+            var reservedJob = TransitionReservation(createdJob, nameof(IJobsRepository.SaveAsTentative), Jobs.SaveAsTentative, JobState.Tentative);
             UpsertSlotNamePropertyIfPresent(oToCreate, reservedJob);
-            return ReadJobAsReservation(reservedJob);
+            var confirmedJob = TransitionReservation(
+                reservedJob, nameof(IJobsRepository.Confirm), Jobs.Confirm, JobState.Confirmed, JobState.Running, JobState.Completed);
+            return ReadJobAsReservation(confirmedJob);
         }
 
         public IReadOnlyCollection<TransponderRangeReservation> CreateOrUpdate(IEnumerable<TransponderRangeReservation> oToCreateOrUpdate)
@@ -119,18 +121,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return;
             }
 
-            EnsureJobIsMutable(existing);
             if (existing.State == JobState.Tentative || existing.State == JobState.Confirmed)
             {
-                Jobs.Cancel(apiObjectId);
+                ReservationLifecycle.Execute(existing, nameof(IJobsRepository.Cancel), () => Jobs.Cancel(apiObjectId));
                 var canceled = Jobs.Read(apiObjectId);
                 if (canceled == null || canceled.State != JobState.Canceled)
                 {
                     throw new InvalidOperationException($"Reservation job {apiObjectId} did not reach Canceled state after cancellation (state: {canceled?.State.ToString() ?? "missing"}). Deletion was not attempted.");
                 }
+
+                existing = canceled;
             }
 
-            Jobs.Delete(apiObjectId);
+            ReservationLifecycle.Execute(existing, nameof(IJobsRepository.Delete), () => Jobs.Delete(apiObjectId));
         }
 
         public void Delete(IEnumerable<Guid> apiObjectIds)
@@ -256,10 +259,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingTransponderRangeReservation);
             }
 
-            EnsureJobIsMutable(existing);
-
             var updatedJob = BuildJob(oToUpdate, existing);
-            var persistedJob = Jobs.Update(updatedJob);
+            var persistedJob = ReservationLifecycle.Execute(updatedJob, nameof(IJobsRepository.Update), () => Jobs.Update(updatedJob));
 
             // Editing a reservation can change the transponder, which swaps the JobResourceNode for a new
             // one with a new id. Re-anchor the slot-name property to the current node so it is not orphaned
@@ -596,6 +597,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             reservation.Name = job.Name;
             reservation.StartTime = job.Start.UtcDateTime;
             reservation.EndTime = job.End.UtcDateTime;
+            reservation.PreRollStart = job.PreRollStart.UtcDateTime;
+            reservation.PostRollEnd = job.PostRollEnd.UtcDateTime;
+            reservation.State = TransponderRangeReservation.MapState(job.State);
             reservation.NodeId = node.Id;
             reservation.SlotName = slotName;
 
@@ -701,6 +705,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             var resourceId = transponder.DOMResource.Value;
             var satelliteName = ResolveSatelliteNameFromTransponder(transponder, id => SatOpsApi.Satellites.Read(id));
 
+            if (existingJob != null && IsReservationJob(existingJob, out var existingNode))
+            {
+                ReservationLifecycle.EnsureAllocationSettingsCanChange(
+                    existingJob, existingNode, nameof(IJobsRepository.Update),
+                    reservation.RelativeStartFrequency, reservation.RelativeEndFrequency,
+                    reservation.BandwidthSize, satelliteName, applySatellite: true);
+            }
+
             reservation.SatelliteName = satelliteName;
 
             var job = existingJob ?? (reservation.Id != Guid.Empty ? new Job(reservation.Id) : new Job());
@@ -773,9 +785,16 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         private static void ApplyBandwidthRange(JobResourceNode node, double? minValue, double? maxValue)
         {
+            var min = minValue.HasValue ? (decimal?)(decimal)minValue.Value : null;
+            var max = maxValue.HasValue ? (decimal?)(decimal)maxValue.Value : null;
             var existing = node.OrchestrationSettings.Capacities
                 .OfType<RangeCapacitySetting>()
                 .FirstOrDefault(c => c.Id == PredefinedGuids.TransponderBandwidthGuid);
+
+            if (existing != null && existing.MinValue == min && existing.MaxValue == max)
+            {
+                return;
+            }
 
             if (existing != null)
             {
@@ -784,17 +803,23 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
             var setting = new RangeCapacitySetting(PredefinedGuids.TransponderBandwidthGuid)
             {
-                MinValue = minValue.HasValue ? (decimal?)(decimal)minValue.Value : null,
-                MaxValue = maxValue.HasValue ? (decimal?)(decimal)maxValue.Value : null,
+                MinValue = min,
+                MaxValue = max,
             };
             node.OrchestrationSettings.AddCapacity(setting);
         }
 
         private static void ApplyBandwidthSize(JobResourceNode node, double? size)
         {
+            var value = size.HasValue ? (decimal?)(decimal)size.Value : null;
             var existing = node.OrchestrationSettings.Configurations
                 .OfType<NumberConfigurationSetting>()
                 .FirstOrDefault(c => c.Id == PredefinedGuids.BandwidthSizeGuid);
+
+            if (existing != null && size.HasValue && existing.Value == value)
+            {
+                return;
+            }
 
             if (existing != null)
             {
@@ -808,7 +833,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
             node.OrchestrationSettings.AddConfiguration(new NumberConfigurationSetting(PredefinedGuids.BandwidthSizeGuid)
             {
-                Value = (decimal)size.Value,
+                Value = value.Value,
             });
         }
 
@@ -816,6 +841,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         {
             var existing = node.OrchestrationSettings.Capabilities
                 .FirstOrDefault(c => c.Id == PredefinedGuids.SatelliteCapabilityGuid);
+
+            if (existing != null && !string.IsNullOrWhiteSpace(satelliteName) && existing.Value == satelliteName)
+            {
+                return;
+            }
 
             if (existing != null)
             {
@@ -833,13 +863,29 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             });
         }
 
-        private static void EnsureJobIsMutable(Job job)
+        private static Job TransitionReservation(Job job, string operation, Func<Guid, Job> transition, params JobState[] expectedStates)
         {
-            if (job.State == JobState.Running || job.State == JobState.Completed)
+            Job result;
+            try
             {
-                throw new InvalidOperationException(
-                    $"Reservation '{job.Id}' cannot be modified because its underlying job is in state '{job.State}'.");
+                result = transition(job.Id);
             }
+            catch (MediaOpsException exception)
+            {
+                throw new ReservationTransitionException(
+                    job.Id, TransponderRangeReservation.MapState(job.State), operation, exception.Message, exception);
+            }
+
+            if (result == null || result.Id != job.Id || !expectedStates.Contains(result.State))
+            {
+                throw new ReservationTransitionException(
+                    job.Id,
+                    TransponderRangeReservation.MapState(job.State),
+                    operation,
+                    $"MediaOps did not return the reservation in an expected state (returned: {result?.State.ToString() ?? "missing"}).");
+            }
+
+            return result;
         }
 
         private void UpsertSlotNamePropertyIfPresent(TransponderRangeReservation reservation, Job job)
@@ -880,7 +926,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new InvalidOperationException(ExceptionMessages.ReservationIsNotValidTransponderRangeReservation);
             }
 
-            EnsureJobIsMutable(job);
+            ReservationLifecycle.EnsureAllocationSettingsCanChange(
+                job, node, nameof(ITransponderRangeReservationRepository.ReserveRange),
+                startFrequency, endFrequency, endFrequency - startFrequency, satelliteName, applySatellite);
 
             ApplyBandwidthRange(node, startFrequency, endFrequency);
             ApplyBandwidthSize(node, endFrequency - startFrequency);
@@ -890,14 +938,16 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 ApplySatelliteCapability(node, satelliteName);
             }
 
-            Jobs.Update(job);
+            var updatedJob = ReservationLifecycle.Execute(
+                job, nameof(ITransponderRangeReservationRepository.ReserveRange), () => Jobs.Update(job));
 
-            // A Draft job does not reserve resources. If the reservation job has not been driven
-            // to Tentative yet (e.g. it was created outside the fixed Create path), transition it
-            // now so the applied range actually reserves the transponder slot.
+            // Recover external Draft jobs using the same confirmation policy as Create.
             if (job.State == JobState.Draft)
             {
-                Jobs.SaveAsTentative(job.Id);
+                var reservedJob = TransitionReservation(
+                    updatedJob, nameof(IJobsRepository.SaveAsTentative), Jobs.SaveAsTentative, JobState.Tentative);
+                TransitionReservation(
+                    reservedJob, nameof(IJobsRepository.Confirm), Jobs.Confirm, JobState.Confirmed, JobState.Running, JobState.Completed);
             }
         }
 

@@ -160,6 +160,54 @@ Time-window reads filter jobs by start and end time in MediaOps.Plan before reso
 Creating or updating a reservation checks overlaps only for the selected transponder and the incoming time
 window. Slot-name lookups filter property values by reservation ID instead of loading all property values.
 
+New range reservations are confirmed through MediaOps (`Draft` -> `Tentative` -> `Confirmed`).
+If the underlying reservation has already started, MediaOps can return `Active` or `Completed` instead.
+`ReserveRange` applies the same confirmation policy when recovering an externally created Draft job;
+editing an existing Tentative booking does not implicitly confirm it.
+
+Reservation reads expose a SatOps-owned `TransponderReservationState` through `reservation.State`.
+Allocation contexts also expose `State`; their existing MediaOps `JobState` property remains available
+for compatibility. `Active` corresponds to MediaOps `Running`, including pre-roll and post-roll.
+Reads preserve `PreRollStart` and `PostRollEnd` alongside the service start and end times.
+State and timing are snapshots, not permission to modify a booking or a guaranteed proposal deadline.
+MediaOps decides whether time changes, resource swaps, name edits and deletion are permitted.
+SatOps does not duplicate MediaOps timing or post-roll rules. The additional SatOps lifecycle policy
+is that frequency range, bandwidth and satellite capability cannot change while a booking is Active.
+A transponder swap is delegated to MediaOps only if it leaves those allocation values unchanged;
+the satellite capability is derived from the selected transponder. Unchanged allocation values
+are not treated as changes.
+
+When MediaOps rejects an operation for lifecycle reasons, SatOps throws `ReservationOperationException`.
+Its `ReservationId`, `Operation`, `LastKnownState` and `Errors` are all usable without importing MediaOps
+types. Each error contains a typed `ReservationOperationErrorCode` and an explanatory `Message`.
+SatOps allocation-policy rejections use the same exception. MediaOps lifecycle errors retain the
+original failure as the inner exception, and mixed validation reasons are preserved.
+Unrelated failures are not disguised as lifecycle rejections.
+
+```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
+
+try
+{
+    api.TransponderRangeReservations.Update(reservation);
+}
+catch (ReservationOperationException exception)
+{
+    foreach (var error in exception.Errors)
+    {
+        Console.WriteLine($"{error.Code}: {error.Message}");
+    }
+}
+```
+
+Validation happens when the operation executes, not through an authoritative proposal preflight API.
+Read the booking again after a rejection: `LastKnownState` is a snapshot, and MediaOps may synchronize
+its lifecycle state before rejecting an operation. Bulk operations are not transactional.
+
+If a transition is rejected, `ReservationTransitionException` exposes the persisted `ReservationId`,
+the failed `Operation`, and `LastKnownState`, retaining the MediaOps exception as its inner exception.
+The booking is not automatically deleted or rolled back: read it again before retrying or cleaning up.
+
 **Enable logging (optional):**
 
 Provide an `ILogger` implementation to surface diagnostics from the middleware pipeline. By default the API

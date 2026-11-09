@@ -150,6 +150,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         }
 
         /// <summary>
+        /// Gets the lifecycle state at read time. This snapshot does not guarantee that a subsequent
+        /// modification is allowed. New in-memory reservations have state <c>Unknown</c>.
+        /// </summary>
+        public TransponderReservationState State { get; internal set; }
+
+        /// <summary>
         /// Gets the derived bandwidth size (end - start) of the reservation, or <c>null</c>
         /// when either bound is missing.
         /// </summary>
@@ -172,6 +178,27 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         internal static TransponderRangeReservation CreateWithId(Guid id)
         {
             return new TransponderRangeReservation(id);
+        }
+
+        internal static TransponderReservationState MapState(JobState state)
+        {
+            switch (state)
+            {
+                case JobState.Draft:
+                    return TransponderReservationState.Draft;
+                case JobState.Tentative:
+                    return TransponderReservationState.Tentative;
+                case JobState.Confirmed:
+                    return TransponderReservationState.Confirmed;
+                case JobState.Running:
+                    return TransponderReservationState.Active;
+                case JobState.Completed:
+                    return TransponderReservationState.Completed;
+                case JobState.Canceled:
+                    return TransponderReservationState.Canceled;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state), state, "Unsupported MediaOps job state.");
+            }
         }
     }
 }

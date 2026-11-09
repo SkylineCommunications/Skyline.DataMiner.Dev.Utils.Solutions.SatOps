@@ -13,6 +13,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         {
             Reservation = reservation;
             JobState = job.State;
+            State = TransponderRangeReservation.MapState(job.State);
             JobStartTimeUtc = job.Start.UtcDateTime;
             JobEndTimeUtc = job.End.UtcDateTime;
             NodeId = node.Id;
@@ -23,8 +24,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         /// <summary>Gets the reservation, including its stored slot name.</summary>
         public TransponderRangeReservation Reservation { get; }
 
-        /// <summary>Gets the underlying job state at read time.</summary>
+        /// <summary>
+        /// Gets the underlying job state at read time. Prefer <see cref="State"/> to avoid
+        /// referencing MediaOps types in consuming solutions.
+        /// </summary>
         public JobState JobState { get; }
+
+        /// <summary>Gets the SatOps lifecycle state at read time.</summary>
+        public TransponderReservationState State { get; }
 
         /// <summary>Gets the complete job start time in UTC.</summary>
         public DateTime JobStartTimeUtc { get; }
