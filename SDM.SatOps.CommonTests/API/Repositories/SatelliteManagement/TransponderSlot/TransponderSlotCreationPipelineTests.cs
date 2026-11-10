@@ -5,12 +5,15 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Moq;
 
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
@@ -104,7 +107,145 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             };
             var pipeline = BuildPipeline(repository, overlappingWithinLayer);
 
-            Assert.ThrowsException<ArgumentException>(() => pipeline.Create(PlanId));
+            Assert.ThrowsException<SlotValidationException>(() => pipeline.Create(PlanId));
+        }
+
+        [DataTestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public void Create_InvalidReplacement_DoesNotDeleteExistingSlots(bool duplicateName)
+        {
+            var original = CreateSlot("Original", 0, 4, 4);
+            var store = new List<TransponderSlot> { original };
+            var replacements = new[] { CreateSlot("A4", 0, 4, 4), CreateSlot(duplicateName ? "A4" : "B4", 2, 6, 4) };
+            var pipeline = BuildPipeline(CreateRepository(store), replacements);
+
+            var exception = Assert.ThrowsException<SlotValidationException>(() => pipeline.Create(PlanId));
+
+            Assert.IsTrue(exception.IsConflict);
+            Assert.AreEqual(1, store.Count);
+            Assert.AreSame(original, store[0]);
+        }
+
+        [TestMethod]
+        public void Create_InvalidSlotFields_DoesNotDeleteExistingSlots()
+        {
+            var original = CreateSlot("Original", 0, 4, 4);
+            var store = new List<TransponderSlot> { original };
+            var invalid = CreateSlot("A4", 0, 4, 4);
+            invalid.Name = null;
+            var pipeline = BuildPipeline(CreateRepository(store), new[] { invalid });
+
+            Assert.ThrowsException<SlotValidationException>(() => pipeline.Create(PlanId));
+
+            Assert.AreSame(original, store.Single());
+        }
+
+        [TestMethod]
+        public void Create_RepeatedRegeneration_ProducesOneReplacementSet()
+        {
+            var store = new List<TransponderSlot>();
+            var pipeline = BuildPipeline(CreateRepository(store), BuildReportedScenarioSlots());
+
+            pipeline.Create(PlanId);
+            pipeline.Create(PlanId);
+
+            Assert.AreEqual(18, store.Count);
+            Assert.AreEqual(18, store.Select(slot => slot.Name).Distinct().Count());
+        }
+
+        [DataTestMethod]
+        [DataRow("Delete")]
+        [DataRow("Create")]
+        public void Create_PersistenceFailure_ReportsPartialWriteStage(string stage)
+        {
+            var failure = new InvalidOperationException("DOM backend failed.");
+            var repository = new Mock<ITransponderSlotRepository>();
+            if (stage == "Delete")
+                repository.Setup(value => value.DeleteSlotsByTransponderPlan(PlanId)).Throws(failure);
+            else
+                repository.Setup(value => value.Create(It.IsAny<IEnumerable<TransponderSlot>>())).Throws(failure);
+            var pipeline = BuildPipeline(repository.Object, BuildReportedScenarioSlots());
+
+            var exception = Assert.ThrowsException<SlotRegenerationException>(() => pipeline.Create(PlanId));
+
+            Assert.AreEqual(stage, exception.Stage);
+            Assert.AreSame(failure, exception.InnerException);
+            CollectionAssert.Contains(exception.PlanIds.ToList(), PlanId);
+            StringAssert.Contains(exception.Message, "Some slots may have changed");
+            if (stage == "Delete")
+                repository.Verify(value => value.Create(It.IsAny<IEnumerable<TransponderSlot>>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void Create_ConcurrentRegeneration_IsRejectedBeforeMutationAndLockIsReleased()
+        {
+            var store = new List<TransponderSlot>();
+            var repository = CreateRepository(store);
+            var generator = new Mock<ITransponderSlotGenerator>();
+            using (var entered = new ManualResetEventSlim())
+            using (var release = new ManualResetEventSlim())
+            {
+                generator.Setup(value => value.BuildSlots(PlanId)).Returns(() =>
+                {
+                    entered.Set();
+                    if (!release.Wait(TimeSpan.FromSeconds(10)))
+                        throw new TimeoutException("Test did not release slot generation.");
+                    return BuildReportedScenarioSlots();
+                });
+                var pipeline = repository.WithMiddleware(null, generator.Object);
+                var first = Task.Run(() => pipeline.Create(PlanId));
+                try
+                {
+                    Assert.IsTrue(entered.Wait(TimeSpan.FromSeconds(10)));
+                    var exception = Assert.ThrowsException<SlotValidationException>(() => pipeline.Create(PlanId));
+                    Assert.IsTrue(exception.IsConflict);
+                    Assert.AreEqual(0, store.Count);
+                }
+                finally
+                {
+                    release.Set();
+                    first.GetAwaiter().GetResult();
+                }
+
+                Assert.AreEqual(18, pipeline.Create(PlanId).Count);
+            }
+        }
+
+        [TestMethod]
+        public void Update_ExistingSlot_UsesUpdateAndPreservesId()
+        {
+            var existing = CreateSlot("A4", 0, 4, 4);
+            var store = new List<TransponderSlot> { existing };
+            var repository = new Mock<ITransponderSlotRepository>();
+            repository.Setup(value => value.ReadByTransponderPlan(PlanId)).Returns(() => store.ToList());
+            repository.Setup(value => value.Update(existing)).Returns(existing);
+            var pipeline = BuildPipeline(repository.Object, Array.Empty<TransponderSlot>());
+            var id = existing.Id;
+            existing.Name = "Edited";
+
+            var updated = pipeline.Update(existing);
+
+            Assert.AreEqual(id, updated.Id);
+            Assert.AreEqual("Edited", updated.Name);
+            repository.Verify(value => value.Update(existing), Times.Once);
+            repository.Verify(value => value.Create(It.IsAny<TransponderSlot>()), Times.Never);
+            repository.Verify(value => value.Create(It.IsAny<IEnumerable<TransponderSlot>>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void Update_DuplicateName_DoesNotPersist()
+        {
+            var existing = CreateSlot("A4", 0, 4, 4);
+            var other = CreateSlot("B4", 4, 8, 4);
+            var repository = new Mock<ITransponderSlotRepository>();
+            repository.Setup(value => value.ReadByTransponderPlan(PlanId)).Returns(new[] { existing, other });
+            var pipeline = BuildPipeline(repository.Object, Array.Empty<TransponderSlot>());
+            existing.Name = other.Name;
+
+            Assert.ThrowsException<SlotValidationException>(() => pipeline.Update(existing));
+
+            repository.Verify(value => value.Update(It.IsAny<TransponderSlot>()), Times.Never);
         }
 
         private static ITransponderSlotRepository BuildPipeline(ITransponderSlotRepository repository, IReadOnlyCollection<TransponderSlot> generatedSlots)

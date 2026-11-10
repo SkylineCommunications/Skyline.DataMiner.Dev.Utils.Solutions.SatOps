@@ -126,12 +126,11 @@ var relatedPlans = api.TransponderPlans.ReadByTransponders(transponders.Select(t
 var relatedSlots = api.TransponderSlots.ReadByTransponderPlans(relatedPlans.Select(p => p.Id));
 ```
 
-**Generate slots from a transponder plan (there is no `Update` for slots):**
+**Generate or edit slots:**
 
-Slots are never edited individually: they are fully derived from the plan rows and the transponder of the plan,
-so any change to those inputs simply means the slots have to be recalculated. Because of that,
-`ITransponderSlotRepository` intentionally has no update method — it only exposes create, delete, read and count —
-and every write goes through `Create`.
+Use `Update(slot)` or `Update(slots)` to edit existing slots without changing their identifiers.
+Names must remain unique within the plan, and slots of the same bandwidth must not overlap.
+Regeneration recalculates slots from plan rows and overwrites individual edits.
 
 Pass the id of the transponder plan, or submit a slot that only has its `TransponderPlan` filled in, and the API
 replaces it by the slots calculated from the plan rows. The slots that already exist for the plan are removed as
@@ -274,6 +273,6 @@ Every repository is built as a small pipeline: the public interface (e.g. `IBeam
 
 The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
 
-`TransponderSlot`s are the one exception to the full CRUD surface: they are derived data, calculated from the plan rows and the transponder of their `TransponderPlan`. `ITransponderSlotRepository` therefore only inherits the creatable, deletable, pageable and countable repository interfaces — there is no update method, and regenerating the slots of a plan is done by calling `Create` with the transponder plan id, which recalculates the slots and replaces the ones currently stored for that plan.
+`TransponderSlot`s support create, update, delete, paged reads and count. `Create(planId)` regenerates the plan's slots; all replacement validation runs before deletion and excludes the slots being replaced. `SlotValidationException` distinguishes invalid requests from conflicts, and `SlotNotFoundException` identifies a missing slot selected for update. Persistence failures after replacement starts throw `SlotRegenerationException` with the affected plan IDs, failing stage and original exception. Refresh and reconcile before retrying: replacement is not transactional. A process-local guard rejects concurrent regenerations; callers in different processes or DataMiner agents must coordinate externally.
 
 The core library also depends on `Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan`: a SatOps `Transponder` is also represented as a `Resource` in the MediaOps data model, so `TransponderResourceCreationMiddleware` keeps a matching MediaOps resource in sync whenever a transponder is created or updated.

@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -78,7 +79,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
             var slot = CreateSlot("New", 100, 200, PlanId);
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -193,7 +194,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
             var slot = CreateSlot("Slot", 100, 200, PlanId);
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnUpdate(slot, s => s));
         }
 
         [TestMethod]
@@ -239,7 +240,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 CreateSlot("B", 200, 300, PlanId),
             };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -252,7 +253,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 CreateSlot("same", 200, 300, PlanId),
             };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -317,7 +318,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 CreateSlot("B", 300, 400, PlanId),
             };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnUpdate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -369,7 +370,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 CreateSlot("B", 200, 300, PlanId),
             };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreateOrUpdate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -379,7 +380,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { persisted }));
             var slots = new List<TransponderSlot> { CreateSlot("New", 100, 200, PlanId) };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -389,7 +390,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { persisted }));
             var slots = new List<TransponderSlot> { CreateSlot("same", 300, 400, PlanId) };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreateOrUpdate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -399,7 +400,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { persisted }));
             var slot = CreateSlot("same", 300, 400, PlanId);
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -437,7 +438,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { wide, inner }));
             var slot = CreateSlot("New", 500, 600, PlanId);
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -699,7 +700,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 CreateSlot("B4", 2, 6, PlanId, 4d),
             };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slots, s => s.ToList()));
         }
 
         [TestMethod]
@@ -721,7 +722,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new SlotOverlapValidationMiddleware(CreateRepository(id => new[] { existing }));
             var slot = CreateSlot("A4", 0, 4, PlanId, 4d);
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -734,7 +735,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
                 CreateSlot("A", 100, 112, PlanId, 12d),
             };
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slots, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slots, s => s.ToList()));
         }
 
         private static ITransponderSlotRepository CreateRepository(Func<Guid, IEnumerable<TransponderSlot>> existingSlotsResolver)

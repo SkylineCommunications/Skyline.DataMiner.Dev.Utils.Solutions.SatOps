@@ -9,6 +9,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
 
     internal sealed class TransponderSlotValidationMiddleware : IBulkRepositoryMiddleware<TransponderSlot>
     {
@@ -165,28 +166,36 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         private void ValidateTransponderSlot(TransponderSlot transponderSlot, ISet<Guid> knownTransponderPlanIds)
         {
             if (transponderSlot == null)
-                throw new ArgumentException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderSlot));
+                throw new SlotValidationException(ExceptionMessages.CollectionCannotContainNullItems, nameof(transponderSlot));
 
             if (!transponderSlot.TransponderPlan.HasValue || transponderSlot.TransponderPlan.Value == Guid.Empty)
-                throw new ArgumentException("TransponderPlan is required.", nameof(transponderSlot));
+                throw new SlotValidationException("TransponderPlan is required.", nameof(transponderSlot));
 
             if (string.IsNullOrWhiteSpace(transponderSlot.Name))
-                throw new ArgumentException("Slot Name is required.", nameof(transponderSlot));
+                throw new SlotValidationException("Slot Name is required.", nameof(transponderSlot));
 
             if (!transponderSlot.SlotStartFrequency.HasValue)
-                throw new ArgumentException("Slot Start Frequency is required.", nameof(transponderSlot));
+                throw new SlotValidationException("Slot Start Frequency is required.", nameof(transponderSlot));
 
             if (!transponderSlot.SlotEndFrequency.HasValue)
-                throw new ArgumentException("Slot End Frequency is required.", nameof(transponderSlot));
+                throw new SlotValidationException("Slot End Frequency is required.", nameof(transponderSlot));
 
             if (!transponderSlot.Bandwidth.HasValue)
-                throw new ArgumentException("Bandwidth is required.", nameof(transponderSlot));
+                throw new SlotValidationException("Bandwidth is required.", nameof(transponderSlot));
 
             if (!transponderSlot.UplinkFreq.HasValue)
-                throw new ArgumentException("Uplink Frequency is required.", nameof(transponderSlot));
+                throw new SlotValidationException("Uplink Frequency is required.", nameof(transponderSlot));
 
             if (!transponderSlot.DownlinkFreq.HasValue)
-                throw new ArgumentException("Downlink Frequency is required.", nameof(transponderSlot));
+                throw new SlotValidationException("Downlink Frequency is required.", nameof(transponderSlot));
+
+            if (!IsFinite(transponderSlot.SlotStartFrequency.Value) || !IsFinite(transponderSlot.SlotEndFrequency.Value)
+                || transponderSlot.SlotStartFrequency.Value < 0
+                || transponderSlot.SlotEndFrequency.Value <= transponderSlot.SlotStartFrequency.Value)
+                throw new SlotValidationException("The slot end frequency must be greater than its start frequency, and the start frequency must not be negative.", nameof(transponderSlot));
+            if (!IsFinite(transponderSlot.Bandwidth.Value) || transponderSlot.Bandwidth.Value <= 0
+                || !IsFinite(transponderSlot.UplinkFreq.Value) || !IsFinite(transponderSlot.DownlinkFreq.Value))
+                throw new SlotValidationException("Bandwidth must be positive and all frequencies must be finite numbers.", nameof(transponderSlot));
 
             var transponderPlanId = transponderSlot.TransponderPlan.Value;
             var transponderPlanExists = knownTransponderPlanIds != null
@@ -194,8 +203,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 : transponderPlanRepository.Read(transponderPlanId) != null;
 
             if (!transponderPlanExists)
-                throw new ArgumentException($"Transponder plan with id '{transponderPlanId}' does not exist.", nameof(transponderSlot));
+                throw new SlotValidationException("The selected transponder plan no longer exists.", nameof(transponderSlot));
         }
+
+        private static bool IsFinite(double value) => !double.IsNaN(value) && !double.IsInfinity(value);
 
         /// <summary>
         /// Validates every slot of a batch, resolving the referenced transponder plans with a single repository read

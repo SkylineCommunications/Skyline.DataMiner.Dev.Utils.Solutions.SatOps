@@ -15,6 +15,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
 
     internal class TransponderSlotRepository : Repository, ITransponderSlotRepository
     {
@@ -46,14 +48,37 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         public TransponderSlot Create(TransponderSlot oToCreate)
         {
             if (oToCreate.Id != Guid.Empty && Read(oToCreate.Id) != null)
-                throw new InvalidOperationException(ExceptionMessages.CannotCreateExistingTransponderSlot);
+                throw new SlotValidationException("The selected slot already exists. Edit it instead of creating it again.", nameof(oToCreate), isConflict: true);
 
             return CreateInternal(oToCreate);
         }
 
         public IReadOnlyCollection<TransponderSlot> Create(Guid transponderPlanId)
         {
-            return RegenerateSlots(transponderPlanId);
+            return this
+                .WithMiddleware(new TransponderSlotValidationMiddleware(SatOpsApi.TransponderPlans), slotGenerator)
+                .WithMiddleware(new SlotOverlapValidationMiddleware(this), slotGenerator)
+                .Create(transponderPlanId);
+        }
+
+        public TransponderSlot Update(TransponderSlot oToUpdate)
+        {
+            if (oToUpdate == null)
+                throw new ArgumentNullException(nameof(oToUpdate));
+            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
+                throw new SlotNotFoundException(oToUpdate.Id);
+
+            var instance = oToUpdate.ToUpdatedInstance();
+            var updated = DomHelper.DomInstances.Update(instance.ToInstance());
+            return TransponderSlot.FromInstance(new TransponderSlotsInstance(updated));
+        }
+
+        public IReadOnlyCollection<TransponderSlot> Update(IEnumerable<TransponderSlot> oToUpdate)
+        {
+            if (oToUpdate == null)
+                throw new ArgumentNullException(nameof(oToUpdate));
+
+            return oToUpdate.Select(Update).ToList();
         }
 
         public void Delete(IEnumerable<TransponderSlot> oToDelete)
@@ -89,17 +114,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 return null;
 
             return TransponderSlot.FromInstance(new TransponderSlotsInstance(domInstance));
-        }
-
-        private IReadOnlyCollection<TransponderSlot> RegenerateSlots(Guid transponderPlanId)
-        {
-            if (transponderPlanId == Guid.Empty)
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
-
-            var slots = slotGenerator.BuildSlots(transponderPlanId);
-            DeleteSlotsByTransponderPlan(transponderPlanId);
-
-            return slots.Select(CreateInternal).ToList();
         }
 
         public long Count(FilterElement<TransponderSlot> filter)
@@ -221,7 +235,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 .Equal(transponderPlanId);
             var existingInstances = DomHelper.DomInstances.Read(domFilter).ToList();
             if (existingInstances.Count > 0)
-                DomHelper.DomInstances.DeleteInBatches(existingInstances);
+            {
+                var result = DomHelper.DomInstances.DeleteInBatches(existingInstances);
+                if (result.UnsuccessfulIds.Count != 0 || result.SuccessfulIds.Count != existingInstances.Count)
+                    throw new InvalidOperationException(
+                        $"Could not delete all transponder slots. Succeeded: {result.SuccessfulIds.Count}; failed IDs: {string.Join(", ", result.UnsuccessfulIds)}.");
+            }
         }
     }
 }
