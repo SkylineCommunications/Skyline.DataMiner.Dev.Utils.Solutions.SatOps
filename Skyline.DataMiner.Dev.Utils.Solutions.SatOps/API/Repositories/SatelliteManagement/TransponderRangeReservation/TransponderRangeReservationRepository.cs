@@ -732,6 +732,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             else if (node.ResourceId != resourceId)
             {
                 var replacement = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
+                replacement.CopyOrchestrationSettingsFrom(node);
                 job.NodeGraph.Swap(node, replacement);
                 node = replacement;
             }

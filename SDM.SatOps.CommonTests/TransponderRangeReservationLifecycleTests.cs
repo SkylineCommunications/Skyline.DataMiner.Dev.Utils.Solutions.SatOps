@@ -175,8 +175,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             fixture.ResourcePools.VerifyNoOtherCalls();
         }
 
-        [TestMethod]
-        public void Update_ExistingNode_DoesNotReinheritPoolEvents()
+        [DataTestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Update_ExistingReservation_DoesNotReinheritPoolEvents(bool reassign)
         {
             var fixture = new Fixture();
             var reservation = fixture.SeedReservation(JobState.Confirmed);
@@ -188,11 +190,142 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 ExecutionDetails = new ScriptExecutionDetails("New Pool Script"),
             });
             reservation.Name = "Renamed";
+            if (reassign)
+            {
+                reservation.Transponder = fixture.AddTransponder("SES-10").Id;
+            }
 
             fixture.Repository.Update(reservation);
 
-            Assert.AreSame(node, fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single());
-            Assert.AreEqual(0, node.OrchestrationSettings.OrchestrationEvents.Count);
+            var updatedNode = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+            if (!reassign)
+            {
+                Assert.AreSame(node, updatedNode);
+            }
+
+            Assert.AreEqual(0, updatedNode.OrchestrationSettings.OrchestrationEvents.Count);
+            fixture.ResourcePools.VerifyNoOtherCalls();
+        }
+
+        [DataTestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Update_PreservesOrchestrationSettings_AndAppliesCurrentReservationValues(bool reassign)
+        {
+            var fixture = new Fixture();
+            var reservation = fixture.SeedReservation(JobState.Confirmed);
+            var originalNode = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+            var capabilityId = Guid.NewGuid();
+            var capacityId = Guid.NewGuid();
+            var configurationId = Guid.NewGuid();
+            originalNode.OrchestrationSettings
+                .AddCapability(new CapabilitySetting(capabilityId) { Value = "Custom capability" })
+                .AddCapacity(new RangeCapacitySetting(capacityId) { MinValue = 1m, MaxValue = 2m })
+                .AddConfiguration(new NumberConfigurationSetting(configurationId) { Value = 123m })
+                .AddOrchestrationEvent(new OrchestrationEvent
+                {
+                    EventType = OrchestrationEventType.PrerollStart,
+                    Metadata = "Node metadata",
+                    ExecutionDetails = new ScriptExecutionDetails("Operator Script")
+                        .AddScriptParameter(new ScriptParameterSetting("Target") { Value = "Node target" }),
+                });
+            originalNode.OrchestrationSettings.Capabilities.Single(setting => setting.Id == PredefinedGuids.SatelliteCapabilityGuid).Value = "Stale satellite";
+            var originalEvent = originalNode.OrchestrationSettings.OrchestrationEvents.Single();
+            fixture.TransponderPool.OrchestrationSettings.AddOrchestrationEvent(new OrchestrationEvent
+            {
+                EventType = OrchestrationEventType.PostrollStop,
+                ExecutionDetails = new ScriptExecutionDetails("New Pool Script"),
+            });
+            fixture.ResourcePools.Invocations.Clear();
+            reservation.RelativeStartFrequency = 12d;
+            reservation.RelativeEndFrequency = 20d;
+            if (reassign)
+            {
+                reservation.Transponder = fixture.AddTransponder("New satellite").Id;
+            }
+
+            var result = fixture.Repository.Update(reservation);
+
+            var node = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+            var orchestrationEvent = node.OrchestrationSettings.OrchestrationEvents.Single();
+            Assert.AreEqual(reservation.Transponder, result.Transponder);
+            Assert.AreEqual(12d, result.RelativeStartFrequency);
+            Assert.AreEqual(20d, result.RelativeEndFrequency);
+            Assert.AreEqual(reassign ? "New satellite" : "SES-10", result.SatelliteName);
+            Assert.AreEqual(OrchestrationEventType.PrerollStart, orchestrationEvent.EventType);
+            Assert.AreEqual("Node metadata", orchestrationEvent.Metadata);
+            Assert.AreEqual("Operator Script", orchestrationEvent.ExecutionDetails.ScriptName);
+            Assert.AreEqual("Node target", orchestrationEvent.ExecutionDetails.ScriptParameters.Single().Value);
+            Assert.AreEqual("Custom capability", node.OrchestrationSettings.Capabilities.Single(setting => setting.Id == capabilityId).Value);
+            var capacity = node.OrchestrationSettings.Capacities.OfType<RangeCapacitySetting>().Single(setting => setting.Id == capacityId);
+            Assert.AreEqual(1m, capacity.MinValue);
+            Assert.AreEqual(2m, capacity.MaxValue);
+            var configuration = node.OrchestrationSettings.Configurations.OfType<NumberConfigurationSetting>().Single(setting => setting.Id == configurationId);
+            Assert.AreEqual(123m, configuration.Value);
+            var range = node.OrchestrationSettings.Capacities.OfType<RangeCapacitySetting>()
+                .Single(setting => setting.Id == PredefinedGuids.TransponderBandwidthGuid);
+            Assert.AreEqual(12m, range.MinValue);
+            Assert.AreEqual(20m, range.MaxValue);
+            Assert.AreEqual(8m, node.OrchestrationSettings.Configurations.OfType<NumberConfigurationSetting>()
+                .Single(setting => setting.Id == PredefinedGuids.BandwidthSizeGuid).Value);
+            if (reassign)
+            {
+                Assert.AreNotEqual(originalNode.Id, node.Id);
+                Assert.AreNotSame(originalEvent, orchestrationEvent);
+                Assert.AreNotSame(originalEvent.ExecutionDetails, orchestrationEvent.ExecutionDetails);
+                orchestrationEvent.ExecutionDetails.ScriptParameters.Single().Value = "Replacement target";
+                configuration.Value = 456m;
+                Assert.AreEqual("Node target", originalEvent.ExecutionDetails.ScriptParameters.Single().Value);
+                Assert.AreEqual(123m, originalNode.OrchestrationSettings.Configurations.OfType<NumberConfigurationSetting>()
+                    .Single(setting => setting.Id == configurationId).Value);
+                Assert.AreEqual(5m, originalNode.OrchestrationSettings.Capacities.OfType<RangeCapacitySetting>()
+                    .Single(setting => setting.Id == PredefinedGuids.TransponderBandwidthGuid).MinValue);
+                Assert.AreEqual("Stale satellite", originalNode.OrchestrationSettings.Capabilities
+                    .Single(setting => setting.Id == PredefinedGuids.SatelliteCapabilityGuid).Value);
+            }
+            else
+            {
+                Assert.AreSame(originalNode, node);
+                Assert.AreSame(originalEvent, orchestrationEvent);
+            }
+
+            Assert.AreEqual("New Pool Script", fixture.TransponderPool.OrchestrationSettings.OrchestrationEvents.Single().ExecutionDetails.ScriptName);
+            fixture.ResourcePools.VerifyNoOtherCalls();
+            fixture.Jobs.Verify(value => value.Update(It.IsAny<Job>()), Times.Once);
+        }
+
+        [TestMethod]
+        public void Update_TransponderReassignment_RetargetsCopiedNodeReferencesWithoutMutatingSource()
+        {
+            var fixture = new Fixture();
+            var reservation = fixture.SeedReservation(JobState.Confirmed);
+            var originalNode = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+            var configurationId = Guid.NewGuid();
+            originalNode.OrchestrationSettings
+                .AddConfiguration(new NumberConfigurationSetting(configurationId)
+                {
+                    Reference = new ConfigurationParameterReference(PredefinedGuids.BandwidthSizeGuid, originalNode.Id),
+                })
+                .AddOrchestrationEvent(new OrchestrationEvent
+                {
+                    EventType = OrchestrationEventType.PrerollStart,
+                    ExecutionDetails = new ScriptExecutionDetails("Operator Script")
+                        .AddScriptParameter(new ScriptParameterSetting("Bandwidth")
+                        {
+                            Reference = new ConfigurationParameterReference(PredefinedGuids.BandwidthSizeGuid, originalNode.Id),
+                        }),
+                });
+            reservation.Transponder = fixture.AddTransponder("SES-10").Id;
+            fixture.ResourcePools.Invocations.Clear();
+
+            fixture.Repository.Update(reservation);
+
+            var node = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+            Assert.AreNotEqual(originalNode.Id, node.Id);
+            Assert.AreEqual(node.Id, node.OrchestrationSettings.Configurations.Single(setting => setting.Id == configurationId).Reference.NodeId);
+            Assert.AreEqual(node.Id, node.OrchestrationSettings.OrchestrationEvents.Single().ExecutionDetails.ScriptParameters.Single().Reference.NodeId);
+            Assert.AreEqual(originalNode.Id, originalNode.OrchestrationSettings.Configurations.Single(setting => setting.Id == configurationId).Reference.NodeId);
+            Assert.AreEqual(originalNode.Id, originalNode.OrchestrationSettings.OrchestrationEvents.Single().ExecutionDetails.ScriptParameters.Single().Reference.NodeId);
             fixture.ResourcePools.VerifyNoOtherCalls();
         }
 
@@ -333,13 +466,23 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         {
             var fixture = new Fixture();
             var reservation = fixture.SeedReservation(JobState.Running);
+            fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single().OrchestrationSettings
+                .AddOrchestrationEvent(new OrchestrationEvent
+                {
+                    EventType = OrchestrationEventType.PrerollStart,
+                    ExecutionDetails = new ScriptExecutionDetails("Operator Script"),
+                });
             var target = fixture.AddTransponder("SES-10");
             reservation.Transponder = target.Id;
+            fixture.ResourcePools.Invocations.Clear();
 
             var result = fixture.Repository.Update(reservation);
 
             Assert.AreEqual(target.Id, result.Transponder);
             Assert.AreEqual(target.DOMResource, fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single().ResourceId);
+            Assert.AreEqual("Operator Script", fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single()
+                .OrchestrationSettings.OrchestrationEvents.Single().ExecutionDetails.ScriptName);
+            fixture.ResourcePools.VerifyNoOtherCalls();
             fixture.Jobs.Verify(value => value.Update(It.IsAny<Job>()), Times.Once);
         }
 
