@@ -21,6 +21,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Reservation = Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation.TransponderRangeReservation;
+    using ResourcePool = Skyline.DataMiner.Solutions.MediaOps.Plan.API.ResourcePool;
 
     [TestClass]
     public class TransponderRangeReservationLifecycleTests
@@ -49,8 +50,150 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             Assert.AreEqual(expectedState, result.State);
             Assert.AreEqual(reservation.PreRollStart, result.PreRollStart);
             Assert.AreEqual(reservation.PostRollEnd, result.PostRollEnd);
+            Assert.AreEqual(0, persisted.NodeGraph.Nodes.OfType<JobResourceNode>().Single().OrchestrationSettings.OrchestrationEvents.Count);
+            fixture.ResourcePools.Verify(value => value.Read(PredefinedGuids.TransponderResourcePoolGuid), Times.Once);
+            fixture.ResourcePools.VerifyNoOtherCalls();
             fixture.Jobs.Verify(value => value.SaveAsTentative(reservation.Id), Times.Once);
             fixture.Jobs.Verify(value => value.Confirm(reservation.Id), Times.Once);
+        }
+
+        [TestMethod]
+        public void Create_InheritsClonedPoolEventsBeforePersistence_WithoutCopyingOtherPoolSettings()
+        {
+            var fixture = new Fixture();
+            foreach (var eventType in new[] { OrchestrationEventType.PrerollStart, OrchestrationEventType.PostrollStop })
+            {
+                fixture.TransponderPool.OrchestrationSettings.AddOrchestrationEvent(new OrchestrationEvent
+                {
+                    EventType = eventType,
+                    Metadata = eventType.ToString(),
+                    ExecutionDetails = new ScriptExecutionDetails("Operator Script")
+                        .AddScriptParameter(new ScriptParameterSetting("Target") { Value = "Pool target" }),
+                });
+            }
+
+            var poolConfiguration = new NumberConfigurationSetting(Guid.NewGuid()) { Value = 123m };
+            fixture.TransponderPool.OrchestrationSettings.AddConfiguration(poolConfiguration);
+            var poolEvents = fixture.TransponderPool.OrchestrationSettings.OrchestrationEvents.ToArray();
+            var reservation = fixture.CreateReservation();
+            Job persisted = null;
+            fixture.Jobs.Setup(value => value.Read(reservation.Id)).Returns((Job)null);
+            fixture.Jobs.Setup(value => value.Create(It.IsAny<Job>()))
+                .Callback<Job>(job =>
+                {
+                    var node = job.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+                    var events = node.OrchestrationSettings.OrchestrationEvents.ToArray();
+                    Assert.AreEqual(poolEvents.Length, events.Length);
+                    for (var index = 0; index < events.Length; index++)
+                    {
+                        Assert.AreNotSame(poolEvents[index], events[index]);
+                        Assert.AreEqual(poolEvents[index].EventType, events[index].EventType);
+                        Assert.AreEqual(poolEvents[index].Metadata, events[index].Metadata);
+                        Assert.AreNotSame(poolEvents[index].ExecutionDetails, events[index].ExecutionDetails);
+                        Assert.AreEqual(poolEvents[index].ExecutionDetails.ScriptName, events[index].ExecutionDetails.ScriptName);
+                        var parameter = events[index].ExecutionDetails.ScriptParameters.Single();
+                        Assert.AreNotSame(poolEvents[index].ExecutionDetails.ScriptParameters.Single(), parameter);
+                        Assert.AreEqual("Pool target", parameter.Value);
+                        parameter.Value = "Job target";
+                    }
+
+                    var range = node.OrchestrationSettings.Capacities.OfType<RangeCapacitySetting>().Single();
+                    Assert.AreEqual(5m, range.MinValue);
+                    Assert.AreEqual(9m, range.MaxValue);
+                    var bandwidth = node.OrchestrationSettings.Configurations.OfType<NumberConfigurationSetting>().Single();
+                    Assert.AreEqual(PredefinedGuids.BandwidthSizeGuid, bandwidth.Id);
+                    Assert.AreEqual(4m, bandwidth.Value);
+                    Assert.AreEqual("SES-10", node.OrchestrationSettings.Capabilities.Single().Value);
+                })
+                .Returns<Job>(job => persisted = job);
+            fixture.Jobs.Setup(value => value.SaveAsTentative(reservation.Id))
+                .Returns(() => WithState(persisted, JobState.Tentative));
+            fixture.Jobs.Setup(value => value.Confirm(reservation.Id))
+                .Returns(() => WithState(persisted, JobState.Confirmed));
+
+            var result = fixture.Repository.Create(reservation);
+
+            Assert.AreEqual(TransponderReservationState.Confirmed, result.State);
+            foreach (var poolEvent in poolEvents)
+            {
+                Assert.AreEqual("Pool target", poolEvent.ExecutionDetails.ScriptParameters.Single().Value);
+            }
+
+            CollectionAssert.AreEqual(poolEvents, fixture.TransponderPool.OrchestrationSettings.OrchestrationEvents.ToArray());
+            Assert.AreEqual(poolConfiguration.Id, fixture.TransponderPool.OrchestrationSettings.Configurations.Single().Id);
+            Assert.AreEqual(123m, fixture.TransponderPool.OrchestrationSettings.Configurations.OfType<NumberConfigurationSetting>().Single().Value);
+            fixture.ResourcePools.Verify(value => value.Read(PredefinedGuids.TransponderResourcePoolGuid), Times.Once);
+            fixture.ResourcePools.VerifyNoOtherCalls();
+        }
+
+        [TestMethod]
+        public void Create_PoolDefaultsAreIndependentAcrossJobs_AndLaterPoolEditsAffectOnlyNewJobs()
+        {
+            var fixture = new Fixture();
+            fixture.TransponderPool.OrchestrationSettings.AddOrchestrationEvent(new OrchestrationEvent
+            {
+                EventType = OrchestrationEventType.PrerollStart,
+                ExecutionDetails = new ScriptExecutionDetails("Operator Script")
+                    .AddScriptParameter(new ScriptParameterSetting("Target") { Value = "Original target" }),
+            });
+            var poolEvent = fixture.TransponderPool.OrchestrationSettings.OrchestrationEvents.Single();
+            fixture.SeedReservation(JobState.Confirmed);
+            var firstEvent = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single().OrchestrationSettings.OrchestrationEvents.Single();
+            fixture.SeedReservation(JobState.Confirmed);
+            var secondEvent = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single().OrchestrationSettings.OrchestrationEvents.Single();
+
+            firstEvent.ExecutionDetails.ScriptParameters.Single().Value = "Job target";
+
+            Assert.AreEqual("Original target", poolEvent.ExecutionDetails.ScriptParameters.Single().Value);
+            Assert.AreEqual("Original target", secondEvent.ExecutionDetails.ScriptParameters.Single().Value);
+
+            poolEvent.ExecutionDetails.ScriptParameters.Single().Value = "Updated pool target";
+            fixture.SeedReservation(JobState.Confirmed);
+            var thirdEvent = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single().OrchestrationSettings.OrchestrationEvents.Single();
+
+            Assert.AreEqual("Job target", firstEvent.ExecutionDetails.ScriptParameters.Single().Value);
+            Assert.AreEqual("Original target", secondEvent.ExecutionDetails.ScriptParameters.Single().Value);
+            Assert.AreEqual("Updated pool target", thirdEvent.ExecutionDetails.ScriptParameters.Single().Value);
+            fixture.ResourcePools.Verify(value => value.Read(PredefinedGuids.TransponderResourcePoolGuid), Times.Exactly(3));
+            fixture.ResourcePools.VerifyNoOtherCalls();
+        }
+
+        [TestMethod]
+        public void Create_MissingTransponderPool_ThrowsBeforePersistence()
+        {
+            var fixture = new Fixture();
+            var reservation = fixture.CreateReservation();
+            fixture.Jobs.Setup(value => value.Read(reservation.Id)).Returns((Job)null);
+            fixture.ResourcePools.Setup(value => value.Read(PredefinedGuids.TransponderResourcePoolGuid)).Returns((ResourcePool)null);
+
+            var exception = Assert.ThrowsException<InvalidOperationException>(() => fixture.Repository.Create(reservation));
+
+            Assert.AreEqual("Transponder resource pool could not be found.", exception.Message);
+            fixture.Jobs.Verify(value => value.Read(reservation.Id), Times.Once);
+            fixture.Jobs.VerifyNoOtherCalls();
+            fixture.ResourcePools.Verify(value => value.Read(PredefinedGuids.TransponderResourcePoolGuid), Times.Once);
+            fixture.ResourcePools.VerifyNoOtherCalls();
+        }
+
+        [TestMethod]
+        public void Update_ExistingNode_DoesNotReinheritPoolEvents()
+        {
+            var fixture = new Fixture();
+            var reservation = fixture.SeedReservation(JobState.Confirmed);
+            var node = fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single();
+            fixture.ResourcePools.Invocations.Clear();
+            fixture.TransponderPool.OrchestrationSettings.AddOrchestrationEvent(new OrchestrationEvent
+            {
+                EventType = OrchestrationEventType.PrerollStart,
+                ExecutionDetails = new ScriptExecutionDetails("New Pool Script"),
+            });
+            reservation.Name = "Renamed";
+
+            fixture.Repository.Update(reservation);
+
+            Assert.AreSame(node, fixture.PersistedJob.NodeGraph.Nodes.OfType<JobResourceNode>().Single());
+            Assert.AreEqual(0, node.OrchestrationSettings.OrchestrationEvents.Count);
+            fixture.ResourcePools.VerifyNoOtherCalls();
         }
 
         [DataTestMethod]
@@ -404,8 +547,12 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             public Fixture()
             {
                 Jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+                TransponderPool = new ResourcePool(PredefinedGuids.TransponderResourcePoolGuid);
+                ResourcePools = new Mock<IResourcePoolsRepository>(MockBehavior.Strict);
+                ResourcePools.Setup(value => value.Read(PredefinedGuids.TransponderResourcePoolGuid)).Returns(TransponderPool);
                 var plan = new Mock<IMediaOpsPlanApi>();
                 plan.Setup(value => value.Jobs).Returns(Jobs.Object);
+                plan.Setup(value => value.ResourcePools).Returns(ResourcePools.Object);
                 var satellite = new Satellite { Name = "SES-10" };
                 transponder = new Transponder { DOMResource = Guid.NewGuid(), TransponderSatellite = satellite.Id };
                 transponders = new Mock<ITransponderRepository>(MockBehavior.Strict);
@@ -428,6 +575,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             }
 
             public Mock<IJobsRepository> Jobs { get; }
+
+            public Mock<IResourcePoolsRepository> ResourcePools { get; }
+
+            public ResourcePool TransponderPool { get; }
 
             public TransponderRangeReservationRepository Repository { get; }
 

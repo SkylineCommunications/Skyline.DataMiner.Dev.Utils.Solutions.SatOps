@@ -726,6 +726,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             if (node == null)
             {
                 node = new JobResourceNode(PredefinedGuids.TransponderResourcePoolGuid, resourceId);
+                InheritPoolOrchestrationEvents(node);
                 job.NodeGraph.Add(node);
             }
             else if (node.ResourceId != resourceId)
@@ -740,6 +741,17 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             ApplySatelliteCapability(node, satelliteName);
 
             return job;
+        }
+
+        private void InheritPoolOrchestrationEvents(JobResourceNode node)
+        {
+            var pool = SatOpsApi.MediaOpsPlan.ResourcePools.Read(node.ResourcePoolId)
+                ?? throw new InvalidOperationException("Transponder resource pool could not be found.");
+
+            foreach (var poolEvent in pool.OrchestrationSettings.OrchestrationEvents)
+            {
+                node.OrchestrationSettings.AddOrchestrationEvent(poolEvent.Clone());
+            }
         }
 
         /// <summary>
