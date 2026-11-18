@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net48</TargetFramework>
-		<PlatformTarget>x86</PlatformTarget>
+		<TargetFramework>net8.0</TargetFramework>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<!-- Exercise the shipped net48 library and its DataMiner dependencies on the cross-platform test runtime. -->
+		<AssetTargetFallback>$(AssetTargetFallback);net48</AssetTargetFallback>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<IsPackable>false</IsPackable>
