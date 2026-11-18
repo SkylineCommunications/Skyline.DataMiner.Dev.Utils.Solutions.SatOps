@@ -196,11 +196,16 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new NotSupportedException($"No {nameof(ITransponderSlotGenerator)} is configured for this repository.");
 
             // This process-wide guard is deliberately non-reentrant. Cross-process callers must coordinate externally.
-            if (Monitor.IsEntered(RegenerationGate) || !Monitor.TryEnter(RegenerationGate))
-                throw new SlotValidationException("Slot regeneration is already in progress. Wait for it to finish and try again.", isConflict: true);
-
+            var lockTaken = false;
             try
             {
+                if (Monitor.IsEntered(RegenerationGate))
+                    throw new SlotValidationException("Slot regeneration is already in progress. Wait for it to finish and try again.", isConflict: true);
+
+                Monitor.TryEnter(RegenerationGate, ref lockTaken);
+                if (!lockTaken)
+                    throw new SlotValidationException("Slot regeneration is already in progress. Wait for it to finish and try again.", isConflict: true);
+
                 var expanded = new List<TransponderSlot>();
                 var replacedPlans = new HashSet<Guid>();
                 foreach (var request in requests)
@@ -220,7 +225,8 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             }
             finally
             {
-                Monitor.Exit(RegenerationGate);
+                if (lockTaken)
+                    Monitor.Exit(RegenerationGate);
             }
         }
 
