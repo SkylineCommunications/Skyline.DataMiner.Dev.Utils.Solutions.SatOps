@@ -160,7 +160,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
                     if (overlappingReservation != null)
                     {
-                        throw new ArgumentException(string.Format(ExceptionMessages.ReservationOverlapDetected, reservation.Name, overlappingReservation.Name), nameof(reservation));
+                        throw new ArgumentException(string.Format(ExceptionMessages.ReservationOverlapDetected, reservation.Name, overlappingReservation.Name), nameof(reservations));
                     }
                 }
             }

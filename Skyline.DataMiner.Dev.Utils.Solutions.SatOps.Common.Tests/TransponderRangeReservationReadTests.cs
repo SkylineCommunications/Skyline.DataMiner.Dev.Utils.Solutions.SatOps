@@ -418,6 +418,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             {
                 var exception = Assert.ThrowsException<ArgumentException>(() => middleware.OnCreate(incoming, next));
                 StringAssert.Contains(exception.Message, existing.Name);
+                Assert.AreEqual("reservations", exception.ParamName);
                 Assert.IsFalse(called);
             }
             else
