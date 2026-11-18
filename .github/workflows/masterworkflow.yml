@@ -20,4 +20,8 @@ jobs:
   CI:
     # For more information which inputs and secrets are available, see the documentation of the reusable workflow:
     # https://docs.dataminer.services/develop/CICD/GitHub/GitHubReusableWorkflows/GitHub_Reusable_Workflows_Master_Workflow.html
-    uses: SkylineCommunications/_ReusableWorkflows/.github/workflows/Master Workflow.yml@main
+    uses: SkylineCommunications/_ReusableWorkflows/.github/workflows/Master Workflow.yml@main    
+    with:
+      solution-filter-name: "SatOps.slnx"
+      nuget-push-source: "https://api.nuget.org/v3/index.json"
+    secrets: inherit
