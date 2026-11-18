@@ -28,6 +28,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     public class TransponderRangeReservationReadTests
     {
         private static readonly string[] ExpectedOrderedReservationNames = { "C", "B" };
+        private static readonly int[] ExpectedReadBatchSizes = { 50, 50, 21 };
 
         [TestMethod]
         public void QueryReads_ApplyOrderingAndLimitBeforePaging()
@@ -252,7 +253,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 },
                 _ => Assert.Fail("No duplicate should be deleted.")).ToList();
 
-            CollectionAssert.AreEqual(new[] { 50, 50, 21 }, batchSizes);
+            CollectionAssert.AreEqual(ExpectedReadBatchSizes, batchSizes);
             Assert.AreEqual(1, resolutions);
             Assert.AreEqual(jobs.Count, reservations.Count);
             for (var index = 0; index < reservations.Count; index++)
