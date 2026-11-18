@@ -39,6 +39,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Skyline.DataMiner.Dev.Utils.Solutions.SatOps\Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.csproj" />
+	  <ProjectReference Include="..\Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common\Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.csproj" />
 	</ItemGroup>
 </Project>
