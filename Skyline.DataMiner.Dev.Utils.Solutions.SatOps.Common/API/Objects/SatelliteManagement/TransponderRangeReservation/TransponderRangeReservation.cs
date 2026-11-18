@@ -12,17 +12,10 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
     /// </summary>
     public class TransponderRangeReservation : API.ApiNamedObject
     {
-        private string name;
-        private Guid? transponder;
-        private double? relativeStartFrequency;
-        private double? relativeEndFrequency;
         private DateTime? startTimeUtc;
         private DateTime? endTimeUtc;
         private DateTime? preRollStartUtc;
         private DateTime? postRollEndUtc;
-        private string satelliteName;
-        private string slotName;
-        private string nodeId;
 
         /// <summary>
         /// Initializes a new, in-memory <see cref="TransponderRangeReservation"/>.
@@ -41,40 +34,24 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         /// <summary>
         /// Gets or sets the name of the transponder range reservation.
         /// </summary>
-        public override string Name
-        {
-            get => name;
-            set => name = value;
-        }
+        public override string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the SatOps <c>Transponder</c> DOM id that this reservation targets.
         /// The repository resolves this to the transponder's <c>DOMResource</c> when
         /// assigning it to the underlying <see cref="JobResourceNode"/>.
         /// </summary>
-        public Guid? Transponder
-        {
-            get => transponder;
-            set => transponder = value;
-        }
+        public Guid? Transponder { get; set; }
 
         /// <summary>
         /// Gets or sets the relative start frequency (min of the bandwidth range capacity).
         /// </summary>
-        public double? RelativeStartFrequency
-        {
-            get => relativeStartFrequency;
-            set => relativeStartFrequency = value;
-        }
+        public double? RelativeStartFrequency { get; set; }
 
         /// <summary>
         /// Gets or sets the relative end frequency (max of the bandwidth range capacity).
         /// </summary>
-        public double? RelativeEndFrequency
-        {
-            get => relativeEndFrequency;
-            set => relativeEndFrequency = value;
-        }
+        public double? RelativeEndFrequency { get; set; }
 
         /// <summary>
         /// Gets or sets the reservation start time (UTC).
@@ -150,31 +127,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         /// relationship on create/update; any caller-supplied value is overwritten. The transponder
         /// is the single source of truth for the satellite.
         /// </summary>
-        public string SatelliteName
-        {
-            get => satelliteName;
-            set => satelliteName = value;
-        }
+        public string SatelliteName { get; set; }
 
         /// <summary>
         /// Gets or sets the slot name stored for the reservation.
         /// This is distinct from <see cref="Name"/>, which is the reservation name.
         /// </summary>
-        public string SlotName
-        {
-            get => slotName;
-            set => slotName = value;
-        }
+        public string SlotName { get; set; }
 
         /// <summary>
         /// Gets the id of the underlying job resource node (equivalent of the helper's node id).
         /// Populated by the repository on read; ignored on create/update.
         /// </summary>
-        public string NodeId
-        {
-            get => nodeId;
-            internal set => nodeId = value;
-        }
+        public string NodeId { get; internal set; }
 
         /// <summary>
         /// Gets the lifecycle state at read time. This snapshot does not guarantee that a subsequent
@@ -190,12 +155,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         {
             get
             {
-                if (!relativeStartFrequency.HasValue || !relativeEndFrequency.HasValue)
+                if (!RelativeStartFrequency.HasValue || !RelativeEndFrequency.HasValue)
                 {
                     return null;
                 }
 
-                return relativeEndFrequency.Value - relativeStartFrequency.Value;
+                return RelativeEndFrequency.Value - RelativeStartFrequency.Value;
             }
         }
 
