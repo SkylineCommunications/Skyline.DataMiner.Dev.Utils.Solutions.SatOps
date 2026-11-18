@@ -174,6 +174,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         /// </summary>
         /// <param name="slots">The submitted slots.</param>
         /// <param name="parameterName">The name of the public parameter reported on validation failure.</param>
+        /// <param name="replacedPlanIds">The identifiers of plans whose persisted slots should be excluded, or <see langword="null"/> to include them.</param>
         private void ValidateSlots(IEnumerable<TransponderSlot> slots, string parameterName, ISet<Guid> replacedPlanIds = null)
         {
             var submitted = slots.Where(HasValidatableRange).ToList();
