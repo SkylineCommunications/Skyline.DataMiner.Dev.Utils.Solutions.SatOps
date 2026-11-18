@@ -9,7 +9,6 @@
 		<AssemblyName>Skyline.DataMiner.Dev.Utils.Solutions.SatOps.GQI</AssemblyName>
 		<RootNamespace>Skyline.DataMiner.Solutions.SatOps.GQI</RootNamespace>
 		
-		<Copyright>Copyright © 2026</Copyright>
 		<PackageTags>Skyline;DataMiner</PackageTags>
 		<PackageProjectUrl>https://skyline.be</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
