@@ -17,7 +17,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using System.Runtime.Serialization;
+    using System.Runtime.CompilerServices;
 
     [TestClass]
     public class FlowTests
@@ -337,7 +337,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 });
             SetApiObjectId(existingPlan, existingPlanId);
 
-            var transponderRepository = BuildTransponderRepositoryForRead((Transponder)FormatterServices.GetUninitializedObject(transponderType));
+            var transponderRepository = BuildTransponderRepositoryForRead((Transponder)RuntimeHelpers.GetUninitializedObject(transponderType));
             var plansRepository = BuildTransponderPlanRepository(null, existingPlan);
 
             var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { transponderRepository, plansRepository }, null);
@@ -388,7 +388,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 });
             SetApiObjectId(existingPlan, existingPlanId);
 
-            var transponderRepository = BuildTransponderRepositoryForRead((Transponder)FormatterServices.GetUninitializedObject(transponderType));
+            var transponderRepository = BuildTransponderRepositoryForRead((Transponder)RuntimeHelpers.GetUninitializedObject(transponderType));
             var plansRepository = BuildTransponderPlanRepository(null, existingPlan);
 
             var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { transponderRepository, plansRepository }, null);
@@ -475,7 +475,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     SetNestedProperty(dom, "TransponderPlanRow.Offset", (double?)0.0);
                 });
 
-            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository((TransponderPlan)FormatterServices.GetUninitializedObject(transponderPlanType)), BuildTransponderPlanRowRepository() }, null);
+            var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { BuildTransponderPlanRepository((TransponderPlan)RuntimeHelpers.GetUninitializedObject(transponderPlanType)), BuildTransponderPlanRowRepository() }, null);
             var onCreate = middlewareType.GetMethod("OnCreate", new[] { transponderPlanRowType, typeof(Func<,>).MakeGenericType(transponderPlanRowType, transponderPlanRowType) });
 
             var exception = InvokeAndUnwrap(onCreate, middleware, transponderPlanRow, BuildIdentityDelegate(transponderPlanRowType));
@@ -519,7 +519,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 });
             SetApiObjectId(existingRow, existingRowId);
 
-            var planRepository = BuildTransponderPlanRepository((TransponderPlan)FormatterServices.GetUninitializedObject(transponderPlanType));
+            var planRepository = BuildTransponderPlanRepository((TransponderPlan)RuntimeHelpers.GetUninitializedObject(transponderPlanType));
             var rowsRepository = BuildTransponderPlanRowRepository(existingRow);
 
             var middleware = Activator.CreateInstance(middlewareType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { planRepository, rowsRepository }, null);
@@ -673,7 +673,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);
-            var apiObject = FormatterServices.GetUninitializedObject(apiType);
+            var apiObject = RuntimeHelpers.GetUninitializedObject(apiType);
 
             var originalInstance = Activator.CreateInstance(domInstanceType);
             configureDom?.Invoke(originalInstance);

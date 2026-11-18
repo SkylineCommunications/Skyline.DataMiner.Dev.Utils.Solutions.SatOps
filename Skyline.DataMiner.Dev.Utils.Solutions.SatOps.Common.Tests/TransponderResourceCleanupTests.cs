@@ -4,7 +4,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.Serialization;
+    using System.Runtime.CompilerServices;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
@@ -105,7 +105,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 SetNestedProperty(updated, "Transponder.TransponderName", (string)null);
             }
 
-            var transponder = FormatterServices.GetUninitializedObject(TransponderType);
+            var transponder = RuntimeHelpers.GetUninitializedObject(TransponderType);
             SetPrivateField(transponder, "originalInstance", original);
             SetPrivateField(transponder, "updatedInstance", updated);
             return transponder;

@@ -2,7 +2,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 {
     using System;
     using System.Reflection;
-    using System.Runtime.Serialization;
+    using System.Runtime.CompilerServices;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
@@ -166,7 +166,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 SetNestedProperty(updated, "Transponder.TransponderName", (string)null);
             }
 
-            var transponder = FormatterServices.GetUninitializedObject(TransponderType);
+            var transponder = RuntimeHelpers.GetUninitializedObject(TransponderType);
             SetPrivateField(transponder, "originalInstance", original);
             SetPrivateField(transponder, "updatedInstance", updated);
             return transponder;
@@ -180,7 +180,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             SetNestedProperty(updated, "General.SatelliteName", name);
 
-            var satellite = FormatterServices.GetUninitializedObject(SatelliteType);
+            var satellite = RuntimeHelpers.GetUninitializedObject(SatelliteType);
             SetPrivateField(satellite, "originalInstance", original);
             SetPrivateField(satellite, "updatedInstance", updated);
             SetIdBackingField(satellite, id);
