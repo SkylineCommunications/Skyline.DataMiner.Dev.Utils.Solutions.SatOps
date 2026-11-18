@@ -27,6 +27,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     [TestClass]
     public class TransponderRangeReservationReadTests
     {
+        private static readonly string[] ExpectedOrderedReservationNames = { "C", "B" };
+
         [TestMethod]
         public void QueryReads_ApplyOrderingAndLimitBeforePaging()
         {
@@ -46,13 +48,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     .WithFieldExposer(TransponderRangeReservationExposers.Name).WithSortOrder(SortOrder.Descending)))
                 .WithLimit(LimitBy.Default.WithLimit(2));
 
-            CollectionAssert.AreEqual(new[] { "C", "B" }, repository.Read(query).Select(value => value.Name).ToArray());
+            CollectionAssert.AreEqual(ExpectedOrderedReservationNames, repository.Read(query).Select(value => value.Name).ToArray());
             var pages = repository.ReadPaged(query, 1).ToArray();
             Assert.AreEqual(2, pages.Length);
             Assert.IsTrue(pages[0].HasNextPage);
             Assert.IsFalse(pages[1].HasNextPage);
-            CollectionAssert.AreEqual(new[] { "C", "B" }, pages.SelectMany(page => page).Select(value => value.Name).ToArray());
-            CollectionAssert.AreEqual(new[] { "C", "B" }, repository.ReadPaged(query).SelectMany(page => page).Select(value => value.Name).ToArray());
+            CollectionAssert.AreEqual(ExpectedOrderedReservationNames, pages.SelectMany(page => page).Select(value => value.Name).ToArray());
+            CollectionAssert.AreEqual(ExpectedOrderedReservationNames, repository.ReadPaged(query).SelectMany(page => page).Select(value => value.Name).ToArray());
         }
 
         [DataTestMethod]

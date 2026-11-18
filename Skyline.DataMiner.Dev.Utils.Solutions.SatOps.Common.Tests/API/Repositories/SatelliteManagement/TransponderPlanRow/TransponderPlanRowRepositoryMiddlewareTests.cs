@@ -506,7 +506,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void ReadPaged_WithoutArguments_DelegatesToInner()
         {
             // Arrange
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged()).Returns(expected);
             var sut = new TransponderPlanRowRepositoryMiddleware(inner.Object, null);
@@ -523,7 +523,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void ReadPaged_WithPageSize_DelegatesToInner()
         {
             // Arrange
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(100)).Returns(expected);
             var sut = new TransponderPlanRowRepositoryMiddleware(inner.Object, null);
@@ -541,7 +541,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var filter = new Mock<FilterElement<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(filter)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanRow>>();
@@ -560,7 +560,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var filter = new Mock<FilterElement<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(filter)).Returns(expected);
 
@@ -584,7 +584,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var query = new Mock<IQuery<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(query)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanRow>>();
@@ -603,7 +603,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var query = new Mock<IQuery<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(query)).Returns(expected);
 
@@ -627,7 +627,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var filter = new Mock<FilterElement<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(filter, 10)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanRow>>();
@@ -646,7 +646,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var filter = new Mock<FilterElement<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(filter, 25)).Returns(expected);
 
@@ -670,7 +670,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var query = new Mock<IQuery<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(query, 10)).Returns(expected);
             var middleware = new Mock<IMiddlewareMarker<TransponderPlanRow>>();
@@ -689,7 +689,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         {
             // Arrange
             var query = new Mock<IQuery<TransponderPlanRow>>().Object;
-            var expected = new IPagedResult<TransponderPlanRow>[0];
+            var expected = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var inner = new Mock<ITransponderPlanRowRepository>();
             inner.Setup(x => x.ReadPaged(query, 25)).Returns(expected);
 

@@ -12,6 +12,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories
     [TestClass]
     public class RelationshipReadHelperTests
     {
+        private static readonly int[] ExpectedBatchSizes = { 50, 50, 21 };
+
         [TestMethod]
         public void ReadByIds_EmptyIds_ReturnsEmptyWithoutReading()
         {
@@ -40,7 +42,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories
             });
 
             Assert.AreEqual(0, result.Count());
-            CollectionAssert.AreEqual(new[] { 50, 50, 21 }, sizes);
+            CollectionAssert.AreEqual(ExpectedBatchSizes, sizes);
         }
 
         [TestMethod]
@@ -48,13 +50,14 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories
         {
             FilterElement<TransponderPlan> receivedFilter = null;
 
-            Read(new[] { Guid.NewGuid() }, filter =>
+            var result = Read(new[] { Guid.NewGuid() }, filter =>
             {
                 receivedFilter = filter;
                 return Enumerable.Empty<TransponderPlan>();
             }).ToList();
 
             Assert.IsNotNull(receivedFilter);
+            Assert.AreEqual(0, result.Count);
             Assert.IsFalse(receivedFilter is ORFilterElement<TransponderPlan>);
         }
 

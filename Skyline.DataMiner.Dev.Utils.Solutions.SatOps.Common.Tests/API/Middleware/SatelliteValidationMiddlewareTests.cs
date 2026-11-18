@@ -354,7 +354,7 @@
         {
             var sut = new SatelliteValidationMiddleware();
             FilterElement<Satellite> filter = new TRUEFilterElement<Satellite>();
-            var expected = new IPagedResult<Satellite>[0];
+            var expected = Array.Empty<IPagedResult<Satellite>>();
             FilterElement<Satellite> captured = null;
 
             var result = sut.OnReadPaged(filter, f =>
@@ -372,7 +372,7 @@
         {
             var sut = new SatelliteValidationMiddleware();
             var query = new Mock<IQuery<Satellite>>().Object;
-            var expected = new IPagedResult<Satellite>[0];
+            var expected = Array.Empty<IPagedResult<Satellite>>();
             IQuery<Satellite> captured = null;
 
             var result = sut.OnReadPaged(query, q =>
@@ -390,7 +390,7 @@
         {
             var sut = new SatelliteValidationMiddleware();
             FilterElement<Satellite> filter = new TRUEFilterElement<Satellite>();
-            var expected = new IPagedResult<Satellite>[0];
+            var expected = Array.Empty<IPagedResult<Satellite>>();
             FilterElement<Satellite> captured = null;
             var capturedPageSize = 0;
 
@@ -411,7 +411,7 @@
         {
             var sut = new SatelliteValidationMiddleware();
             var query = new Mock<IQuery<Satellite>>().Object;
-            var expected = new IPagedResult<Satellite>[0];
+            var expected = Array.Empty<IPagedResult<Satellite>>();
             IQuery<Satellite> captured = null;
             var capturedPageSize = 0;
 

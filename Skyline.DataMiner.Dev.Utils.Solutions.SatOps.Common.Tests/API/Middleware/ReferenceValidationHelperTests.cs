@@ -21,6 +21,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
     [TestClass]
     public class ReferenceValidationHelperTests
     {
+        private static readonly string[] ExpectedCachedValues = { "value" };
+
         private sealed class Item
         {
             public Guid? Reference { get; set; }
@@ -146,7 +148,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var second = ReferenceValidationHelper.ReadCached(key, cache, Read);
 
             Assert.AreEqual(1, readCount);
-            CollectionAssert.AreEqual(new[] { "value" }, first.ToList());
+            CollectionAssert.AreEqual(ExpectedCachedValues, first.ToList());
             Assert.AreSame(first, second);
         }
 

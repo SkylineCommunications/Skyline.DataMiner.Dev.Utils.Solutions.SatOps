@@ -13,6 +13,8 @@
     [TestClass]
     public class FilterElementFactoryTests
     {
+        private static readonly string[] ListFieldNames = { "listField" };
+
         private const Comparer UnsupportedComparer = (Comparer)999;
 
         [TestMethod]
@@ -135,7 +137,7 @@
         public void Create_ListExposerContains_ReturnsFilter()
         {
             // Arrange
-            var exposer = new Exposer<DomInstance, List<string>>(d => new List<string>(), new[] { "listField" });
+            var exposer = new Exposer<DomInstance, List<string>>(d => new List<string>(), ListFieldNames);
 
             // Act
             var result = FilterElementFactory.Create(exposer, Comparer.Contains, "abc");
@@ -148,7 +150,7 @@
         public void Create_ListExposerNotContains_ReturnsFilter()
         {
             // Arrange
-            var exposer = new Exposer<DomInstance, List<string>>(d => new List<string>(), new[] { "listField" });
+            var exposer = new Exposer<DomInstance, List<string>>(d => new List<string>(), ListFieldNames);
 
             // Act
             var result = FilterElementFactory.Create(exposer, Comparer.NotContains, "abc");
@@ -161,7 +163,7 @@
         public void Create_ListExposerUnsupportedComparer_ThrowsNotSupportedException()
         {
             // Arrange
-            var exposer = new Exposer<DomInstance, List<string>>(d => new List<string>(), new[] { "listField" });
+            var exposer = new Exposer<DomInstance, List<string>>(d => new List<string>(), ListFieldNames);
 
             // Act & Assert
             Assert.ThrowsException<NotSupportedException>(() => FilterElementFactory.Create(exposer, Comparer.Equals, "abc"));

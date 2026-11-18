@@ -21,6 +21,8 @@
     [TestClass]
     public class TransponderNameUniquenessMiddlewareTests
     {
+        private static readonly string[] ExpectedRequestedNames = { "A", "B" };
+
         [TestMethod]
         public void Constructor_NullResolver_ThrowsArgumentNullException()
         {
@@ -243,7 +245,7 @@
 
             sut.OnCreateOrUpdate(new[] { CreateTransponder(" A "), CreateTransponder("B"), CreateTransponder(null) }, t => t.ToList());
 
-            CollectionAssert.AreEquivalent(new[] { "A", "B" }, requestedNames.ToList());
+            CollectionAssert.AreEquivalent(ExpectedRequestedNames, requestedNames.ToList());
         }
 
         [TestMethod]
@@ -435,7 +437,7 @@
 
         private static TransponderNameUniquenessMiddleware CreateSut(params Transponder[] existing)
         {
-            var list = existing ?? new Transponder[0];
+            var list = existing ?? Array.Empty<Transponder>();
             return new TransponderNameUniquenessMiddleware(CreateRepository(names => ResolveByName(list, names)));
         }
 
@@ -449,7 +451,7 @@
         /// <summary>
         /// Mimics the repository lookup: only the transponders that carry one of the requested names are returned.
         /// </summary>
-        private static IEnumerable<Transponder> ResolveByName(IEnumerable<Transponder> existing, IEnumerable<string> names)
+        private static List<Transponder> ResolveByName(IEnumerable<Transponder> existing, IEnumerable<string> names)
         {
             var wantedNames = new HashSet<string>(
                 names.Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim()),

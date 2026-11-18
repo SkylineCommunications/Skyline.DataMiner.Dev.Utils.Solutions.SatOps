@@ -25,6 +25,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     [TestClass]
     public class RepositoryQueryTests
     {
+        private static readonly string[] OrderedSatelliteNames = { "C", "B", "A" };
+
         [DataTestMethod]
         [DataRow("satellites")]
         [DataRow("beams")]
@@ -88,7 +90,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [DataRow(3, 2)]
         public void LimitedQuery_PagesOnlyTheOrderedStorageResults(int limit, int pageSize)
         {
-            var expected = new[] { "C", "B", "A" }.Take(limit).ToArray();
+            var expected = OrderedSatelliteNames.Take(limit).ToArray();
             var instances = expected.Select(name => new SatellitesInstance
             {
                 General = { SatelliteName = name, SatelliteAbbreviation = name },
@@ -125,12 +127,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             for (var index = 0; index < pages.Length; index++)
             {
                 Assert.AreEqual(index < pages.Length - 1, pages[index].HasNextPage);
-                Assert.AreEqual(Math.Min(pageSize, limit - index * pageSize), pages[index].Count());
+                Assert.AreEqual(Math.Min(pageSize, limit - index * pageSize), pages[index].Count);
             }
         }
 
         private static void AssertQueryReads<T>(
-            Func<SatOpsApi, IPageableRepository<T>> repositoryFactory, FieldExposer idField, FieldExposer orderField, FieldExposer storageField)
+            Func<SatOpsApi, IPageableRepository<T>> repositoryFactory, FieldExposer idField, FieldExposer orderField,
+            DynamicListExposer<DomInstance, object> storageField)
             where T : class
         {
             foreach (var limited in new[] { false, true })
@@ -180,15 +183,15 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                     {
                         if (mode == 0)
                         {
-                            repository.Read(query).ToList();
+                            Assert.IsNotNull(repository.Read(query).ToList());
                         }
                         else if (mode == 1)
                         {
-                            repository.ReadPaged(query).ToList();
+                            Assert.IsNotNull(repository.ReadPaged(query).ToList());
                         }
                         else
                         {
-                            repository.ReadPaged(query, 1).ToList();
+                            Assert.IsNotNull(repository.ReadPaged(query, 1).ToList());
                         }
                     });
 

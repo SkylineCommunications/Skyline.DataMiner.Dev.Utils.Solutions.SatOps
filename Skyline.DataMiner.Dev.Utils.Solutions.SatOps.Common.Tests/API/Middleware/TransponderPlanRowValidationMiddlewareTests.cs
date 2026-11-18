@@ -385,7 +385,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         public void OnReadPaged_Filter_ReturnsNextResult()
         {
             var sut = CreateSut();
-            var pages = new IPagedResult<TransponderPlanRow>[0];
+            var pages = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var filter = new TRUEFilterElement<TransponderPlanRow>();
             FilterElement<TransponderPlanRow> passed = null;
 
@@ -403,7 +403,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         public void OnReadPaged_Query_ReturnsNextResult()
         {
             var sut = CreateSut();
-            var pages = new IPagedResult<TransponderPlanRow>[0];
+            var pages = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var mockQuery = new Mock<IQuery<TransponderPlanRow>>();
             IQuery<TransponderPlanRow> passed = null;
 
@@ -421,7 +421,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         public void OnReadPaged_FilterWithPageSize_ReturnsNextResult()
         {
             var sut = CreateSut();
-            var pages = new IPagedResult<TransponderPlanRow>[0];
+            var pages = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var filter = new TRUEFilterElement<TransponderPlanRow>();
             FilterElement<TransponderPlanRow> passedFilter = null;
             var passedPageSize = 0;
@@ -442,7 +442,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         public void OnReadPaged_QueryWithPageSize_ReturnsNextResult()
         {
             var sut = CreateSut();
-            var pages = new IPagedResult<TransponderPlanRow>[0];
+            var pages = Array.Empty<IPagedResult<TransponderPlanRow>>();
             var mockQuery = new Mock<IQuery<TransponderPlanRow>>();
             IQuery<TransponderPlanRow> passedQuery = null;
             var passedPageSize = 0;

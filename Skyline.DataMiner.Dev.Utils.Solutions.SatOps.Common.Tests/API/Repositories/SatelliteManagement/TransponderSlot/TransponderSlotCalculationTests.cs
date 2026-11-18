@@ -27,6 +27,10 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     [TestClass]
     public class TransponderSlotCalculationTests
     {
+        private static readonly string[] ExpectedFourMhzSlots = { "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4" };
+        private static readonly string[] ExpectedSixMhzSlots = { "A6", "B6", "C6", "D6", "E6", "F6" };
+        private static readonly string[] ExpectedTwelveMhzSlots = { "A12", "B12", "C12" };
+
         private static readonly Guid PlanId = Guid.NewGuid();
 
         [DataTestMethod]
@@ -118,13 +122,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             Assert.AreEqual(9 + 6 + 3, slots.Count);
             CollectionAssert.AreEqual(
-                new[] { "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4" },
+                ExpectedFourMhzSlots,
                 slots.Where(s => s.Bandwidth == 4d).Select(s => s.Name).ToArray());
             CollectionAssert.AreEqual(
-                new[] { "A6", "B6", "C6", "D6", "E6", "F6" },
+                ExpectedSixMhzSlots,
                 slots.Where(s => s.Bandwidth == 6d).Select(s => s.Name).ToArray());
             CollectionAssert.AreEqual(
-                new[] { "A12", "B12", "C12" },
+                ExpectedTwelveMhzSlots,
                 slots.Where(s => s.Bandwidth == 12d).Select(s => s.Name).ToArray());
         }
 
@@ -163,14 +167,14 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             return slot;
         }
 
-        private static IReadOnlyList<CalculatedSlot> CalculateSlotsForRows(double transponderBandwidth, IEnumerable<PlanRow> rows)
+        private static List<CalculatedSlot> CalculateSlotsForRows(double transponderBandwidth, IEnumerable<PlanRow> rows)
         {
             return rows
                 .SelectMany(row => CalculateSlots(transponderBandwidth, row.Offset, row.Step, row.Bandwidth, row.Limit))
                 .ToList();
         }
 
-        private static IReadOnlyList<CalculatedSlot> CalculateSlots(double transponderBandwidth, double offset, double step, double bandwidth, double limit)
+        private static List<CalculatedSlot> CalculateSlots(double transponderBandwidth, double offset, double step, double bandwidth, double limit)
         {
             var method = typeof(TransponderSlotGenerator).GetMethod("CalculateSlots", BindingFlags.NonPublic | BindingFlags.Static);
             Assert.IsNotNull(method, "TransponderSlotGenerator.CalculateSlots was not found.");

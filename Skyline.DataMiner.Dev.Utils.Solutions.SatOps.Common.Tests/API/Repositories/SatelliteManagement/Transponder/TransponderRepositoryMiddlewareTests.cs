@@ -384,7 +384,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             // Arrange
             var ids = new List<Guid> { Guid.NewGuid() };
             var inner = new Mock<ITransponderRepository>();
-            inner.Setup(x => x.Read(ids)).Returns(new Transponder[0]);
+            inner.Setup(x => x.Read(ids)).Returns(Array.Empty<Transponder>());
             var middleware = new Mock<IBulkDeletableMiddleware<Transponder>>();
             var sut = new TransponderRepositoryMiddleware(inner.Object, middleware.Object);
 

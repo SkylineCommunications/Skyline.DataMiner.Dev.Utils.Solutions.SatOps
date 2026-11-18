@@ -132,6 +132,16 @@
             {
                 return other != null && other.value == value;
             }
+
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as EquatableOnly);
+            }
+
+            public override int GetHashCode()
+            {
+                return value.GetHashCode();
+            }
         }
     }
 }

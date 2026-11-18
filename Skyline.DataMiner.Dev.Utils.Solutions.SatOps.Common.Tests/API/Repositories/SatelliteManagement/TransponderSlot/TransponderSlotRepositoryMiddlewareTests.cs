@@ -21,6 +21,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     [TestClass]
     public class TransponderSlotRepositoryMiddlewareTests
     {
+        private static readonly string[] ExpectedRegenerationStages = { "build", "validate", "delete" };
+
         [TestMethod]
         public void Constructor_NullInner_ThrowsArgumentNullException()
         {
@@ -510,7 +512,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             sut.Create(new[] { CreateGenerationRequest(planId) });
 
-            CollectionAssert.AreEqual(new[] { "build", "validate", "delete" }, sequence);
+            CollectionAssert.AreEqual(ExpectedRegenerationStages, sequence);
         }
 
         [TestMethod]
@@ -607,7 +609,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             Assert.AreSame(built, result);
             CollectionAssert.AreEqual(built, validated.ToList());
-            CollectionAssert.AreEqual(new[] { "build", "validate", "delete" }, sequence);
+            CollectionAssert.AreEqual(ExpectedRegenerationStages, sequence);
         }
 
         [TestMethod]

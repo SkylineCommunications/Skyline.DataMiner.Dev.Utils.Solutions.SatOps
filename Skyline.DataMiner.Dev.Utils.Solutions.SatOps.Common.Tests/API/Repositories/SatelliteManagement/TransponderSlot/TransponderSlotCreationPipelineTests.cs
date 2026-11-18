@@ -27,6 +27,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     [TestClass]
     public class TransponderSlotCreationPipelineTests
     {
+        private static readonly string[] ExpectedReportedSlotNames =
+        {
+            "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4",
+            "A6", "B6", "C6", "D6", "E6", "F6",
+            "A12", "B12", "C12",
+        };
+
         private const double TransponderBandwidth = 36d;
         private const double TransponderStartFrequency = 14000d;
         private const double TransponderDownlinkStartFrequency = 11000d;
@@ -50,7 +57,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             Assert.AreEqual(18, created.Count);
             Assert.AreEqual(18, store.Count);
             CollectionAssert.AreEquivalent(
-                new[] { "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4", "A6", "B6", "C6", "D6", "E6", "F6", "A12", "B12", "C12" },
+                ExpectedReportedSlotNames,
                 created.Select(s => s.Name).ToArray());
         }
 
@@ -288,7 +295,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         /// Produces exactly what <c>TransponderSlotGenerator</c> calculates for the reported plan:
         /// a 36 MHz transponder with 4, 6 and 12 MHz rows.
         /// </summary>
-        private static IReadOnlyCollection<TransponderSlot> BuildReportedScenarioSlots()
+        private static List<TransponderSlot> BuildReportedScenarioSlots()
         {
             var rows = new[]
             {

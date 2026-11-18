@@ -1151,7 +1151,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         public void Reactivate_WithEmptyObjects_DelegatesToInner()
         {
             // Arrange
-            var input = new TransponderPlanObject[0];
+            var input = Array.Empty<TransponderPlanObject>();
             var expected = new List<TransponderPlanObject>();
             var inner = new Mock<ITransponderPlanRepository>();
             inner.Setup(x => x.Reactivate(input)).Returns(expected);
