@@ -2192,7 +2192,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the PlanName field of the DOM Instance.
+        /// Gets or sets the Name field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -2473,7 +2473,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         protected override Section InternalToSection()
         {
             if (section.GetValue<String>(SlcSatellite_ManagementIds.Sections.TransponderPlan.PlanName) == null)
-                throw new InvalidOperationException("'PlanName' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Name' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.TransponderPlan.DefaultSlotSize) == null)
                 throw new InvalidOperationException("'DefaultSlotSize' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Guid>(SlcSatellite_ManagementIds.Sections.TransponderPlan.Transponder) == null)
@@ -2903,7 +2903,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the SatelliteName field of the DOM Instance.
+        /// Gets or sets the Name field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -2946,7 +2946,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the SatelliteAbbreviation field of the DOM Instance.
+        /// Gets or sets the Abbreviation field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -3184,9 +3184,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         protected override Section InternalToSection()
         {
             if (section.GetValue<String>(SlcSatellite_ManagementIds.Sections.General.SatelliteName) == null)
-                throw new InvalidOperationException("'SatelliteName' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Name' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<String>(SlcSatellite_ManagementIds.Sections.General.SatelliteAbbreviation) == null)
-                throw new InvalidOperationException("'SatelliteAbbreviation' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Abbreviation' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             return section;
         }
     }
@@ -3642,7 +3642,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the ReservationName field of the DOM Instance.
+        /// Gets or sets the Name field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -3743,7 +3743,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the TransponderSatellite field of the DOM Instance.
+        /// Gets or sets the Satellite field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -3829,7 +3829,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the TransponderName field of the DOM Instance.
+        /// Gets or sets the Name field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -4454,9 +4454,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         protected override Section InternalToSection()
         {
             if (section.GetValue<Guid>(SlcSatellite_ManagementIds.Sections.Transponder.TransponderSatellite) == null)
-                throw new InvalidOperationException("'TransponderSatellite' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Satellite' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<String>(SlcSatellite_ManagementIds.Sections.Transponder.TransponderName) == null)
-                throw new InvalidOperationException("'TransponderName' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Name' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.Transponder.Bandwidth) == null)
                 throw new InvalidOperationException("'Bandwidth' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.Transponder.StartFrequency) == null)
@@ -4668,7 +4668,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the SlotName field of the DOM Instance.
+        /// Gets or sets the Name field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -4711,7 +4711,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the SlotStartFrequency field of the DOM Instance.
+        /// Gets or sets the StartFrequency field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -4754,7 +4754,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the SlotEndFrequency field of the DOM Instance.
+        /// Gets or sets the EndFrequency field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -4951,11 +4951,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
             if (section.GetValue<Guid>(SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan) == null)
                 throw new InvalidOperationException("'TransponderPlan' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<String>(SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotName) == null)
-                throw new InvalidOperationException("'SlotName' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Name' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotStartFrequency) == null)
-                throw new InvalidOperationException("'SlotStartFrequency' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'StartFrequency' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotEndFrequency) == null)
-                throw new InvalidOperationException("'SlotEndFrequency' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'EndFrequency' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.TransponderSlot.Bandwidth) == null)
                 throw new InvalidOperationException("'Bandwidth' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             if (section.GetValue<Double>(SlcSatellite_ManagementIds.Sections.TransponderSlot.UplinkFreq) == null)
@@ -4988,7 +4988,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the BeamName field of the DOM Instance.
+        /// Gets or sets the Name field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -5031,7 +5031,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         }
 
         /// <summary>
-        /// Gets or sets the BeamSatellite field of the DOM Instance.
+        /// Gets or sets the Satellite field of the DOM Instance.
         /// </summary>
         /// <remarks>
         /// When retrieving the value:
@@ -5226,7 +5226,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model
         protected override Section InternalToSection()
         {
             if (section.GetValue<Guid>(SlcSatellite_ManagementIds.Sections.Beam.BeamSatellite) == null)
-                throw new InvalidOperationException("'BeamSatellite' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
+                throw new InvalidOperationException("'Satellite' is required. Please fill it in before saving, or mark it as optional with the DOM Editor.");
             return section;
         }
     }

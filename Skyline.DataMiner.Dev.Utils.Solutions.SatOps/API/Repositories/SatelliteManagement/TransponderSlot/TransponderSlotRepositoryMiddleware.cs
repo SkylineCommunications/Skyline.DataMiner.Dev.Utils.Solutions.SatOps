@@ -9,9 +9,13 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
 
     internal sealed class TransponderSlotRepositoryMiddleware : ITransponderSlotRepository
     {
+        private static readonly object RegenerationGate = new object();
         private readonly ITransponderSlotRepository inner;
         private readonly IMiddlewareMarker<TransponderSlot> middleware;
         private readonly ITransponderSlotGenerator slotGenerator;
@@ -50,14 +54,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IReadOnlyCollection<TransponderSlot> Create(IEnumerable<TransponderSlot> oToCreate)
         {
-            var slots = ExpandGenerationRequests(oToCreate);
+            var requests = oToCreate?.ToList();
+            if (requests != null && requests.Any(IsGenerationRequest))
+            {
+                return Regenerate(requests);
+            }
 
             if (middleware is IBulkCreatableMiddleware<TransponderSlot> bulkCreatableMiddleware)
             {
-                return bulkCreatableMiddleware.OnCreate(slots, inner.Create);
+                return bulkCreatableMiddleware.OnCreate(requests, inner.Create);
             }
 
-            return inner.Create(slots);
+            return inner.Create(requests);
         }
 
         public TransponderSlot Create(TransponderSlot oToCreate)
@@ -77,14 +85,27 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public IReadOnlyCollection<TransponderSlot> Create(Guid transponderPlanId)
         {
-            var slots = RegenerateSlots(transponderPlanId);
+            if (transponderPlanId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
 
-            if (middleware is IBulkCreatableMiddleware<TransponderSlot> bulkCreatableMiddleware)
-            {
-                return bulkCreatableMiddleware.OnCreate(slots, inner.Create);
-            }
+            return Regenerate(new[] { new TransponderSlot { TransponderPlan = transponderPlanId } });
+        }
 
-            return inner.Create(slots);
+        public TransponderSlot Update(TransponderSlot oToUpdate)
+        {
+            if (middleware is IUpdatableMiddleware<TransponderSlot> updatable)
+                return updatable.OnUpdate(oToUpdate, inner.Update);
+
+            return inner.Update(oToUpdate);
+        }
+
+        public IReadOnlyCollection<TransponderSlot> Update(IEnumerable<TransponderSlot> oToUpdate)
+        {
+            var slots = oToUpdate?.ToList();
+            if (middleware is IBulkUpdatableMiddleware<TransponderSlot> updatable)
+                return updatable.OnUpdate(slots, inner.Update);
+
+            return inner.Update(slots);
         }
 
         public void Delete(IEnumerable<TransponderSlot> oToDelete)
@@ -169,57 +190,70 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return inner.ReadPaged(query, pageSize);
         }
 
-        /// <summary>
-        /// Calculates the slots of the given transponder plan and removes the slots that are currently persisted
-        /// for that plan. The existing slots are removed before the calculated ones are validated, otherwise every
-        /// calculated slot would be reported as overlapping the persisted slot it replaces.
-        /// </summary>
-        private IReadOnlyCollection<TransponderSlot> RegenerateSlots(Guid transponderPlanId)
+        private IReadOnlyCollection<TransponderSlot> Regenerate(IEnumerable<TransponderSlot> requests)
         {
-            if (transponderPlanId == Guid.Empty)
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
-
             if (slotGenerator == null)
                 throw new NotSupportedException($"No {nameof(ITransponderSlotGenerator)} is configured for this repository.");
 
-            var slots = slotGenerator.BuildSlots(transponderPlanId);
-            inner.DeleteSlotsByTransponderPlan(transponderPlanId);
+            // This process-wide guard is deliberately non-reentrant. Cross-process callers must coordinate externally.
+            if (Monitor.IsEntered(RegenerationGate) || !Monitor.TryEnter(RegenerationGate))
+                throw new SlotValidationException("Slot regeneration is already in progress. Wait for it to finish and try again.", isConflict: true);
 
-            return slots;
-        }
-
-        /// <summary>
-        /// Replaces every slot generation request by the slots calculated for its transponder plan.
-        /// </summary>
-        private IEnumerable<TransponderSlot> ExpandGenerationRequests(IEnumerable<TransponderSlot> slots)
-        {
-            if (slots == null)
-                return null;
-
-            var materialized = slots.ToList();
-            if (!materialized.Any(IsGenerationRequest))
-                return materialized;
-
-            var expanded = new List<TransponderSlot>();
-            var handledPlans = new HashSet<Guid>();
-
-            foreach (var slot in materialized)
+            try
             {
-                if (!IsGenerationRequest(slot))
+                var expanded = new List<TransponderSlot>();
+                var replacedPlans = new HashSet<Guid>();
+                foreach (var request in requests)
                 {
-                    expanded.Add(slot);
-                    continue;
+                    if (!IsGenerationRequest(request))
+                    {
+                        expanded.Add(request);
+                        continue;
+                    }
+
+                    var planId = request.TransponderPlan.Value;
+                    if (replacedPlans.Add(planId))
+                        expanded.AddRange(slotGenerator.BuildSlots(planId));
                 }
 
-                var transponderPlanId = slot.TransponderPlan.Value;
-                if (!handledPlans.Add(transponderPlanId))
-                    continue;
-
-                var built = RegenerateSlots(transponderPlanId);
-                expanded.AddRange(built);
+                return ValidateAndReplace(expanded, replacedPlans);
             }
+            finally
+            {
+                Monitor.Exit(RegenerationGate);
+            }
+        }
 
-            return expanded;
+        private IReadOnlyCollection<TransponderSlot> ValidateAndReplace(
+            IReadOnlyCollection<TransponderSlot> slots, ISet<Guid> replacedPlans)
+        {
+            Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next = validated =>
+            {
+                var materialized = validated.ToList();
+                if (inner is TransponderSlotRepositoryMiddleware wrapped)
+                    return wrapped.ValidateAndReplace(materialized, replacedPlans);
+
+                var stage = "Delete";
+                try
+                {
+                    foreach (var planId in replacedPlans)
+                        inner.DeleteSlotsByTransponderPlan(planId);
+
+                    stage = "Create";
+                    return inner.Create(materialized);
+                }
+                catch (Exception exception)
+                {
+                    throw new SlotRegenerationException(replacedPlans, stage, exception);
+                }
+            };
+
+            if (middleware is SlotOverlapValidationMiddleware overlap)
+                return overlap.OnReplace(slots, replacedPlans, next);
+            if (middleware is IBulkCreatableMiddleware<TransponderSlot> validation)
+                return validation.OnCreate(slots, next);
+
+            return next(slots);
         }
 
         /// <summary>

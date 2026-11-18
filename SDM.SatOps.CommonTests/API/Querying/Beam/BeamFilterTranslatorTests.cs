@@ -19,7 +19,7 @@
             var translator = new BeamFilterTranslator();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamName.Equal("MyBeam"));
+            var result = translator.Translate(BeamExposers.Name.Equal("MyBeam"));
 
             // Assert
             AssertTranslated(result);
@@ -45,7 +45,7 @@
             var translator = new BeamFilterTranslator();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamSatellite.Equal(Guid.NewGuid()));
+            var result = translator.Translate(BeamExposers.Satellite.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);
@@ -60,7 +60,7 @@
             var translator = new BeamFilterTranslator();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamLinkType.Equal(linkType));
+            var result = translator.Translate(BeamExposers.LinkType.Equal(linkType));
 
             // Assert
             AssertTranslated(result);
@@ -71,7 +71,7 @@
         {
             // Arrange
             var translator = new BeamFilterTranslator();
-            var filter = BeamExposers.BeamLinkType.Equal((BeamLinkType)999);
+            var filter = BeamExposers.LinkType.Equal((BeamLinkType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -87,7 +87,7 @@
             var translator = new BeamFilterTranslator();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamTransmissionType.Equal(transmissionType));
+            var result = translator.Translate(BeamExposers.TransmissionType.Equal(transmissionType));
 
             // Assert
             AssertTranslated(result);
@@ -98,7 +98,7 @@
         {
             // Arrange
             var translator = new BeamFilterTranslator();
-            var filter = BeamExposers.BeamTransmissionType.Equal((BeamTransmissionType)999);
+            var filter = BeamExposers.TransmissionType.Equal((BeamTransmissionType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -124,7 +124,7 @@
             var translator = new BeamFilterTranslator();
 
             // Act
-            var result = translator.Translate(BeamExposers.BeamId.Equal(Guid.NewGuid()));
+            var result = translator.Translate(BeamExposers.Guid.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);

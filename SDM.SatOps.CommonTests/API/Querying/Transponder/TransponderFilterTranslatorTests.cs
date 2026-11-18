@@ -19,7 +19,7 @@
             var translator = new TransponderFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderExposers.TransponderName.Equal("TP1"));
+            var result = translator.Translate(TransponderExposers.Name.Equal("TP1"));
 
             // Assert
             AssertTranslated(result);
@@ -46,9 +46,9 @@
             var id = Guid.NewGuid();
 
             // Act & Assert
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderSatellite.Equal(id)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderBeam.Equal(id)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderDOMResource.Equal(id)));
+            AssertTranslated(translator.Translate(TransponderExposers.Satellite.Equal(id)));
+            AssertTranslated(translator.Translate(TransponderExposers.Beam.Equal(id)));
+            AssertTranslated(translator.Translate(TransponderExposers.DOMResource.Equal(id)));
         }
 
         [TestMethod]
@@ -58,14 +58,14 @@
             var translator = new TransponderFilterTranslator();
 
             // Act & Assert
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderBandwidth.Equal(36.0)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderStartFrequency.Equal(10.0)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderStopFrequency.Equal(20.0)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderDownlinkStartFreq.Equal(1.0)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderDownlinkEndFreq.Equal(2.0)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderRollingWindow.Equal(3.0)));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderHardEndDate.Equal(new DateTime(2020, 1, 1))));
-            AssertTranslated(translator.Translate(TransponderExposers.TransponderPhoneNumber.Equal("123")));
+            AssertTranslated(translator.Translate(TransponderExposers.Bandwidth.Equal(36.0)));
+            AssertTranslated(translator.Translate(TransponderExposers.StartFrequency.Equal(10.0)));
+            AssertTranslated(translator.Translate(TransponderExposers.StopFrequency.Equal(20.0)));
+            AssertTranslated(translator.Translate(TransponderExposers.DownlinkStartFreq.Equal(1.0)));
+            AssertTranslated(translator.Translate(TransponderExposers.DownlinkEndFreq.Equal(2.0)));
+            AssertTranslated(translator.Translate(TransponderExposers.RollingWindow.Equal(3.0)));
+            AssertTranslated(translator.Translate(TransponderExposers.HardEndDate.Equal(new DateTime(2020, 1, 1))));
+            AssertTranslated(translator.Translate(TransponderExposers.PhoneNumber.Equal("123")));
         }
 
         [DataTestMethod]
@@ -81,7 +81,7 @@
             var translator = new TransponderFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderExposers.TransponderBand.Equal(bandType));
+            var result = translator.Translate(TransponderExposers.Band.Equal(bandType));
 
             // Assert
             AssertTranslated(result);
@@ -92,7 +92,7 @@
         {
             // Arrange
             var translator = new TransponderFilterTranslator();
-            var filter = TransponderExposers.TransponderBand.Equal((TransponderBandType)999);
+            var filter = TransponderExposers.Band.Equal((TransponderBandType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -107,7 +107,7 @@
             var translator = new TransponderFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderExposers.TransponderPolarization.Equal(polarizationType));
+            var result = translator.Translate(TransponderExposers.Polarization.Equal(polarizationType));
 
             // Assert
             AssertTranslated(result);
@@ -118,7 +118,7 @@
         {
             // Arrange
             var translator = new TransponderFilterTranslator();
-            var filter = TransponderExposers.TransponderPolarization.Equal((TransponderPolarizationType)999);
+            var filter = TransponderExposers.Polarization.Equal((TransponderPolarizationType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -135,7 +135,7 @@
             var translator = new TransponderFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderExposers.TransponderUplinkPolarization.Equal(type));
+            var result = translator.Translate(TransponderExposers.UplinkPolarization.Equal(type));
 
             // Assert
             AssertTranslated(result);
@@ -146,7 +146,7 @@
         {
             // Arrange
             var translator = new TransponderFilterTranslator();
-            var filter = TransponderExposers.TransponderUplinkPolarization.Equal((TransponderUplinkPolarizationType)999);
+            var filter = TransponderExposers.UplinkPolarization.Equal((TransponderUplinkPolarizationType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -163,7 +163,7 @@
             var translator = new TransponderFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderExposers.TransponderDownlinkPolarization.Equal(type));
+            var result = translator.Translate(TransponderExposers.DownlinkPolarization.Equal(type));
 
             // Assert
             AssertTranslated(result);
@@ -174,7 +174,7 @@
         {
             // Arrange
             var translator = new TransponderFilterTranslator();
-            var filter = TransponderExposers.TransponderDownlinkPolarization.Equal((TransponderDownlinkPolarizationType)999);
+            var filter = TransponderExposers.DownlinkPolarization.Equal((TransponderDownlinkPolarizationType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -187,7 +187,7 @@
             var translator = new TransponderFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderExposers.TransponderId.Equal(Guid.NewGuid()));
+            var result = translator.Translate(TransponderExposers.Guid.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);

@@ -468,6 +468,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var built = new List<TransponderSlot> { CreateSlot("A36", planId), CreateSlot("B36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
+            inner.Setup(x => x.Create(It.IsAny<IEnumerable<TransponderSlot>>())).Returns(built);
             var generator = new Mock<ITransponderSlotGenerator>();
             generator.Setup(x => x.BuildSlots(planId)).Returns(built);
 
@@ -475,7 +476,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
                 .Callback<IEnumerable<TransponderSlot>, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>((s, _) => validated = s)
-                .Returns(built);
+                .Returns((IEnumerable<TransponderSlot> slots, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(slots));
 
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
@@ -487,7 +488,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         }
 
         [TestMethod]
-        public void CreateBulk_GenerationRequest_BuildsBeforeDeletingAndValidating()
+        public void CreateBulk_GenerationRequest_ValidatesBeforeDeleting()
         {
             var planId = Guid.NewGuid();
             var built = new List<TransponderSlot> { CreateSlot("A36", planId) };
@@ -495,20 +496,21 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.DeleteSlotsByTransponderPlan(planId)).Callback(() => sequence.Add("delete"));
+            inner.Setup(x => x.Create(It.IsAny<IEnumerable<TransponderSlot>>())).Returns(built);
 
             var generator = new Mock<ITransponderSlotGenerator>();
             generator.Setup(x => x.BuildSlots(planId)).Returns(built).Callback(() => sequence.Add("build"));
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
-                .Returns(built)
-                .Callback(() => sequence.Add("validate"));
+                .Callback(() => sequence.Add("validate"))
+                .Returns((IEnumerable<TransponderSlot> slots, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(slots));
 
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
             sut.Create(new[] { CreateGenerationRequest(planId) });
 
-            CollectionAssert.AreEqual(new[] { "build", "delete", "validate" }, sequence);
+            CollectionAssert.AreEqual(new[] { "build", "validate", "delete" }, sequence);
         }
 
         [TestMethod]
@@ -539,12 +541,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var built = new List<TransponderSlot> { CreateSlot("A36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
+            inner.Setup(x => x.Create(It.IsAny<IEnumerable<TransponderSlot>>())).Returns(built);
             var generator = new Mock<ITransponderSlotGenerator>();
             generator.Setup(x => x.BuildSlots(planId)).Returns(built);
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
-                .Returns(built);
+                .Returns((IEnumerable<TransponderSlot> slots, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(slots));
 
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
@@ -562,12 +565,13 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var built = new List<TransponderSlot> { first, CreateSlot("B36", planId) };
 
             var inner = new Mock<ITransponderSlotRepository>();
+            inner.Setup(x => x.Create(It.IsAny<IEnumerable<TransponderSlot>>())).Returns(built);
             var generator = new Mock<ITransponderSlotGenerator>();
             generator.Setup(x => x.BuildSlots(planId)).Returns(built);
 
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
-                .Returns(built);
+                .Returns((IEnumerable<TransponderSlot> slots, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(slots));
 
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
@@ -578,7 +582,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
         }
 
         [TestMethod]
-        public void CreateByPlanId_BuildsDeletesAndValidatesTheCalculatedSlots()
+        public void CreateByPlanId_BuildsAndValidatesBeforeDeletingTheExistingSlots()
         {
             var planId = Guid.NewGuid();
             var built = new List<TransponderSlot> { CreateSlot("A36", planId), CreateSlot("B36", planId) };
@@ -587,6 +591,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             var inner = new Mock<ITransponderSlotRepository>();
             inner.Setup(x => x.DeleteSlotsByTransponderPlan(planId)).Callback(() => sequence.Add("delete"));
+            inner.Setup(x => x.Create(It.IsAny<IEnumerable<TransponderSlot>>())).Returns(built);
 
             var generator = new Mock<ITransponderSlotGenerator>();
             generator.Setup(x => x.BuildSlots(planId)).Returns(built).Callback(() => sequence.Add("build"));
@@ -594,7 +599,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var bulk = new Mock<IBulkCreatableMiddleware<TransponderSlot>>();
             bulk.Setup(x => x.OnCreate(It.IsAny<IEnumerable<TransponderSlot>>(), It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
                 .Callback<IEnumerable<TransponderSlot>, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>((s, _) => { validated = s; sequence.Add("validate"); })
-                .Returns(built);
+                .Returns((IEnumerable<TransponderSlot> slots, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(slots));
 
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, bulk.Object, generator.Object);
 
@@ -602,7 +607,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
 
             Assert.AreSame(built, result);
             CollectionAssert.AreEqual(built, validated.ToList());
-            CollectionAssert.AreEqual(new[] { "build", "delete", "validate" }, sequence);
+            CollectionAssert.AreEqual(new[] { "build", "validate", "delete" }, sequence);
         }
 
         [TestMethod]
@@ -613,6 +618,25 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
             var sut = new TransponderSlotRepositoryMiddleware(inner.Object, new Mock<IMiddlewareMarker<TransponderSlot>>().Object, generator.Object);
 
             Assert.ThrowsException<ArgumentException>(() => sut.Create(Guid.Empty));
+        }
+
+        [TestMethod]
+        public void UpdateBulk_UsesUpdateMiddlewareAndNeverCreates()
+        {
+            var slots = new[] { CreateSlot("A36", Guid.NewGuid()) };
+            var inner = new Mock<ITransponderSlotRepository>();
+            inner.Setup(value => value.Update(It.IsAny<IEnumerable<TransponderSlot>>())).Returns(slots);
+            var validation = new Mock<IBulkUpdatableMiddleware<TransponderSlot>>();
+            validation.Setup(value => value.OnUpdate(
+                It.IsAny<IEnumerable<TransponderSlot>>(),
+                It.IsAny<Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>>>()))
+                .Returns((IEnumerable<TransponderSlot> items, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next) => next(items));
+            var sut = new TransponderSlotRepositoryMiddleware(inner.Object, validation.Object);
+
+            Assert.AreSame(slots, sut.Update(slots));
+
+            inner.Verify(value => value.Update(It.IsAny<IEnumerable<TransponderSlot>>()), Times.Once);
+            inner.Verify(value => value.Create(It.IsAny<IEnumerable<TransponderSlot>>()), Times.Never);
         }
 
         private static TransponderSlot CreateGenerationRequest(Guid planId)

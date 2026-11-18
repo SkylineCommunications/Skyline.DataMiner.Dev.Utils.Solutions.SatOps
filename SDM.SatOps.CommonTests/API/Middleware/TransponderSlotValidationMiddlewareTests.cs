@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
 {
     using System;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -72,7 +73,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.TransponderPlan = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -82,7 +83,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.TransponderPlan = Guid.Empty;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -92,7 +93,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.Name = "  ";
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -102,7 +103,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.SlotStartFrequency = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -112,7 +113,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.SlotEndFrequency = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -122,7 +123,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.Bandwidth = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -132,7 +133,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.UplinkFreq = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -142,7 +143,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.DownlinkFreq = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -151,7 +152,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var sut = new TransponderSlotValidationMiddleware(CreatePlanRepository(null));
             var slot = CreateValidSlot();
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(slot, s => s));
         }
 
         [TestMethod]
@@ -177,7 +178,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var sut = CreateSut();
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreate(new TransponderSlot[] { null }, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreate(new TransponderSlot[] { null }, s => s.ToList()));
         }
 
         [TestMethod]
@@ -220,7 +221,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
             var slot = CreateValidSlot();
             slot.Name = null;
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(slot, s => s));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnUpdate(slot, s => s));
         }
 
         [TestMethod]
@@ -263,7 +264,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var sut = CreateSut();
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnUpdate(new TransponderSlot[] { null }, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnUpdate(new TransponderSlot[] { null }, s => s.ToList()));
         }
 
         [TestMethod]
@@ -306,7 +307,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var sut = CreateSut();
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(new TransponderSlot[] { null }, s => s.ToList()));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreateOrUpdate(new TransponderSlot[] { null }, s => s.ToList()));
         }
 
         [TestMethod]
@@ -331,7 +332,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var sut = new TransponderSlotValidationMiddleware(CreatePlanRepository(null));
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnCreateOrUpdate(
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnCreateOrUpdate(
                 new List<TransponderSlot> { CreateValidSlot() },
                 s => s.ToList()));
         }
@@ -379,7 +380,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Middleware
         {
             var sut = CreateSut();
 
-            Assert.ThrowsException<ArgumentException>(() => sut.OnDelete(new TransponderSlot[] { null }, s => { }));
+            Assert.ThrowsException<SlotValidationException>(() => sut.OnDelete(new TransponderSlot[] { null }, s => { }));
         }
 
         [TestMethod]

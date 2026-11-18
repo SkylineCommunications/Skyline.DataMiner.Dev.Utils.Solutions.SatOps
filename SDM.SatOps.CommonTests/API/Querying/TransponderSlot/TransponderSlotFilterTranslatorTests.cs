@@ -19,7 +19,7 @@
             var translator = new TransponderSlotFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderSlotExposers.SlotName.Equal("Slot1"));
+            var result = translator.Translate(TransponderSlotExposers.Name.Equal("Slot1"));
 
             // Assert
             AssertTranslated(result);
@@ -59,8 +59,8 @@
             var translator = new TransponderSlotFilterTranslator();
 
             // Act & Assert
-            AssertTranslated(translator.Translate(TransponderSlotExposers.SlotStartFrequency.Equal(10.0)));
-            AssertTranslated(translator.Translate(TransponderSlotExposers.SlotEndFrequency.Equal(20.0)));
+            AssertTranslated(translator.Translate(TransponderSlotExposers.StartFrequency.Equal(10.0)));
+            AssertTranslated(translator.Translate(TransponderSlotExposers.EndFrequency.Equal(20.0)));
             AssertTranslated(translator.Translate(TransponderSlotExposers.Bandwidth.Equal(36.0)));
             AssertTranslated(translator.Translate(TransponderSlotExposers.UplinkFreq.Equal(1.0)));
             AssertTranslated(translator.Translate(TransponderSlotExposers.DownlinkFreq.Equal(2.0)));
@@ -72,8 +72,8 @@
             // Arrange
             var translator = new TransponderSlotFilterTranslator();
             var filter = new ANDFilterElement<TransponderSlot>(
-                TransponderSlotExposers.SlotName.Equal("Slot1"),
-                TransponderSlotExposers.SlotStartFrequency.GreaterThan(5.0));
+                TransponderSlotExposers.Name.Equal("Slot1"),
+                TransponderSlotExposers.StartFrequency.GreaterThan(5.0));
 
             // Act
             var result = translator.Translate(filter);
@@ -91,7 +91,7 @@
             var translator = new TransponderSlotFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderSlotExposers.SlotId.Equal(Guid.NewGuid()));
+            var result = translator.Translate(TransponderSlotExposers.Guid.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);

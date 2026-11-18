@@ -2,6 +2,7 @@
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model;
@@ -15,20 +16,37 @@
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
-            [BeamExposers.BeamId.fieldName] = HandleGuid,
-            [BeamExposers.BeamName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [BeamExposers.Guid.fieldName] = HandleGuid,
+            [BeamExposers.Status.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.StatusId, comparer,
+                InstanceStatusFilterHelper.ToStatusId((InstanceStatus)value,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Draft,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Active,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Deprecated,
+                    SlcSatellite_ManagementIds.Behaviors.BeamsBehavior.Statuses.Error)),
+            [BeamExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (SlcSatellite_ManagementIds.Sections.Beam.BeamName), comparer, (string)value),
-            [BeamExposers.BeamSatellite.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [BeamExposers.Satellite.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (SlcSatellite_ManagementIds.Sections.Beam.BeamSatellite), comparer, (Guid)value),
-            [BeamExposers.BeamLinkType.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [BeamExposers.LinkType.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (SlcSatellite_ManagementIds.Sections.Beam.LinkType), comparer, ConvertLinkType((BeamLinkType)value)),
-            [BeamExposers.BeamTransmissionType.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [BeamExposers.TransmissionType.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (SlcSatellite_ManagementIds.Sections.Beam.TransmissionType), comparer, ConvertTransmissionType((BeamTransmissionType)value)),
             [BeamExposers.FootprintFile.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (SlcSatellite_ManagementIds.Sections.Beam.FootprintFile), comparer, (string)value),
         };
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => beamDefinitionFilter;
+
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [BeamExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [BeamExposers.Status.fieldName] = DomInstanceExposers.StatusId,
+            [BeamExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.BeamName),
+            [BeamExposers.Satellite.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.BeamSatellite),
+            [BeamExposers.LinkType.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.LinkType),
+            [BeamExposers.TransmissionType.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.TransmissionType),
+            [BeamExposers.FootprintFile.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.Beam.FootprintFile),
+        };
 
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
 

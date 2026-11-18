@@ -15,14 +15,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
-            [TransponderSlotExposers.SlotId.fieldName] = HandleGuid,
+            [TransponderSlotExposers.Guid.fieldName] = HandleGuid,
             [TransponderSlotExposers.TransponderPlan.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan), comparer, (Guid)value),
-            [TransponderSlotExposers.SlotName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderSlotExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotName), comparer, (string)value),
-            [TransponderSlotExposers.SlotStartFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderSlotExposers.StartFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotStartFrequency), comparer, (double)value),
-            [TransponderSlotExposers.SlotEndFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderSlotExposers.EndFrequency.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotEndFrequency), comparer, (double)value),
             [TransponderSlotExposers.Bandwidth.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.Bandwidth), comparer, (double)value),
@@ -33,6 +33,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot
         };
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => transponderSlotDefinitionFilter;
+
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [TransponderSlotExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [TransponderSlotExposers.TransponderPlan.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.TransponderPlan),
+            [TransponderSlotExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotName),
+            [TransponderSlotExposers.StartFrequency.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotStartFrequency),
+            [TransponderSlotExposers.EndFrequency.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.SlotEndFrequency),
+            [TransponderSlotExposers.Bandwidth.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.Bandwidth),
+            [TransponderSlotExposers.UplinkFreq.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.UplinkFreq),
+            [TransponderSlotExposers.DownlinkFreq.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderSlot.DownlinkFreq),
+        };
 
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
     }

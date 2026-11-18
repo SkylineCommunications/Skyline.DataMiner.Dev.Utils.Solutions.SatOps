@@ -39,16 +39,27 @@ var wideSlots = api.TransponderSlots.Read(
     TransponderSlotExposers.Bandwidth.GreaterThan(36.0));
 ```
 
-Enum exposers such as `TransponderBand` and `SatelliteHemisphere` have DOM translators, but
-`.Equal(enum)` can fail to compile (`CS0315`) with older query SDK references. Status has no
-query exposer. Use the typed `ReadFiltered` methods to filter these fields on the DOM server,
-optionally combining them with a regular name or relationship filter:
+Filter exposers translate API filters to DOM filters on the server. Lifecycle status is available
+as a typed `Status` exposer on satellites, beams, transponders and transponder plans. Other
+repository-specific filters (such as hemisphere, band and polarization) are also available through
+the typed `ReadFiltered` methods:
 
 ```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Satellite;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Beam;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Satellite;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
+
+var activeSatellites = api.Satellites.Read(
+    SatelliteExposers.Status.Equal(InstanceStatus.Active));
+
 var activeKu = api.Transponders.ReadFiltered(
     status: InstanceStatus.Active,
     band: TransponderBandType.Ku,
-    filter: TransponderExposers.TransponderSatellite.Equal(satelliteId));
+    filter: TransponderExposers.Satellite.Equal(satelliteId));
 
 var easternSatellites = api.Satellites.ReadFiltered(
     status: InstanceStatus.Active,
@@ -59,15 +70,15 @@ var feederBeams = api.Beams.ReadFiltered(
     linkType: BeamLinkType.Feeder);
 ```
 
-Every exposer class also exposes the entity's own id (`SatelliteId`, `BeamId`, `TransponderId`, `PlanId`,
-`PlanRowId`, `SlotId` and `ReservationId`), which is the only way to read a single transponder slot
-(`ITransponderSlotRepository` has no `Read(Guid)`).
+Each exposer class exposes the entity's ID through its `Guid` exposer. The transponder-slot
+repository has no `Read(Guid)` overload, so filter by `TransponderSlotExposers.Guid` to find a
+single slot:
 
 ```csharp
 using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderSlot;
 
 var slot = api.TransponderSlots
-    .Read(TransponderSlotExposers.SlotId.Equal(slotId))
+    .Read(TransponderSlotExposers.Guid.Equal(slotId))
     .FirstOrDefault();
 ```
 
@@ -115,12 +126,11 @@ var relatedPlans = api.TransponderPlans.ReadByTransponders(transponders.Select(t
 var relatedSlots = api.TransponderSlots.ReadByTransponderPlans(relatedPlans.Select(p => p.Id));
 ```
 
-**Generate slots from a transponder plan (there is no `Update` for slots):**
+**Generate or edit slots:**
 
-Slots are never edited individually: they are fully derived from the plan rows and the transponder of the plan,
-so any change to those inputs simply means the slots have to be recalculated. Because of that,
-`ITransponderSlotRepository` intentionally has no update method — it only exposes create, delete, read and count —
-and every write goes through `Create`.
+Use `Update(slot)` or `Update(slots)` to edit existing slots without changing their identifiers.
+Names must remain unique within the plan, and slots of the same bandwidth must not overlap.
+Regeneration recalculates slots from plan rows and overwrites individual edits.
 
 Pass the id of the transponder plan, or submit a slot that only has its `TransponderPlan` filled in, and the API
 replaces it by the slots calculated from the plan rows. The slots that already exist for the plan are removed as
@@ -148,6 +158,54 @@ api.TransponderRangeReservations.ReserveRange(reservation.Id, startFrequency: 10
 Time-window reads filter jobs by start and end time in MediaOps.Plan before resolving reservation details.
 Creating or updating a reservation checks overlaps only for the selected transponder and the incoming time
 window. Slot-name lookups filter property values by reservation ID instead of loading all property values.
+
+New range reservations are confirmed through MediaOps (`Draft` -> `Tentative` -> `Confirmed`).
+If the underlying reservation has already started, MediaOps can return `Active` or `Completed` instead.
+`ReserveRange` applies the same confirmation policy when recovering an externally created Draft job;
+editing an existing Tentative booking does not implicitly confirm it.
+
+Reservation reads expose a SatOps-owned `TransponderReservationState` through `reservation.State`.
+Allocation contexts also expose `State`; their existing MediaOps `JobState` property remains available
+for compatibility. `Active` corresponds to MediaOps `Running`, including pre-roll and post-roll.
+Reads preserve `PreRollStart` and `PostRollEnd` alongside the service start and end times.
+State and timing are snapshots, not permission to modify a booking or a guaranteed proposal deadline.
+MediaOps decides whether time changes, resource swaps, name edits and deletion are permitted.
+SatOps does not duplicate MediaOps timing or post-roll rules. The additional SatOps lifecycle policy
+is that frequency range, bandwidth and satellite capability cannot change while a booking is Active.
+A transponder swap is delegated to MediaOps only if it leaves those allocation values unchanged;
+the satellite capability is derived from the selected transponder. Unchanged allocation values
+are not treated as changes.
+
+When MediaOps rejects an operation for lifecycle reasons, SatOps throws `ReservationOperationException`.
+Its `ReservationId`, `Operation`, `LastKnownState` and `Errors` are all usable without importing MediaOps
+types. Each error contains a typed `ReservationOperationErrorCode` and an explanatory `Message`.
+SatOps allocation-policy rejections use the same exception. MediaOps lifecycle errors retain the
+original failure as the inner exception, and mixed validation reasons are preserved.
+Unrelated failures are not disguised as lifecycle rejections.
+
+```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
+
+try
+{
+    api.TransponderRangeReservations.Update(reservation);
+}
+catch (ReservationOperationException exception)
+{
+    foreach (var error in exception.Errors)
+    {
+        Console.WriteLine($"{error.Code}: {error.Message}");
+    }
+}
+```
+
+Validation happens when the operation executes, not through an authoritative proposal preflight API.
+Read the booking again after a rejection: `LastKnownState` is a snapshot, and MediaOps may synchronize
+its lifecycle state before rejecting an operation. Bulk operations are not transactional.
+
+If a transition is rejected, `ReservationTransitionException` exposes the persisted `ReservationId`,
+the failed `Operation`, and `LastKnownState`, retaining the MediaOps exception as its inner exception.
+The booking is not automatically deleted or rolled back: read it again before retrying or cleaning up.
 
 **Enable logging (optional):**
 
@@ -215,6 +273,6 @@ Every repository is built as a small pipeline: the public interface (e.g. `IBeam
 
 The domain entities also form a hierarchy: a `Satellite` owns `Beam`s and `Transponder`s, a `Transponder` owns `TransponderPlan`s, and each `TransponderPlan` owns `TransponderPlanRow`s and `TransponderSlot`s. Validation middleware enforces that these parent references exist before a child entity can be created or updated.
 
-`TransponderSlot`s are the one exception to the full CRUD surface: they are derived data, calculated from the plan rows and the transponder of their `TransponderPlan`. `ITransponderSlotRepository` therefore only inherits the creatable, deletable, pageable and countable repository interfaces — there is no update method, and regenerating the slots of a plan is done by calling `Create` with the transponder plan id, which recalculates the slots and replaces the ones currently stored for that plan.
+`TransponderSlot`s support create, update, delete, paged reads and count. `Create(planId)` regenerates the plan's slots; all replacement validation runs before deletion and excludes the slots being replaced. `SlotValidationException` distinguishes invalid requests from conflicts, and `SlotNotFoundException` identifies a missing slot selected for update. Persistence failures after replacement starts throw `SlotRegenerationException` with the affected plan IDs, failing stage and original exception. Refresh and reconcile before retrying: replacement is not transactional. A process-local guard rejects concurrent regenerations; callers in different processes or DataMiner agents must coordinate externally.
 
 The core library also depends on `Skyline.DataMiner.Dev.Utils.Solutions.MediaOps.Plan`: a SatOps `Transponder` is also represented as a `Resource` in the MediaOps data model, so `TransponderResourceCreationMiddleware` keeps a matching MediaOps resource in sync whenever a transponder is created or updated.

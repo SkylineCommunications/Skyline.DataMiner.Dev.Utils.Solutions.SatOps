@@ -32,7 +32,7 @@
             var translator = new TransponderRangeReservationFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderRangeReservationExposers.ReservationName.Equal("abc"));
+            var result = translator.Translate(TransponderRangeReservationExposers.Name.Equal("abc"));
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(TRUEFilterElement<Job>));
@@ -132,7 +132,7 @@
 
             // Act
             var result = translator.ApplyClientSide(
-                TransponderRangeReservationExposers.ReservationId.Equal(expected.Id),
+                TransponderRangeReservationExposers.Guid.Equal(expected.Id),
                 reservations).ToList();
 
             // Assert

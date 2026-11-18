@@ -9,9 +9,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
     /// <summary>
     /// Regression tests for SatOps Common 0.0.9:
-    /// <c>TransponderRangeReservationRepository</c> derives the reservation's <c>SatelliteName</c>
-    /// from the selected transponder's <c>TransponderSatellite</c> relationship. The transponder
-    /// is the single source of truth for the satellite, so caller-supplied <c>SatelliteName</c>
+    /// <c>TransponderRangeReservationRepository</c> derives the reservation's <c>Name</c>
+    /// from the selected transponder's <c>Satellite</c> relationship. The transponder
+    /// is the single source of truth for the satellite, so caller-supplied <c>Name</c>
     /// values are overwritten and a missing satellite relationship produces a clear validation
     /// error instead of a silently omitted capability.
     /// </summary>
@@ -56,12 +56,12 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var exception = InvokeResolveExpectingException(transponder, id =>
             {
-                Assert.Fail("The satellite repository must not be queried when TransponderSatellite is missing.");
+                Assert.Fail("The satellite repository must not be queried when Satellite is missing.");
                 return null;
             });
 
             var argumentException = exception as ArgumentException;
-            Assert.IsNotNull(argumentException, "A missing TransponderSatellite must produce an ArgumentException.");
+            Assert.IsNotNull(argumentException, "A missing Satellite must produce an ArgumentException.");
             Assert.AreEqual("transponder", argumentException.ParamName);
             StringAssert.Contains(argumentException.Message, "no linked satellite");
         }

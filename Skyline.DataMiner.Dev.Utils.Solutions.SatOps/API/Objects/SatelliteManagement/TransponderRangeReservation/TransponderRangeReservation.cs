@@ -117,6 +117,33 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         }
 
         /// <summary>
+        /// Sets the reservation time window (UTC), preserving the existing pre-roll duration.
+        /// When the end time changes, the post-roll end is set to the new end time (zero-length post-roll).
+        /// An unchanged end time leaves the existing post-roll end untouched.
+        /// This changes only the in-memory reservation; MediaOps validates lifecycle restrictions on update.
+        /// </summary>
+        /// <param name="startTime">The new reservation start time (UTC).</param>
+        /// <param name="endTime">The new reservation end time (UTC).</param>
+        public void SetTimeWindow(DateTime startTime, DateTime endTime)
+        {
+            var preRollDuration = startTimeUtc - preRollStartUtc;
+            var endChanged = endTimeUtc != DateTime.SpecifyKind(endTime, DateTimeKind.Utc);
+
+            StartTime = startTime;
+            EndTime = endTime;
+
+            if (preRollDuration.HasValue)
+            {
+                PreRollStart = StartTime.Value - preRollDuration.Value;
+            }
+
+            if (endChanged)
+            {
+                PostRollEnd = EndTime;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the satellite capability value written to the reservation job node.
         /// This value is derived from the selected transponder's
         /// <see cref="SatelliteManagement.Transponder.Transponder.TransponderSatellite"/>
@@ -150,6 +177,12 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         }
 
         /// <summary>
+        /// Gets the lifecycle state at read time. This snapshot does not guarantee that a subsequent
+        /// modification is allowed. New in-memory reservations have state <c>Unknown</c>.
+        /// </summary>
+        public TransponderReservationState State { get; internal set; }
+
+        /// <summary>
         /// Gets the derived bandwidth size (end - start) of the reservation, or <c>null</c>
         /// when either bound is missing.
         /// </summary>
@@ -172,6 +205,27 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagem
         internal static TransponderRangeReservation CreateWithId(Guid id)
         {
             return new TransponderRangeReservation(id);
+        }
+
+        internal static TransponderReservationState MapState(JobState state)
+        {
+            switch (state)
+            {
+                case JobState.Draft:
+                    return TransponderReservationState.Draft;
+                case JobState.Tentative:
+                    return TransponderReservationState.Tentative;
+                case JobState.Confirmed:
+                    return TransponderReservationState.Confirmed;
+                case JobState.Running:
+                    return TransponderReservationState.Active;
+                case JobState.Completed:
+                    return TransponderReservationState.Completed;
+                case JobState.Canceled:
+                    return TransponderReservationState.Canceled;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state), state, "Unsupported MediaOps job state.");
+            }
         }
     }
 }

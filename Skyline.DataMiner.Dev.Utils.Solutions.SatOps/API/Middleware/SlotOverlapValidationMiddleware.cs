@@ -9,6 +9,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
 
     /// <summary>
     /// Middleware that validates there are no overlapping frequency ranges or duplicate slot names
@@ -57,6 +58,15 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
             ValidateSlots(new[] { oToCreate }, nameof(oToCreate));
             return next(oToCreate);
+        }
+
+        internal IReadOnlyCollection<TransponderSlot> OnReplace(
+            IReadOnlyCollection<TransponderSlot> slots,
+            ISet<Guid> replacedPlanIds,
+            Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next)
+        {
+            ValidateSlots(slots, nameof(slots), replacedPlanIds);
+            return next(slots);
         }
 
         public IReadOnlyCollection<TransponderSlot> OnCreate(IEnumerable<TransponderSlot> oToCreate, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next)
@@ -164,7 +174,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         /// </summary>
         /// <param name="slots">The submitted slots.</param>
         /// <param name="parameterName">The name of the public parameter reported on validation failure.</param>
-        private void ValidateSlots(IEnumerable<TransponderSlot> slots, string parameterName)
+        private void ValidateSlots(IEnumerable<TransponderSlot> slots, string parameterName, ISet<Guid> replacedPlanIds = null)
         {
             var submitted = slots.Where(HasValidatableRange).ToList();
             if (submitted.Count == 0)
@@ -172,7 +182,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
             foreach (var group in submitted.GroupBy(s => s.TransponderPlan.Value))
             {
-                ValidatePlan(group.Key, group.ToList(), parameterName);
+                ValidatePlan(group.Key, group.ToList(), parameterName, replacedPlanIds != null && replacedPlanIds.Contains(group.Key));
             }
         }
 
@@ -181,11 +191,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
         /// that are not part of the submission. Names are unique across the whole plan, while overlaps are only
         /// validated between slots of the same bandwidth, because every bandwidth tiles the transponder on its own.
         /// </summary>
-        private void ValidatePlan(Guid planId, IReadOnlyCollection<TransponderSlot> submitted, string parameterName)
+        private void ValidatePlan(Guid planId, IReadOnlyCollection<TransponderSlot> submitted, string parameterName, bool replacing = false)
         {
             var submittedIds = new HashSet<Guid>(submitted.Select(s => s.Id));
 
-            var persisted = (slotRepository.ReadByTransponderPlan(planId) ?? Enumerable.Empty<TransponderSlot>())
+            var persisted = (replacing ? Enumerable.Empty<TransponderSlot>() : slotRepository.ReadByTransponderPlan(planId) ?? Enumerable.Empty<TransponderSlot>())
                 .Where(s => HasValidatableRange(s) && !submittedIds.Contains(s.Id))
                 .Select(s => new SlotCandidate(s, isSubmitted: false));
 
@@ -261,9 +271,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
             if (current.IsSubmitted || previous.IsSubmitted)
             {
-                throw new ArgumentException(
+                throw new SlotValidationException(
                     string.Format(ExceptionMessages.DuplicateSlotNameDetected, current.Slot.Name),
-                    parameterName);
+                    parameterName, isConflict: true);
             }
         }
 
@@ -281,9 +291,9 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 var reported = current.IsSubmitted && !other.IsSubmitted ? current : other;
                 var conflicting = ReferenceEquals(reported, current) ? other : current;
 
-                throw new ArgumentException(
+                throw new SlotValidationException(
                     string.Format(ExceptionMessages.SlotOverlapDetected, reported.Slot.Name, conflicting.Slot.Name),
-                    parameterName);
+                    parameterName, isConflict: true);
             }
         }
 

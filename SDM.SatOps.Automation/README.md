@@ -64,16 +64,20 @@ api.Satellites.Activate(satellite);
 **Filter with exposers:**
 
 ```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
 using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
 
 var kuBandTransponders = api.Transponders.Read(
-    TransponderExposers.TransponderBand.Equal(TransponderBandType.Ku));
+    TransponderExposers.Band.Equal(TransponderBandType.Ku));
+
+var activeTransponders = api.Transponders.Read(
+    TransponderExposers.Status.Equal(InstanceStatus.Active));
 ```
 
 **Generate slots for a transponder plan:**
 
-Slots are calculated from the plan rows, so they are never updated in place: `api.TransponderSlots` has no
-update method and all slot writes run through `Create`. Pass the id of the transponder plan, or submit a slot
+Use `api.TransponderSlots.Update(slot)` to edit an existing slot without changing its ID. To regenerate all slots, pass the id of the transponder plan to `Create`, or submit a slot
 that only has its `TransponderPlan` filled in, and the API replaces it by the slots calculated from the plan
 rows, removing the existing slots of the plan in the same call. Call `Create` again to regenerate them.
 

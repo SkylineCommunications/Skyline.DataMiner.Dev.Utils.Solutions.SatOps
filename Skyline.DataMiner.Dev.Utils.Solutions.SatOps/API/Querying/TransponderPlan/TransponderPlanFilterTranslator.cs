@@ -2,6 +2,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
 {
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying;
     using System;
@@ -15,8 +16,14 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
 
         private readonly Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> handlers = new Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>>
         {
-            [TransponderPlanExposers.PlanId.fieldName] = HandleGuid,
-            [TransponderPlanExposers.PlanName.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
+            [TransponderPlanExposers.Guid.fieldName] = HandleGuid,
+            [TransponderPlanExposers.Status.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.StatusId, comparer,
+                InstanceStatusFilterHelper.ToStatusId((InstanceStatus)value,
+                    DomModel.SlcSatellite_ManagementIds.Behaviors.TransponderPlansBehavior.Statuses.Draft,
+                    DomModel.SlcSatellite_ManagementIds.Behaviors.TransponderPlansBehavior.Statuses.Active,
+                    DomModel.SlcSatellite_ManagementIds.Behaviors.TransponderPlansBehavior.Statuses.Deprecated,
+                    DomModel.SlcSatellite_ManagementIds.Behaviors.TransponderPlansBehavior.Statuses.Error)),
+            [TransponderPlanExposers.Name.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.PlanName), comparer, (string)value),
             [TransponderPlanExposers.StartTime.fieldName] = (comparer, value) => FilterElementFactory.Create(DomInstanceExposers.FieldValues.DomInstanceField
                 (DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.StartTime), comparer, (DateTime)value),
@@ -31,6 +38,18 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
         };
 
         protected override FilterElement<DomInstance> DomDefinitionFilter => transponderPlanDefinitionFilter;
+
+        protected override IReadOnlyDictionary<string, FieldExposer> OrderFields { get; } = new Dictionary<string, FieldExposer>
+        {
+            [TransponderPlanExposers.Guid.fieldName] = DomInstanceExposers.Id,
+            [TransponderPlanExposers.Status.fieldName] = DomInstanceExposers.StatusId,
+            [TransponderPlanExposers.Name.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.PlanName),
+            [TransponderPlanExposers.StartTime.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.StartTime),
+            [TransponderPlanExposers.EndTime.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.EndTime),
+            [TransponderPlanExposers.IsPermanent.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.IsPermanent),
+            [TransponderPlanExposers.DefaultSlotSize.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.DefaultSlotSize),
+            [TransponderPlanExposers.Transponder.fieldName] = DomInstanceExposers.FieldValues.DomInstanceField(DomModel.SlcSatellite_ManagementIds.Sections.TransponderPlan.Transponder),
+        };
 
         protected override Dictionary<string, Func<Comparer, object, FilterElement<DomInstance>>> Handlers => handlers;
     }

@@ -58,7 +58,7 @@
             var translator = new TransponderPlanRowFilterTranslator();
 
             // Act
-            var result = translator.Translate(TransponderPlanRowExposers.PlanRowId.Equal(Guid.NewGuid()));
+            var result = translator.Translate(TransponderPlanRowExposers.Guid.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);

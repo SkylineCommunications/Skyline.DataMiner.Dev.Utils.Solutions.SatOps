@@ -7,7 +7,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
     /// <summary>
     /// Regression tests for the premature required-field validation bug in DOM model *Instance.Clone().
-    /// See release note for 0.0.6: "Creating a new Satellite (and equivalents) threw 'SatelliteName is required'
+    /// See release note for 0.0.6: "Creating a new Satellite (and equivalents) threw 'Name is required'
     /// due to premature validation during clone."
     /// </summary>
     [TestClass]

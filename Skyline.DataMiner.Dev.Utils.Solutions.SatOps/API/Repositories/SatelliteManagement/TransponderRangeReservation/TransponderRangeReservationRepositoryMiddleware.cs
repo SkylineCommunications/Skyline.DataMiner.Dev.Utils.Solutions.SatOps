@@ -145,6 +145,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return inner.ReadByTransponder(transponderId);
         }
 
+        public IEnumerable<TransponderReservationAllocationContext> ReadAllocationContextByTransponder(Guid transponderId)
+        {
+            return inner.ReadAllocationContextByTransponder(transponderId);
+        }
+
         public IEnumerable<TransponderRangeReservation> ReadByTimeWindow(DateTime startTimeUtc, DateTime endTimeUtc)
         {
             return inner.ReadByTimeWindow(startTimeUtc, endTimeUtc);

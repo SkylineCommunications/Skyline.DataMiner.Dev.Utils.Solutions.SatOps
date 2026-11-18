@@ -19,7 +19,7 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act
-            var result = translator.Translate(SatelliteExposers.SatelliteName.Equal("MySat"));
+            var result = translator.Translate(SatelliteExposers.Name.Equal("MySat"));
 
             // Assert
             var and = result as ANDFilterElement<DomInstance>;
@@ -34,14 +34,14 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act & Assert
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteAbbreviation.Equal("ABC")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteOperator.Equal("Op")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteCoverage.Equal("Cov")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteApplications.Equal("App")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteInfo.Equal("Info")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteManufacturer.Equal("Man")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteCountry.Equal("BE")));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteLaunchInfo.Equal("Launch")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Abbreviation.Equal("ABC")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Operator.Equal("Op")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Coverage.Equal("Cov")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Applications.Equal("App")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Info.Equal("Info")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Manufacturer.Equal("Man")));
+            AssertTranslated(translator.Translate(SatelliteExposers.Country.Equal("BE")));
+            AssertTranslated(translator.Translate(SatelliteExposers.LaunchInfo.Equal("Launch")));
         }
 
         [TestMethod]
@@ -51,9 +51,9 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act & Assert
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteLongitudeForGEODegrees.Equal(12.5)));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteInclinationDegrees.Equal(0.5)));
-            AssertTranslated(translator.Translate(SatelliteExposers.SatelliteLaunchInServiceDate.Equal(new DateTime(2020, 1, 1))));
+            AssertTranslated(translator.Translate(SatelliteExposers.LongitudeForGeoDegrees.Equal(12.5)));
+            AssertTranslated(translator.Translate(SatelliteExposers.InclinationDegrees.Equal(0.5)));
+            AssertTranslated(translator.Translate(SatelliteExposers.LaunchInServiceDate.Equal(new DateTime(2020, 1, 1))));
         }
 
         [DataTestMethod]
@@ -66,7 +66,7 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act
-            var result = translator.Translate(SatelliteExposers.SatelliteOrbit.Equal(orbitType));
+            var result = translator.Translate(SatelliteExposers.Orbit.Equal(orbitType));
 
             // Assert
             AssertTranslated(result);
@@ -77,7 +77,7 @@
         {
             // Arrange
             var translator = new SatelliteFilterTranslator();
-            var filter = SatelliteExposers.SatelliteOrbit.Equal((OrbitType)999);
+            var filter = SatelliteExposers.Orbit.Equal((OrbitType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -92,7 +92,7 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act
-            var result = translator.Translate(SatelliteExposers.SatelliteHemisphere.Equal(hemisphereType));
+            var result = translator.Translate(SatelliteExposers.Hemisphere.Equal(hemisphereType));
 
             // Assert
             AssertTranslated(result);
@@ -103,7 +103,7 @@
         {
             // Arrange
             var translator = new SatelliteFilterTranslator();
-            var filter = SatelliteExposers.SatelliteHemisphere.Equal((HemisphereType)999);
+            var filter = SatelliteExposers.Hemisphere.Equal((HemisphereType)999);
 
             // Act & Assert
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => translator.Translate(filter));
@@ -129,7 +129,7 @@
             var translator = new SatelliteFilterTranslator();
 
             // Act
-            var result = translator.Translate(SatelliteExposers.SatelliteId.Equal(Guid.NewGuid()));
+            var result = translator.Translate(SatelliteExposers.Guid.Equal(Guid.NewGuid()));
 
             // Assert
             AssertTranslated(result);

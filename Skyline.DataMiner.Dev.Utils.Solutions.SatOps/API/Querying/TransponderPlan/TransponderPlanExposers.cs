@@ -1,6 +1,7 @@
 namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
 {
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
     using System;
 
@@ -13,14 +14,19 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.TransponderPlan
     public static class TransponderPlanExposers
     {
         /// <summary>
-        /// Exposes the <see cref="TransponderPlan.Id"/> property for querying as "PlanId".
+        /// Exposes the <see cref="ApiObject.Id"/> property for querying as "Guid".
         /// </summary>
-        public static readonly Exposer<TransponderPlan, Guid> PlanId = new Exposer<TransponderPlan, Guid>((obj) => obj.Id, "PlanId");
+        public static readonly Exposer<TransponderPlan, Guid> Guid = new Exposer<TransponderPlan, Guid>((obj) => obj.Id, "Guid");
 
         /// <summary>
         /// Exposes the <see cref="TransponderPlan.Name"/> property for querying as "PlanName".
         /// </summary>
-        public static readonly Exposer<TransponderPlan, string> PlanName = new Exposer<TransponderPlan, string>((obj) => obj.Name, "PlanName");
+        public static readonly Exposer<TransponderPlan, string> Name = new Exposer<TransponderPlan, string>((obj) => obj.Name, "Name");
+
+        /// <summary>
+        /// Exposes the <see cref="TransponderPlan.Status"/> property for querying as "Status".
+        /// </summary>
+        public static readonly Exposer<TransponderPlan, InstanceStatus> Status = new Exposer<TransponderPlan, InstanceStatus>((obj) => obj.Status, "Status");
 
         /// <summary>
         /// Exposes the <see cref="TransponderPlan.StartTime"/> property for querying.

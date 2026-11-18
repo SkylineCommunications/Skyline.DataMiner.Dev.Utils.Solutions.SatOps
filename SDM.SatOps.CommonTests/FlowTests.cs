@@ -11,6 +11,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.Transponder;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlan;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -65,6 +66,9 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("beam", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message, string.Format(
+                ExceptionMessages.BeamSatelliteDoesNotExist,
+                ((Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Beam.Beam)beam).BeamSatellite));
         }
 
         [TestMethod]
@@ -99,6 +103,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("transponder", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message, "Transponder Name is required.");
         }
 
         [TestMethod]
@@ -133,6 +138,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
             Assert.AreEqual("transponder", argumentException.ParamName);
+            StringAssert.Contains(argumentException.Message,
+                $"Transponder satellite with id '{((Transponder)transponder).TransponderSatellite}' does not exist.");
         }
 
         [TestMethod]
@@ -235,6 +242,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, ExceptionMessages.TransponderPlanNameIsRequired);
         }
 
         [TestMethod]
@@ -261,6 +269,8 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, string.Format(
+                ExceptionMessages.TransponderWithIdDoesNotExist, ((TransponderPlan)transponderPlan).Transponder));
         }
 
         [TestMethod]
@@ -290,6 +300,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, ExceptionMessages.TransponderPlanDefaultSlotSizeMustBeGreaterThanZero);
         }
 
         [TestMethod]
@@ -336,6 +347,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, string.Format(ExceptionMessages.PermanentTransponderPlanAlreadyExists, transponderId));
         }
 
         [TestMethod]
@@ -386,6 +398,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
 
             var argumentException = exception as ArgumentException;
             Assert.IsNotNull(argumentException);
+            StringAssert.Contains(argumentException.Message, string.Format(ExceptionMessages.TransponderPlanTimeRangeOverlaps, "TP-Plan-Existing"));
         }
 
         [TestMethod]
@@ -652,22 +665,31 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             reservationType.GetProperty("RelativeEndFrequency").SetValue(reservation, relativeEnd);
             reservationType.GetProperty("StartTime").SetValue(reservation, startTime);
             reservationType.GetProperty("EndTime").SetValue(reservation, endTime);
-            reservationType.GetProperty("SlotName")?.SetValue(reservation, "Slot-1");
+            reservationType.GetProperty("Name")?.SetValue(reservation, "Slot-1");
 
             return reservation;
         }
 
-        private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureOriginalDom)
+        private static object CreateApiObject(Type apiType, string domInstanceTypeName, Action<object> configureDom)
         {
             var domInstanceType = CommonAssembly.GetType(domInstanceTypeName, throwOnError: true);
             var apiObject = FormatterServices.GetUninitializedObject(apiType);
 
             var originalInstance = Activator.CreateInstance(domInstanceType);
-            configureOriginalDom?.Invoke(originalInstance);
+            configureDom?.Invoke(originalInstance);
             var updatedInstance = Activator.CreateInstance(domInstanceType);
+            configureDom?.Invoke(updatedInstance);
+
+            if (domInstanceType.GetProperty("Status") != null)
+            {
+                var domInstanceProperty = domInstanceType.GetProperty("domInstance", BindingFlags.Instance | BindingFlags.NonPublic);
+                SetNestedProperty(domInstanceProperty.GetValue(originalInstance), "StatusId", "active");
+                SetNestedProperty(domInstanceProperty.GetValue(updatedInstance), "StatusId", "active");
+            }
 
             SetPrivateField(apiObject, "originalInstance", originalInstance);
             SetPrivateField(apiObject, "updatedInstance", updatedInstance);
+            SetApiObjectId(apiObject, Guid.NewGuid());
 
             return apiObject;
         }
@@ -796,8 +818,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 "Skyline.DataMiner.Solutions.SatOps.Common.DOM.Model.TranspondersInstance",
                 dom => ConfigureValidTransponderDom(dom, name));
 
-            // The API getters read the updated instance, so it has to carry the same values.
-            ConfigureValidTransponderDom(GetPrivateField(transponder, "updatedInstance"), name);
             SetApiObjectId(transponder, id);
 
             return transponder;
@@ -851,12 +871,6 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
                 Assert.Fail("Expected no exception, but got: {0}", invocationException.InnerException);
                 return null;
             }
-        }
-
-        private static object GetPrivateField(object target, string fieldName)
-        {
-            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            return field.GetValue(target);
         }
 
         /// <summary>

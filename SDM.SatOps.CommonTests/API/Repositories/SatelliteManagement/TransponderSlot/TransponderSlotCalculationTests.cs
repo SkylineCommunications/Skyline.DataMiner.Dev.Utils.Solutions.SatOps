@@ -11,6 +11,12 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     using Moq;
 
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlan;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderPlanRow;
+    using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderSlot;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderSlot;
 
@@ -22,6 +28,27 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests.API.Repositories.SatelliteMan
     public class TransponderSlotCalculationTests
     {
         private static readonly Guid PlanId = Guid.NewGuid();
+
+        [DataTestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public void BuildSlots_InvalidPlanRows_ReturnsDomainErrorBeforeReplacement(bool duplicateBandwidth)
+        {
+            var plan = new TransponderPlan();
+            var transponder = new Transponder { Bandwidth = 72, StartFrequency = 14000, DownlinkStartFreq = 11000 };
+            plan.Transponder = transponder.Id;
+            var first = new TransponderPlanRow { TransponderPlan = plan.Id, Bandwidth = 24, StepSize = 24, Offset = 0, Limit = 72 };
+            var second = new TransponderPlanRow { TransponderPlan = plan.Id, Bandwidth = duplicateBandwidth ? 24 : 12, StepSize = duplicateBandwidth ? 24 : 0, Offset = 0, Limit = 72 };
+            var api = new Mock<ISatOpsApi> { DefaultValue = DefaultValue.Mock };
+            api.Setup(value => value.TransponderPlans.Read(plan.Id)).Returns(plan);
+            api.Setup(value => value.Transponders.Read(transponder.Id)).Returns(transponder);
+            api.Setup(value => value.TransponderPlanRows.Read(It.IsAny<FilterElement<TransponderPlanRow>>())).Returns(new[] { first, second });
+
+            var exception = Assert.ThrowsException<SlotValidationException>(() => new TransponderSlotGenerator(api.Object).BuildSlots(plan.Id));
+
+            Assert.AreEqual(duplicateBandwidth, exception.IsConflict);
+            StringAssert.Contains(exception.Detail, duplicateBandwidth ? "one row per bandwidth" : "positive bandwidth and step size");
+        }
 
         [TestMethod]
         public void CalculateSlots_RowTilingTheFullTransponder_ProducesAdjacentSlots()

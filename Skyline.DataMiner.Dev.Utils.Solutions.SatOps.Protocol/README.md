@@ -56,10 +56,15 @@ protocol.FillArray(Parameter.Transponders.tablePid, new List<object[]> { keys, n
 Pushing the filter down to the API avoids retrieving entities the connector does not need.
 
 ```csharp
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
+using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
 using Skyline.DataMiner.Solutions.SatOps.Common.API.Querying.Transponder;
 
 var kuBandTransponders = api.Transponders.Read(
-    TransponderExposers.TransponderBand.Equal(TransponderBandType.Ku));
+    TransponderExposers.Band.Equal(TransponderBandType.Ku));
+
+var activeTransponders = api.Transponders.Read(
+    TransponderExposers.Status.Equal(InstanceStatus.Active));
 ```
 
 **Navigate the entity hierarchy:**

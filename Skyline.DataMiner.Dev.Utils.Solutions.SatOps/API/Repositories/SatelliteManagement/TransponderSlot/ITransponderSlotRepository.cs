@@ -9,12 +9,13 @@
     /// Represents a repository for managing <see cref="TransponderSlot"/> entities.
     /// </summary>
     public interface ITransponderSlotRepository : IBulkCreatableRepository<TransponderSlot>, IBulkDeletableRepository<TransponderSlot>, 
-        IPageableRepository<TransponderSlot>, ICountableRepository<TransponderSlot>
+        IPageableRepository<TransponderSlot>, ICountableRepository<TransponderSlot>, IBulkUpdatableRepository<TransponderSlot>
     {
         /// <summary>
         /// Generates the slots of the specified transponder plan and persists them.
         /// The slots are calculated from the plan rows and the transponder of the plan.
-        /// Any slots that already belong to the plan are removed first.
+        /// Replacements are validated before the existing slots are removed. Persistence is not transactional.
+        /// Concurrent regeneration calls are rejected within the same process; callers across processes must coordinate.
         /// </summary>
         /// <param name="transponderPlanId">The unique identifier of the transponder plan.</param>
         /// <returns>The collection of created <see cref="TransponderSlot"/> instances.</returns>

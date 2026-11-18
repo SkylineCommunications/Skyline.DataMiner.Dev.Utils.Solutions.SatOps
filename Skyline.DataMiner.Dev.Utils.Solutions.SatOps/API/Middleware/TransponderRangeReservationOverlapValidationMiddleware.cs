@@ -3,7 +3,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
-    using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.Logging;
     using SLDataGateway.API.Types.Querying;
     using System;
@@ -17,11 +16,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
     {
         private const double OverlapTolerance = 1e-9;
 
-        private readonly ITransponderRangeReservationRepository reservationRepository;
+        private readonly Func<Guid, DateTime, DateTime, IEnumerable<TransponderRangeReservation>> readOccupancy;
 
-        public TransponderRangeReservationOverlapValidationMiddleware(ITransponderRangeReservationRepository reservationRepository)
+        public TransponderRangeReservationOverlapValidationMiddleware(Func<Guid, DateTime, DateTime, IEnumerable<TransponderRangeReservation>> readOccupancy)
         {
-            this.reservationRepository = reservationRepository ?? throw new ArgumentNullException(nameof(reservationRepository));
+            this.readOccupancy = readOccupancy ?? throw new ArgumentNullException(nameof(readOccupancy));
         }
 
         public TransponderRangeReservation OnCreate(TransponderRangeReservation oToCreate, Func<TransponderRangeReservation, TransponderRangeReservation> next)
@@ -148,7 +147,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
                 var incomingReservations = group.ToList();
                 var windowStart = incomingReservations.Min(reservation => reservation.StartTime.Value);
                 var windowEnd = incomingReservations.Max(reservation => reservation.EndTime.Value);
-                var existingReservations = (reservationRepository.ReadByTransponderAndTimeWindow(group.Key, windowStart, windowEnd) ?? Enumerable.Empty<TransponderRangeReservation>())
+                var existingReservations = (readOccupancy(group.Key, windowStart, windowEnd) ?? Enumerable.Empty<TransponderRangeReservation>())
                     .Where(existing => HasRequiredRanges(existing) && !excludedIds.Contains(existing.Id))
                     .ToList();
 

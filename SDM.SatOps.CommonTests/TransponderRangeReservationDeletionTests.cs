@@ -7,8 +7,11 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
     using Moq;
     using Skyline.DataMiner.Net;
     using Skyline.DataMiner.Solutions.MediaOps.Plan.API;
+    using Skyline.DataMiner.Solutions.MediaOps.Plan.Exceptions;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Constants;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Exceptions;
+    using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.TransponderRangeReservation;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteManagement.TransponderRangeReservation;
 
     [TestClass]
@@ -37,6 +40,7 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
         [DataTestMethod]
         [DataRow(JobState.Draft)]
         [DataRow(JobState.Canceled)]
+        [DataRow(JobState.Completed)]
         public void Delete_UnscheduledReservation_DeletesWithoutCancel(JobState state)
         {
             var job = CreateJob(state);
@@ -49,18 +53,46 @@ namespace Skyline.DataMiner.SDM.SatOps.CommonTests
             jobs.Verify(repository => repository.Delete(job.Id), Times.Once);
         }
 
-        [DataTestMethod]
-        [DataRow(JobState.Running)]
-        [DataRow(JobState.Completed)]
-        public void Delete_ImmutableReservation_DoesNotCancelOrDelete(JobState state)
+        [TestMethod]
+        public void Delete_ActiveReservation_DelegatesAndTranslatesMediaOpsRejection()
         {
-            var job = CreateJob(state);
-            var jobs = new Mock<IJobsRepository>();
+            var job = CreateJob(JobState.Running);
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
             jobs.Setup(repository => repository.Read(job.Id)).Returns(job);
+            var error = new JobInvalidStateError();
+            typeof(MediaOpsErrorData).GetProperty(nameof(MediaOpsErrorData.ErrorMessage))
+                .SetValue(error, "An Active booking cannot be deleted.");
+            var failure = new MediaOpsException(error);
+            jobs.Setup(repository => repository.Delete(job.Id)).Throws(failure);
 
-            Assert.ThrowsException<InvalidOperationException>(() => CreateRepository(jobs.Object).Delete(job.Id));
+            var exception = Assert.ThrowsException<ReservationOperationException>(() => CreateRepository(jobs.Object).Delete(job.Id));
 
+            Assert.AreEqual(job.Id, exception.ReservationId);
+            Assert.AreEqual(TransponderReservationState.Active, exception.LastKnownState);
+            Assert.AreEqual("Delete", exception.Operation);
+            Assert.AreSame(failure, exception.InnerException);
+            StringAssert.Contains(exception.Message, failure.Message);
             jobs.Verify(repository => repository.Cancel(It.IsAny<Guid>()), Times.Never);
+            jobs.Verify(repository => repository.Delete(job.Id), Times.Once);
+        }
+
+        [TestMethod]
+        public void Delete_CancelLifecycleRejection_IsTranslatedAndDoesNotAttemptDelete()
+        {
+            var job = CreateJob(JobState.Confirmed);
+            var jobs = new Mock<IJobsRepository>(MockBehavior.Strict);
+            jobs.Setup(repository => repository.Read(job.Id)).Returns(job);
+            var error = new JobInvalidStateError();
+            typeof(MediaOpsErrorData).GetProperty(nameof(MediaOpsErrorData.ErrorMessage))
+                .SetValue(error, "The reservation starts too soon to cancel.");
+            var failure = new MediaOpsException(error);
+            jobs.Setup(repository => repository.Cancel(job.Id)).Throws(failure);
+
+            var exception = Assert.ThrowsException<ReservationOperationException>(() => CreateRepository(jobs.Object).Delete(job.Id));
+
+            Assert.AreEqual("Cancel", exception.Operation);
+            Assert.AreSame(failure, exception.InnerException);
+            StringAssert.Contains(exception.Message, failure.Message);
             jobs.Verify(repository => repository.Delete(It.IsAny<Guid>()), Times.Never);
         }
 
