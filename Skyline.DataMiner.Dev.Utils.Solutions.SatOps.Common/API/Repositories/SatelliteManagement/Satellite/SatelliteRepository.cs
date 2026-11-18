@@ -109,40 +109,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 .Select(di => Satellite.FromInstance(new SatellitesInstance(di)));
         }
 
-        public IEnumerable<Satellite> ReadFiltered(InstanceStatus? status = null, HemisphereType? hemisphere = null, FilterElement<Satellite> filter = null)
-        {
-            if (filter is FALSEFilterElement<Satellite> || (filter != null && filter.isEmpty()))
-                return Enumerable.Empty<Satellite>();
-
-            if (!status.HasValue && !hemisphere.HasValue && filter == null)
-                return Read();
-
-            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(BuildReadFilter(status, hemisphere, filter)));
-        }
-
-        internal FilterElement<DomInstance> BuildReadFilter(InstanceStatus? status, HemisphereType? hemisphere, FilterElement<Satellite> filter)
-        {
-            var domFilter = filterTranslator.Translate(filter ?? new TRUEFilterElement<Satellite>());
-            if (status.HasValue)
-            {
-                var statusId = InstanceStatusFilterHelper.ToStatusId(
-                    status.Value,
-                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Draft,
-                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Active,
-                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Deprecated,
-                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Error);
-                domFilter = domFilter.AND(DomInstanceExposers.StatusId.Equal(statusId));
-            }
-
-            if (hemisphere.HasValue)
-            {
-                var hemisphereValue = SatelliteFilterTranslator.ConvertHemisphere(hemisphere.Value);
-                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.General.Hemisphere).Equal(hemisphereValue));
-            }
-
-            return domFilter;
-        }
-
         public Satellite Read(Guid id)
         {
             if (id == Guid.Empty)
@@ -177,6 +143,60 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return DomHelper.DomInstances.Read(idFilter)
                 .Where(di => IsSatelliteInstance(di) && idSet.Contains(di.ID.Id))
                 .Select(di => Satellite.FromInstance(new SatellitesInstance(di)));
+        }
+
+        public IEnumerable<Satellite> Read(FilterElement<Satellite> filter)
+        {
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<Satellite>();
+            }
+
+            var domFilter = filterTranslator.Translate(filter);
+            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(domFilter));
+        }
+
+        public IEnumerable<Satellite> Read(IQuery<Satellite> query)
+        {
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            var domQuery = filterTranslator.TranslateQuery(query);
+            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(domQuery));
+        }
+
+        public IEnumerable<Satellite> ReadFiltered(InstanceStatus? status = null, HemisphereType? hemisphere = null, FilterElement<Satellite> filter = null)
+        {
+            if (filter is FALSEFilterElement<Satellite> || (filter != null && filter.isEmpty()))
+                return Enumerable.Empty<Satellite>();
+
+            if (!status.HasValue && !hemisphere.HasValue && filter == null)
+                return Read();
+
+            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(BuildReadFilter(status, hemisphere, filter)));
+        }
+
+        internal FilterElement<DomInstance> BuildReadFilter(InstanceStatus? status, HemisphereType? hemisphere, FilterElement<Satellite> filter)
+        {
+            var domFilter = filterTranslator.Translate(filter ?? new TRUEFilterElement<Satellite>());
+            if (status.HasValue)
+            {
+                var statusId = InstanceStatusFilterHelper.ToStatusId(
+                    status.Value,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Draft,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Active,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Deprecated,
+                    SlcSatellite_ManagementIds.Behaviors.SatellitesBehavior.Statuses.Error);
+                domFilter = domFilter.AND(DomInstanceExposers.StatusId.Equal(statusId));
+            }
+
+            if (hemisphere.HasValue)
+            {
+                var hemisphereValue = SatelliteFilterTranslator.ConvertHemisphere(hemisphere.Value);
+                domFilter = domFilter.AND(DomInstanceExposers.FieldValues.DomInstanceField(SlcSatellite_ManagementIds.Sections.General.Hemisphere).Equal(hemisphereValue));
+            }
+
+            return domFilter;
         }
 
         public Satellite Activate(Guid id)
@@ -353,26 +373,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentNullException(nameof(query));
 
             return Count(query.Filter);
-        }
-
-        public IEnumerable<Satellite> Read(FilterElement<Satellite> filter)
-        {
-            if (filter.isEmpty())
-            {
-                return Enumerable.Empty<Satellite>();
-            }
-
-            var domFilter = filterTranslator.Translate(filter);
-            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(domFilter));
-        }
-
-        public IEnumerable<Satellite> Read(IQuery<Satellite> query)
-        {
-            if (query == null)
-                throw new ArgumentNullException(nameof(query));
-
-            var domQuery = filterTranslator.TranslateQuery(query);
-            return Satellite.InstantiateSatellites(SatOpsApi.SlcSatelliteManagementHelper.GetSatellites(domQuery));
         }
 
         public IEnumerable<IPagedResult<Satellite>> ReadPaged()

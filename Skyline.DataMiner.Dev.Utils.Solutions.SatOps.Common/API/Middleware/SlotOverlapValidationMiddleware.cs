@@ -60,15 +60,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
             return next(oToCreate);
         }
 
-        internal IReadOnlyCollection<TransponderSlot> OnReplace(
-            IReadOnlyCollection<TransponderSlot> slots,
-            ISet<Guid> replacedPlanIds,
-            Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next)
-        {
-            ValidateSlots(slots, nameof(slots), replacedPlanIds);
-            return next(slots);
-        }
-
         public IReadOnlyCollection<TransponderSlot> OnCreate(IEnumerable<TransponderSlot> oToCreate, Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next)
         {
             if (oToCreate == null)
@@ -79,6 +70,15 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Middleware
 
             ValidateSlots(oToCreate, nameof(oToCreate));
             return next(oToCreate);
+        }
+
+        internal IReadOnlyCollection<TransponderSlot> OnReplace(
+            IReadOnlyCollection<TransponderSlot> slots,
+            ISet<Guid> replacedPlanIds,
+            Func<IEnumerable<TransponderSlot>, IReadOnlyCollection<TransponderSlot>> next)
+        {
+            ValidateSlots(slots, nameof(slots), replacedPlanIds);
+            return next(slots);
         }
 
         public TransponderSlot OnUpdate(TransponderSlot oToUpdate, Func<TransponderSlot, TransponderSlot> next)

@@ -143,14 +143,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 .Select(di => TransponderPlanRow.FromInstance(new TransponderPlanRowsInstance(di)));
         }
 
-        public IEnumerable<TransponderPlanRow> ReadByTransponderPlan(Guid transponderPlanId)
-        {
-            if (transponderPlanId == Guid.Empty)
-                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
-
-            return Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId));
-        }
-
         public TransponderPlanRow Read(Guid id)
         {
             if (id == Guid.Empty)
@@ -187,6 +179,34 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 .Select(di => TransponderPlanRow.FromInstance(new TransponderPlanRowsInstance(di)));
         }
 
+        public IEnumerable<TransponderPlanRow> Read(FilterElement<TransponderPlanRow> filter)
+        {
+            if (filter.isEmpty())
+            {
+                return Enumerable.Empty<TransponderPlanRow>();
+            }
+
+            var domFilter = filterTranslator.Translate(filter);
+            return TransponderPlanRow.InstantiateTransponderPlanRows(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlanRows(domFilter));
+        }
+
+        public IEnumerable<TransponderPlanRow> Read(IQuery<TransponderPlanRow> query)
+        {
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            var domQuery = filterTranslator.TranslateQuery(query);
+            return TransponderPlanRow.InstantiateTransponderPlanRows(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlanRows(domQuery));
+        }
+
+        public IEnumerable<TransponderPlanRow> ReadByTransponderPlan(Guid transponderPlanId)
+        {
+            if (transponderPlanId == Guid.Empty)
+                throw new ArgumentException(ExceptionMessages.ValueCannotBeEmptyGuid, nameof(transponderPlanId));
+
+            return Read(TransponderPlanRowExposers.TransponderPlan.Equal(transponderPlanId));
+        }
+
         public TransponderPlanRow Update(TransponderPlanRow oToUpdate)
         {
             if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
@@ -217,26 +237,6 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
                 throw new ArgumentNullException(nameof(query));
 
             return Count(query.Filter);
-        }
-
-        public IEnumerable<TransponderPlanRow> Read(FilterElement<TransponderPlanRow> filter)
-        {
-            if (filter.isEmpty())
-            {
-                return Enumerable.Empty<TransponderPlanRow>();
-            }
-
-            var domFilter = filterTranslator.Translate(filter);
-            return TransponderPlanRow.InstantiateTransponderPlanRows(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlanRows(domFilter));
-        }
-
-        public IEnumerable<TransponderPlanRow> Read(IQuery<TransponderPlanRow> query)
-        {
-            if (query == null)
-                throw new ArgumentNullException(nameof(query));
-
-            var domQuery = filterTranslator.TranslateQuery(query);
-            return TransponderPlanRow.InstantiateTransponderPlanRows(SatOpsApi.SlcSatelliteManagementHelper.GetTransponderPlanRows(domQuery));
         }
 
         public IEnumerable<IPagedResult<TransponderPlanRow>> ReadPaged()

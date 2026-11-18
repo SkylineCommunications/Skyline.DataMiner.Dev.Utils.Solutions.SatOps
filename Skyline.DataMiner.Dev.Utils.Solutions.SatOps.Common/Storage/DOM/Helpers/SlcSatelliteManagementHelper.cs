@@ -44,24 +44,6 @@
         internal IEnumerable<TransponderSlotsInstance> GetTransponderSlots(IQuery<DomInstance> query) =>
             InstanceFactory.ReadAndCreateInstances(DomHelper, query, instance => new TransponderSlotsInstance(instance));
 
-        internal IEnumerable<IEnumerable<BeamsInstance>> GetBeamsPaged(IQuery<DomInstance> query, int pageSize) =>
-            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new BeamsInstance(instance));
-
-        internal IEnumerable<IEnumerable<SatellitesInstance>> GetSatellitesPaged(IQuery<DomInstance> query, int pageSize) =>
-            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new SatellitesInstance(instance));
-
-        internal IEnumerable<IEnumerable<TranspondersInstance>> GetTranspondersPaged(IQuery<DomInstance> query, int pageSize) =>
-            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TranspondersInstance(instance));
-
-        internal IEnumerable<IEnumerable<TransponderPlansInstance>> GetTransponderPlansPaged(IQuery<DomInstance> query, int pageSize) =>
-            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderPlansInstance(instance));
-
-        internal IEnumerable<IEnumerable<TransponderPlanRowsInstance>> GetTransponderPlanRowsPaged(IQuery<DomInstance> query, int pageSize) =>
-            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderPlanRowsInstance(instance));
-
-        internal IEnumerable<IEnumerable<TransponderSlotsInstance>> GetTransponderSlotsPaged(IQuery<DomInstance> query, int pageSize) =>
-            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderSlotsInstance(instance));
-
         public long CountSatelliteManagementInstances(FilterElement<DomInstance> filter)
         {
             if (filter == null)
@@ -427,6 +409,9 @@
             }
         }
 
+        internal IEnumerable<IEnumerable<BeamsInstance>> GetBeamsPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new BeamsInstance(instance));
+
         internal IEnumerable<IEnumerable<BeamsInstance>> GetBeamsPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
             if (paramFilter == null)
@@ -442,6 +427,9 @@
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
             return InstanceFactory.CreateInstances(pages, instance => new BeamsInstance(instance));
         }
+
+        internal IEnumerable<IEnumerable<SatellitesInstance>> GetSatellitesPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new SatellitesInstance(instance));
 
         internal IEnumerable<IEnumerable<SatellitesInstance>> GetSatellitesPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
@@ -459,6 +447,9 @@
             return InstanceFactory.CreateInstances(pages, instance => new SatellitesInstance(instance));
         }
 
+        internal IEnumerable<IEnumerable<TranspondersInstance>> GetTranspondersPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TranspondersInstance(instance));
+
         internal IEnumerable<IEnumerable<TranspondersInstance>> GetTranspondersPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
             if (paramFilter == null)
@@ -474,6 +465,9 @@
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
             return InstanceFactory.CreateInstances(pages, instance => new TranspondersInstance(instance));
         }
+
+        internal IEnumerable<IEnumerable<TransponderPlansInstance>> GetTransponderPlansPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderPlansInstance(instance));
 
         internal IEnumerable<IEnumerable<TransponderPlansInstance>> GetTransponderPlansPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
@@ -491,6 +485,9 @@
             return InstanceFactory.CreateInstances(pages, instance => new TransponderPlansInstance(instance));
         }
 
+        internal IEnumerable<IEnumerable<TransponderPlanRowsInstance>> GetTransponderPlanRowsPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderPlanRowsInstance(instance));
+
         internal IEnumerable<IEnumerable<TransponderPlanRowsInstance>> GetTransponderPlanRowsPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
             if (paramFilter == null)
@@ -506,6 +503,9 @@
             var pages = DomHelper.DomInstances.ReadPaged(paramFilter, pageSize);
             return InstanceFactory.CreateInstances(pages, instance => new TransponderPlanRowsInstance(instance));
         }
+
+        internal IEnumerable<IEnumerable<TransponderSlotsInstance>> GetTransponderSlotsPaged(IQuery<DomInstance> query, int pageSize) =>
+            InstanceFactory.ReadAndCreateInstancesPaged(DomHelper, query, pageSize, instance => new TransponderSlotsInstance(instance));
 
         internal IEnumerable<IEnumerable<TransponderSlotsInstance>> GetTransponderSlotsPaged(FilterElement<DomInstance> paramFilter, int pageSize)
         {
