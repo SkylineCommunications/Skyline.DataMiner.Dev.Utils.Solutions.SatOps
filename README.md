@@ -23,11 +23,11 @@ At Skyline Communications, we deal in world-class solutions that are deployed by
 
 | Project | Description |
 |---|---|
-| [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps/README.md) (`SDM.SatOps.Common`) | Core API library, entry point `SatOpsApi` |
-| [`SDM.SatOps.GQI`](SDM.SatOps.GQI/README.md) | GQI data source DevPack, built on top of the core library |
-| [`SDM.SatOps.Automation`](SDM.SatOps.Automation/README.md) | Automation script DevPack, built on top of the core library |
+| [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common/README.md) | Core API library, entry point `SatOpsApi` |
+| [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps.GQI`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps.GQI/README.md) | GQI data source DevPack, built on top of the core library |
+| [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Automation`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Automation/README.md) | Automation script DevPack, built on top of the core library |
 | [`Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol`](Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Protocol/README.md) | Connector (QAction) DevPack, built on top of the core library |
-| `SDM.SatOps.CommonTests` | MSTest unit tests for the core library |
+| `Skyline.DataMiner.Dev.Utils.Solutions.SatOps.Common.Tests` | MSTest unit tests for the core library |
 
 ## Architecture
 
