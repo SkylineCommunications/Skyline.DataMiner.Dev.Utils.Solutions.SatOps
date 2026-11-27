@@ -3,6 +3,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
     using Skyline.DataMiner.Net.Apps.DataMinerObjectModel;
     using Skyline.DataMiner.Net.Messages.SLDataGateway;
     using Skyline.DataMiner.SDM;
+    using ResourceState = Skyline.DataMiner.Solutions.MediaOps.Plan.API.ResourceState;
     using Skyline.DataMiner.Solutions.SatOps.Common.API;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement;
     using Skyline.DataMiner.Solutions.SatOps.Common.API.Objects.SatelliteManagement.Transponder;
@@ -449,6 +450,20 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
         {
             var transponder = Read(id) ?? throw new ArgumentException(string.Format(ExceptionMessages.TransponderWithIdWasNotFound, id), nameof(id));
 
+            if (transponder.DOMResource.HasValue && transponder.DOMResource.Value != Guid.Empty)
+            {
+                var targetState = transitionId == SlcSatellite_ManagementIds.Behaviors.TranspondersBehavior.Transitions.Active_To_Deprecated
+                    ? ResourceState.Deprecated
+                    : ResourceState.Complete;
+                return new TransponderResourceLifecycle(SatOpsApi.MediaOpsPlan.Resources)
+                    .Transition(transponder.DOMResource.Value, targetState, () => TransitionDom(transponder, transitionId));
+            }
+
+            return TransitionDom(transponder, transitionId);
+        }
+
+        private Transponder TransitionDom(Transponder transponder, string transitionId)
+        {
             var domInstanceId = transponder.ToOriginalInstance().ID;
             var transitionedDomInstance = DomHelper.DomInstances.DoStatusTransition(domInstanceId, transitionId);
             return Transponder.FromInstance(new TranspondersInstance(transitionedDomInstance));
