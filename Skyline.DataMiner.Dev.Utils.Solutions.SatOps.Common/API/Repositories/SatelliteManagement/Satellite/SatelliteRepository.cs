@@ -58,7 +58,7 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             foreach (var satellite in oToCreateOrUpdate)
             {
                 var existing = satellite.Id != Guid.Empty ? Read(satellite.Id) : null;
-                var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite);
+                var result = existing == null ? CreateInternal(satellite) : UpdateInternal(satellite, existing);
                 results.Add(result);
             }
 
@@ -336,7 +336,22 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
             return Satellite.FromInstance(new SatellitesInstance(createdDomInstance));
         }
 
-        private Satellite UpdateInternal(Satellite satellite)
+        private Satellite UpdateInternal(Satellite satellite, Satellite existing)
+        {
+            if (!string.Equals(existing.Name, satellite.Name, StringComparison.Ordinal))
+            {
+                var transponders = SatOpsApi.Transponders.ReadBySatellite(satellite.Id).ToList();
+                if (transponders.Any(item => item.DOMResource.HasValue && item.DOMResource.Value != Guid.Empty))
+                {
+                    return new SatelliteResourceRename(SatOpsApi.MediaOpsPlan)
+                        .Execute(transponders, satellite.Name, () => SaveUpdatedSatellite(satellite));
+                }
+            }
+
+            return SaveUpdatedSatellite(satellite);
+        }
+
+        private Satellite SaveUpdatedSatellite(Satellite satellite)
         {
             var updatedInstance = satellite.ToUpdatedInstance();
             var updatedDomInstance = DomHelper.DomInstances.Update(updatedInstance.ToInstance());
@@ -350,10 +365,11 @@ namespace Skyline.DataMiner.Solutions.SatOps.Common.API.Repositories.SatelliteMa
 
         public Satellite Update(Satellite oToUpdate)
         {
-            if (oToUpdate.Id == Guid.Empty || Read(oToUpdate.Id) == null)
+            var existing = oToUpdate.Id != Guid.Empty ? Read(oToUpdate.Id) : null;
+            if (existing == null)
                 throw new InvalidOperationException(ExceptionMessages.CannotUpdateNonExistingSatellite);
 
-            return UpdateInternal(oToUpdate);
+            return UpdateInternal(oToUpdate, existing);
         }
 
         public long Count(FilterElement<Satellite> filter)
